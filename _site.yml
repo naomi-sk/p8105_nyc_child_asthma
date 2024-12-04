@@ -1,0 +1,12 @@
+name: "Child Asthma in NYC"
+output_dir: "."
+navbar:
+  title: "Navigation"
+  right:
+    - text: "Home"
+      href: index.html
+    - icon: fa-github fa-lg
+      href: http://github.com/naomi-sk
+output:
+  html_document:
+    theme: cerulean
