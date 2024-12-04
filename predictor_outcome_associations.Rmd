@@ -1,5 +1,5 @@
 ---
-title: "Home"
+title: "Predictor-Outcome Associations"
 author: ""
 date: ""
 output: 
@@ -10,5 +10,3 @@ output:
 ---
 
 # Title
-
-Screencast placeholder.

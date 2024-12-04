@@ -1,5 +1,5 @@
 ---
-title: "Home"
+title: "Exploratory Data Analysis"
 author: ""
 date: ""
 output: 
@@ -9,6 +9,4 @@ output:
     theme: cerulean
 ---
 
-# Title
-
-Screencast placeholder.
+# Exploratory Data Analysis

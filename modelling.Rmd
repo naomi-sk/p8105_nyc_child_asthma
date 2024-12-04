@@ -1,5 +1,5 @@
 ---
-title: "Home"
+title: "Modelling"
 author: ""
 date: ""
 output: 
@@ -9,6 +9,4 @@ output:
     theme: cerulean
 ---
 
-# Title
-
-Screencast placeholder.
+# Linear Model Effects Model
