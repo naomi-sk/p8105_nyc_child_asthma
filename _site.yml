@@ -14,7 +14,7 @@ navbar:
       - text: "Predictor-Outcome Association"
         href: predictor_outcome_associations.html   
       - text: "Modelling"
-        href: model.html
+        href: modelling.html
     - text: "Report"
       href: report.html
     - text: "Visualizations"
