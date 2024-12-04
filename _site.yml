@@ -5,6 +5,8 @@ navbar:
   right:
     - text: "Home"
       href: index.html
+    - text: "Home"
+      href: data_preparation.html
     - icon: fa-github fa-lg
       href: http://github.com/naomi-sk
 output:
