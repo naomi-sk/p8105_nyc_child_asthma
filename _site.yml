@@ -8,7 +8,13 @@ navbar:
     - text: "Data Preparation"
       href: data_preparation.html
     - text: "Analyses"
-      href: analyses.html
+      menu: 
+      - text: "Exploratory Analysis"
+        href: exploratory_data_analysis.html
+      - text: "Predictor-Outcome Association"
+        href: predictor_outcome_associations.html   
+      - text: "Modelling"
+        href: model.html
     - text: "Report"
       href: report.html
     - text: "Visualizations"
