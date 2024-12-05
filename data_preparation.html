@@ -14,7 +14,7 @@
 
 <title>Data Preparation</title>
 
-<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cerulean.min.css" rel="stylesheet" />
@@ -36,8 +36,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -344,7 +344,7 @@ div.tocify {
       <a href="predictor_outcome_associations.html">Predictor-Outcome Association</a>
     </li>
     <li>
-      <a href="model.html">Modelling</a>
+      <a href="modelling.html">Modelling</a>
     </li>
   </ul>
 </li>
@@ -377,6 +377,63 @@ div.tocify {
 
 <div id="data-preparation" class="section level1">
 <h1>Data Preparation</h1>
+</div>
+<div id="greenspace-data" class="section level1">
+<h1>Greenspace data</h1>
+<p>For more information on the dataset and its data dictionary, click <a
+href="https://data.cityofnewyork.us/Recreation/Parks-Properties/enfh-gkve/about_data">here</a>.</p>
+<pre class="r"><code>greenspace_df = read_csv(&quot;./data/Parks_Properties_20241126.csv&quot;, na = c(&quot;NA&quot;, &quot;.&quot;, &quot;&quot;)) |&gt;
+  janitor::clean_names() </code></pre>
+<p>The original <code>greenspace_df</code> dataset (2051 observations
+and 34 variables) contains information on Greenspaces in NYC.</p>
+<p>Variables of interest include <code>acquisitiondate</code>,
+<code>acres</code>, <code>borough</code>, and
+<code>typecategory</code>.</p>
+<p><strong>Data cleaning</strong></p>
+<pre class="r"><code>greenspace_clean = greenspace_df |&gt;
+  mutate(
+    borough = case_match(borough, #renamed borough according to data dictionary
+      &quot;R&quot; ~ &quot;Staten Island&quot;,
+      &quot;Q&quot; ~ &quot;Queens&quot;,
+      &quot;X&quot; ~ &quot;Bronx&quot;,
+      &quot;B&quot; ~ &quot;Brooklyn&quot;,
+      &quot;M&quot; ~ &quot;Manhattan&quot;),
+    typecategory = as.factor(typecategory), #converted char variables into factors
+    borough = as.factor(borough)) |&gt;
+  separate(acquisitiondate, into = c(&quot;year&quot;, &quot;month&quot;, &quot;day&quot;), sep = &quot;-&quot;) |&gt;
+  select(year, borough, acres, typecategory) |&gt; 
+  filter(year &lt; 2022 | is.na(year))</code></pre>
+<pre class="r"><code>#Greenspace dataset: 2016-2018
+dataset1_gs = greenspace_clean |&gt;
+  filter(year &lt; 2019 | is.na(year)) |&gt; 
+  group_by(year, borough) |&gt;
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = &quot;drop&quot;)
+
+dataset1_gs_calc = dataset1_gs |&gt; 
+  group_by(borough) |&gt; 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = &quot;drop&quot;) |&gt; 
+  mutate(year_group = &quot;2016-2018&quot;)</code></pre>
+<pre class="r"><code>#Greenspace dataset: 2019-2021
+dataset2_gs = greenspace_clean |&gt;
+  filter(year &lt; 2022 | is.na(year)) |&gt;
+  group_by(year, borough) |&gt;
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = &quot;drop&quot;)
+
+dataset2_gs_calc = dataset2_gs |&gt; 
+  group_by(borough) |&gt; 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = &quot;drop&quot;) |&gt; 
+  mutate(year_group = &quot;2019-2021&quot;)</code></pre>
+<pre class="r"><code>#bind 
+total_acres = bind_rows(dataset1_gs_calc, dataset2_gs_calc)
+  
+#Final dataset
+Greenspace_data = total_acres |&gt;
+  pivot_wider(names_from = year_group,
+              values_from = acres_sum)</code></pre>
+<p>The final Greenspace dataset (<code>Greenspace_data</code>) includes
+2051 observations and 34 variables. Variables include
+<code>borough</code>, <code>2016-2018</code>, and
+<code>2019-2021</code>. Entries represent total acres of greenspace.</p>
 </div>
 
 
