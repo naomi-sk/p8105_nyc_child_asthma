@@ -30,19 +30,13 @@ Our project seeks to analyze how environmental factors shape children's respirat
 
 Using mixed-effects modeling and other statistical methods, we analyze data across two time periods (2016-2018 and 2019-2021) to investigate the relationships between emergency department visits, air quality (PM2.5), temperature patterns, and greenspace distribution, examining how these climate-sensitive factors affect children's health outcomes across different areas of New York City.
 
-
-
-
-
-## Main Research Questions:
+## Main Research Questions
 
 * What is the relationship between environmental factors (PM2.5, temperature, greenspace) and pediatric asthma ED rates?
 * Which environmental factors show the strongest associations with pediatric asthma rates?
 * How do these environmental health burdens differ across different areas of New York City?
 
 We believe that understanding these relationships is crucial for informing equitable, climate-resilient urban planning policies and public health initiatives aimed at protecting and improving children's health in New York City, especially in communities most vulnerable to environmental stressors.
-
-
 
 ## Screencast
 
