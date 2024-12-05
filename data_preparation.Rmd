@@ -1,5 +1,5 @@
 ---
-title: "Data Preparation"
+title: ""
 author: ""
 date: ""
 output: 
@@ -13,85 +13,136 @@ output:
 
 ```{r eval = TRUE, echo = FALSE, message = FALSE}
 
-# Load libraries and set theme
+knitr::opts_chunk$set(message = FALSE)
 
-library(tidyverse)
+# Load libraries
 
-knitr::opts_chunk$set(
-	echo = TRUE,
-	warning = FALSE,
-	fig.width = 8, 
-  fig.height = 6,
-  out.width = "90%"
-)
-
-theme_set(theme_minimal() + theme(legend.position = "bottom"))
-
-options(
-  ggplot2.continuous.colour = "viridis",
-  ggplot2.continuous.fill = "viridis"
-)
-
-scale_colour_discrete = scale_colour_viridis_d
-scale_fill_discrete = scale_fill_viridis_d
-
-```
-## PM2.5 data 
-
-```{r}
 library(tidyverse)
 library(rvest)
 library(readxl)
 library(plotly)
+
 ```
 
+The data for this project was obtained from multiple sources, including the New York State Asthma Dashboard, a Kaggle dataset on New York City Air quality, the New York City Open Data portal for greenspace, and temperature data extracted from the Open-Meteo historical weather API. The data cleaning and preparation process involved several stages to clean, wrangle, standardize and merge data for subsequent analysis.
 
-Import and clean PM2.5 data from website: https://www.kaggle.com/datasets/sahityasetu/new-york-city-air-quality?resource=download. 
-
+## Pediatric ED Admissions and Hospitalizations data
 
 ```{r}
+
+# Load and clean data for 2016-2018
+
+ed_2016_2018 <- read_csv("data/ed_data_csv.csv", skip = 2) |>
+ janitor::clean_names() |>
+ filter(
+   data_years == "2016-2018",
+   indicator %in% c(
+     "Asthma emergency department visit rate per 10,000 - aged 0-17 years",
+     "Asthma hospitalization rate per 10,000 - aged 0-17 years"
+   ),
+   county %in% c("New York", "Queens", "Richmond", "Kings", "Bronx")
+ ) %>%
+ select(data_years, county, zip_code, indicator, zip_code_rate) |>
+ mutate(
+   indicator = case_when(
+     indicator == "Asthma emergency department visit rate per 10,000 - aged 0-17 years" ~ "ed_visits_rate",
+     indicator == "Asthma hospitalization rate per 10,000 - aged 0-17 years" ~ "hosp_rate"
+   ),
+   zip_code_rate = case_when(
+     str_detect(zip_code_rate, "\\*") ~ NA_character_,
+     zip_code_rate == "s" ~ NA_character_,
+     TRUE ~ zip_code_rate
+   )
+ ) %>%
+  rename(borough = county) |>
+  mutate(
+    borough = case_when(
+      borough == "New York" ~ "Manhattan",
+      borough == "Kings" ~ "Brooklyn",
+      borough == "Richmond" ~ "Staten Island",
+      TRUE ~ borough
+    )
+  )
+
+# Load and clean data for 2019-2021
+
+ed_2019_2021 <- read_csv("data/ed_data_csv.csv", skip = 2) |>
+ janitor::clean_names() |>
+ filter(
+   data_years == "2019-2021",
+   indicator %in% c(
+     "Asthma emergency department visit rate per 10,000 - aged 0-17 years",
+     "Asthma hospitalization rate per 10,000 - aged 0-17 years"
+   ),
+   county %in% c("New York", "Queens", "Richmond", "Kings", "Bronx")
+ ) %>%
+ select(data_years, county, zip_code, indicator, zip_code_rate) |>
+ mutate(
+   indicator = case_when(
+     indicator == "Asthma emergency department visit rate per 10,000 - aged 0-17 years" ~ "ed_visits_rate",
+     indicator == "Asthma hospitalization rate per 10,000 - aged 0-17 years" ~ "hosp_rate"
+   ),
+   zip_code_rate = case_when(
+     str_detect(zip_code_rate, "\\*") ~ NA_character_,
+     zip_code_rate == "s" ~ NA_character_,
+     TRUE ~ zip_code_rate
+   )
+ ) %>%
+  rename(borough = county) |>
+  mutate(
+    borough = case_when(
+      borough == "New York" ~ "Manhattan",
+      borough == "Kings" ~ "Brooklyn",
+      borough == "Richmond" ~ "Staten Island",
+      TRUE ~ borough
+    )
+  )
+```
+
+The pediatric admissions data was sourced from the [New York State Asthma Dashboard](https://apps.health.ny.gov/public/tabvis/PHIG_Public/asthma/), which compiles information from the Behavioral Risk Factor Surveillance System (BRFSS) and Statewide Planning and Research Cooperative System (SPARCS) databases. Separate datasets were obtained for the 2016-2018 and 2019-2021 time periods, each loaded from a CSV file while skipping the first two rows.
+
+Variable names were standardized using the janitor package. The data was then filtered to include two selected key health indicators: **asthma emergency department visit rates** and **asthma hospitalization rates** for children aged 0-17 years. The geographic scope was limited to the five New York City counties: New York, Queens, Richmond, Kings, and Bronx.
+
+Variables were renamed with `Asthma emergency department visit rate per 10,000 - aged 0-17 years` to `ed_visits_rate` and `Asthma hospitalization rate per 10,000 - aged 0-17 years` to `hosp_rate`. The `county` variable was renamed to `borough` ensure consistency across NYC datasets, with New York changed to Manhattan, Kings to Brooklyn, and Richmond to Staten Island.
+
+Missing and unstable values were handled in two ways: values marked with "s" indicating data suppression for confidentiality reasons were converted to NA, and values marked with an asterisk signifying fewer than 10 events in the numerator were also converted to NA to avoid unstable estimates.
+
+## PM2.5 (Air Quality) data 
+
+```{r}
+
+# Load particulate matter data 
+
 particulate_matter = 
   read_csv("data/Air_Quality_20231208.csv")
+
 ```
 
-The raw data has `r nrow(particulate_matter)` rows and `r ncol(particulate_matter)` columns. 
+The PM2.5 data was obtained from a [NYC Kaggle dataset](https://www.kaggle.com/datasets/sahityasetu/new-york-city-air-quality?resource=download). 
 
-The columns are Unique ID, Indicator ID, Name, Measure, Measure Info, Geo 
-Type Name, Geo Join ID, Geo Place Name, Time Period, Start_Date, Data Value, and Message. 
+The raw data had the following column structure:
 
-Unique ID: A unique identifier assigned to each row in the dataset.
+* `Unique ID`: A unique identifier assigned to each row in the dataset.
+* `Indicator ID`: A code assigned to each indicator or measure of air quality being tracked.
+* `Name`: The name or label given to the indicator or measure being tracked.
+* `Measure`: The unit of measurement used to quantify the air quality indicator, such as * parts per billion (ppb) for ozone or sulfur dioxide.
+* `Measure Info`: Additional information about the measurement or calculation of the air quality indicator, if applicable.
+* `Geo Type Name`: The type of geographic area being tracked, such as community districts (CDs) or boroughs.
+* `Geo Join ID`: A unique identifier assigned to each geographic area being tracked.
+* `Geo Place Name`: The name of the specific geographic area being tracked, such as Coney Island or the Bronx.
+* `Time Period`: The time period during which the air quality measurement was taken, such as a specific season or winter of a particular year.
+* `Start_Date`: The date on which the air quality measurement period began.
+* `Data Value`: The value of the air quality indicator for the specific geographic area and time period being tracked.
+* `Message`: Additional information or notes about the air quality measurement or data value, if applicable.
 
-Indicator ID: A code assigned to each indicator or measure of air quality being tracked.
+The raw data was cleaned by converting the `Unique ID`, `Indicator ID`, and `Geo Join ID` variables to character type. The data was then filtered to focus on the `Fine particles (PM 2.5)` indicator and the years of interest (2016-2018 and 2019-2021).
 
-Name: The name or label given to the indicator or measure being tracked.
-
-Measure: The unit of measurement used to quantify the air quality indicator, such as parts per billion (ppb) for ozone or sulfur dioxide.
-
-Measure Info: Additional information about the measurement or calculation of the air quality indicator, if applicable.
-
-Geo Type Name: The type of geographic area being tracked, such as community districts (CDs) or boroughs.
-
-Geo Join ID: A unique identifier assigned to each geographic area being tracked.
-
-Geo Place Name: The name of the specific geographic area being tracked, such as Coney Island or the Bronx.
-
-Time Period: The time period during which the air quality measurement was taken, such as a specific season or winter of a particular year.
-
-Start_Date: The date on which the air quality measurement period began.
-
-Data Value: The value of the air quality indicator for the specific geographic area and time period being tracked.
-
-Message: Additional information or notes about the air quality measurement or data value, if applicable.
-
-As it stands, these data are not "tidy": Unique ID should be a character, as should Indicator ID and Geo Join ID. 
-
-We are interested in PM2.5 so we can filter name to "Fine particles (PM 2.5)". I should note there is name option "Asthma emergency department visits due to PM2.5", "Respiratory hospitalizations due to PM2.5 (age 20+)", "Cardiovascular hospitalizations due to PM2.5 (age 40+)", "Deaths due to PM2.5", "Respiratory hospitalizations due to PM2.5 (age 20+)", corresponding to annual rates(18+, 30+, etc.) that could be interesting to look at in secondary analyses. 
-
-Further filter to years of interest, we will be looking to compare 2016-2018 to 2019-2021.
-
-We will make two datasets, one for analysis in which we will filter by borough and create a new column that has the average PM2.5 across 2016-2018 and 2019-2021. 
+Several datasets were created as part of the cleaning process:
 
 ```{r}
+
+# Create aggregated tidied PM dataset
+
 tidy_analysis_pm = 
   particulate_matter |>
   janitor::clean_names() |>
@@ -122,35 +173,27 @@ tidy_analysis_pm =
     values_from = average_pm2.5,
     names_prefix = "avg_pm2.5_"
   )
+
+tidy_analysis_pm_long = tidy_analysis_pm |>
+  pivot_longer(
+    cols = starts_with("avg_pm2.5"),
+    names_to = "data_years",
+    values_to = "pm2.5_level"
+  ) |>
+  mutate(
+    data_years = str_replace(data_years, "avg_pm2.5_", "")
+  )
+
 ```
 
-Cleaned analysis PM2.5 dataset has `r nrow(tidy_analysis_pm)` rows and `r ncol(tidy_analysis_pm)` columns. 
+* **Tidy Analysis PM2.5 Dataset** (`tidy_analysis_pm`): This dataset was aggregated by borough and time period to calculate the average PM2.5 levels. The `unique_id`, `indicator_id`, and `start_date` variables were removed, and the `geo_place_name` variable was renamed to `borough`. The data was then pivoted to create columns for the 2016-2018 and 2019-2021 average PM2.5 values, with the new column names prefixed as avg_pm2.5_.
 
-I made a new dataset that is by borough and individual years to be used in the visualization step. 
-
-I will also make a visualization that describes Asthma emergency department visits due to PM2.5
-for Estimated annual rate (under age 18) for UHF42 neighborhoods across all boroughs. 
-
+* **Tidy Analysis PM2.5 Dataset** (`tidy_analysis_pm_long`): The tidy analysis dataset was restructure to long format to match the format needed for merging.
 
 ```{r}
-tidy_pm_asthmahospitalizations = 
-  particulate_matter |>
-  janitor::clean_names() |>
-    mutate(
-    unique_id = as.character(unique_id),
-    indicator_id = as.character(indicator_id),
-    geo_join_id = as.character(geo_join_id)) |>
-  filter(name == "Asthma emergency department visits due to PM2.5") |>
-  filter(geo_type_name == "UHF42") |>
-  filter(time_period %in% c("2012-2014","2015-2017")) |>
-    rename(pm2.5_mcgm3 = data_value) |>
-  select(name, measure, geo_type_name, geo_join_id, geo_place_name, time_period, pm2.5_mcgm3)
 
-tidy_pm_asthmahospitalizations
-```
+# Create PM tidy visualization dataset
 
-
-```{r}
 tidy_visualization_pm = 
   particulate_matter |>
   janitor::clean_names() |>
@@ -164,10 +207,37 @@ tidy_visualization_pm =
                             "Annual Average 2020", "Annual Average 2021")) |>
   filter(geo_type_name == "CD") |>
     rename(pm2.5_mcgm3 = data_value) 
+
 ```
+
+* **Tidy Visualization PM2.5 Dataset** (`tidy_visualization_pm`): This dataset retained the community district-level PM2.5 data, to be used for subsequent visualization. The `unique_id`, `indicator_id`, and `geo_join_id` variables were converted to character type, and the `data_value` variable was renamed to `pm2.5_mcgm3`.
 
 
 ```{r}
+
+# Create tidy PM asthma hospitalizations dataset
+
+tidy_pm_asthmahospitalizations = 
+  particulate_matter |>
+  janitor::clean_names() |>
+    mutate(
+    unique_id = as.character(unique_id),
+    indicator_id = as.character(indicator_id),
+    geo_join_id = as.character(geo_join_id)) |>
+  filter(name == "Asthma emergency department visits due to PM2.5") |>
+  filter(geo_type_name == "UHF42") |>
+  filter(time_period %in% c("2012-2014","2015-2017")) |>
+    rename(pm2.5_mcgm3 = data_value) |>
+  select(name, measure, geo_type_name, geo_join_id, geo_place_name, time_period, pm2.5_mcgm3)
+
+```
+
+* **Tidy PM2.5 Asthma Hospitalizations Dataset** (`tidy_pm_asthmahospitalizations`): This dataset focused on the `Asthma emergency department visits due to PM2.5` indicator, filtered for the UHF42 geographic level and the 2012-2014 and 2015-2017 time periods. The `unique_id`, `indicator_id`, and `geo_join_id` variables were converted to character type, and the `data_value` variable was renamed to `pm2.5_mcgm3`.
+
+```{r}
+
+# Load geography data
+
 geography = 
   read_excel("data/geoid_borough_name_nyc.xlsx") |>
   rename(geo_join_id = ID) |>
@@ -175,65 +245,69 @@ geography =
            as.character(geo_join_id))
 ```
 
-
 ```{r}
+
+# Merge datasets to create final PM visualization dataset with geographic data
+
 pm_for_vis = 
     left_join(tidy_visualization_pm, geography, by = c("geo_join_id")) |>
     rename(neighborhood = Name) |>
     rename(borough = Borough) |>
    select(name, neighborhood, borough, time_period, pm2.5_mcgm3)
+
 ```
 
-Cleaned visualization PM2.5 dataset has `r nrow(pm_for_vis)` rows and `r ncol(pm_for_vis)` columns. 
-
-This merged on the geo_join_id column for each community district. I renamed some variables for clarity and selected the variables of interest for visualization.
-
+* **Tidy Visualization PM2.5 Dataset** (`pm_for_vis`): This dataset was created by merging the tidy_visualization_pm dataset with a geography data file to include community district-level information needed for subsequent visualization. The geography data was used to add the `neighborhood` and `borough` variables to the PM2.5 dataset. The `geo_join_id` column was used as the key for the left join operation. Finally, the variables of interest for visualization were selected, including `name`, `neighborhood`, `borough`, `time_period`, and `pm2.5_mcgm3`. The final cleaned Visualization PM2.5 dataset has `r nrow(pm_for_vis)` rows and `r ncol(pm_for_vis)` columns. 
 
 ## Greenspace data
 
-For more information on the dataset and its data dictionary, click [here](https://data.cityofnewyork.us/Recreation/Parks-Properties/enfh-gkve/about_data).
 
-```{r greenspace import, message=FALSE}
+```{r}
+
+# Load and clean greenspace data
+
 greenspace_df = read_csv("./data/Parks_Properties_20241126.csv", na = c("NA", ".", "")) |>
   janitor::clean_names() 
+
 ```
 
-```{r check, include=FALSE}
-greenspace_df #2051 obs. 34 variables
+The greenspace data was obtained from the [New York City Open Data portal](https://data.cityofnewyork.us/Recreation/Parks-Properties/enfh-gkve/about_data). The original dataset contained information on various types of greenspaces in NYC, including variables such as:
 
-summary(greenspace_df) 
-#90 NAs for acquisitiondate. Keep NAs.
-#acquisitiondate (dttm), acres (dbl), borough (char), typecategory (char)
-```
+* `acquisitiondate`: The date the greenspace was acquired
+* `acres`: The size of the greenspace in acres
+* `borough`: The borough the greenspace is located in 
+* `typecategory`: The type of greenspace 
 
-The original `greenspace_df` dataset (`r nrow(greenspace_df)` observations and `r ncol(greenspace_df)` variables) contains information on Greenspaces in NYC. 
+The dataset contains `r nrow(greenspace_df)` observations and `r ncol(greenspace_df)` variables providng the most up-to-date information on Greenspaces in New York City. 
 
-Variables of interest include `acquisitiondate`, `acres`, `borough`, and `typecategory`.
+Relevant variables of interest for the research aims include `acquisitiondate`, `acres`, `borough`, and `typecategory`.
 
-**Data cleaning**
+```{r}
 
-```{r greenspace clean, message=FALSE}
+# Clean and filter relevant greenspace dataset variables 
+
 greenspace_clean = greenspace_df |>
   mutate(
-    borough = case_match(borough, #renamed borough according to data dictionary
+    borough = case_match(borough, 
       "R" ~ "Staten Island",
       "Q" ~ "Queens",
       "X" ~ "Bronx",
       "B" ~ "Brooklyn",
       "M" ~ "Manhattan"),
-    typecategory = as.factor(typecategory), #converted char variables into factors
+    typecategory = as.factor(typecategory), 
     borough = as.factor(borough)) |>
   separate(acquisitiondate, into = c("year", "month", "day"), sep = "-") |>
   select(year, borough, acres, typecategory) |> 
   filter(year < 2022 | is.na(year))
+
 ```
 
-```{r clean check, include=FALSE}
-summary(greenspace_clean)
-```
+The greenspace data was cleaned by first recoding the borough variable to use full borough names instead of abbreviations. The `typecategory` variable was converted from character to a factor data type, and the `borough` variable was also converted to a factor. The `acquisitiondate` variable was separated into individual year, month, and day columns, and the final cleaned dataset retained only the `year`, `borough`, `acres`, and `typecategory` variables, keeping rows with missing year values as long as the year was less than 2022.
 
-```{r Greenspace 2016-2018, message=FALSE}
-#Greenspace dataset: 2016-2018
+```{r}
+
+# Greenspace dataset: 2016-2018
+
 dataset1_gs = greenspace_clean |>
   filter(year < 2019 | is.na(year)) |> 
   group_by(year, borough) |>
@@ -242,11 +316,14 @@ dataset1_gs = greenspace_clean |>
 dataset1_gs_calc = dataset1_gs |> 
   group_by(borough) |> 
   summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
-  mutate(year_group = "2016-2018")
+  mutate(data_years = "2016-2018")
+
 ```
 
-```{r Greenspace 2019-2021, message=FALSE}
-#Greenspace dataset: 2019-2021
+```{r}
+
+# Greenspace dataset: 2019-2021
+
 dataset2_gs = greenspace_clean |>
   filter(year < 2022 | is.na(year)) |>
   group_by(year, borough) |>
@@ -255,25 +332,32 @@ dataset2_gs = greenspace_clean |>
 dataset2_gs_calc = dataset2_gs |> 
   group_by(borough) |> 
   summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
-  mutate(year_group = "2019-2021")
+  mutate(data_years = "2019-2021")
 ```
 
-```{r merge, message=FALSE}
-#bind 
+Two datasets were created to represent the 2016-2018 and 2019-2021 time periods of interest to the research aims, aggregating the data to the borough level to calculate the total acres of greenspace.
+
+```{r}
+
+# Combine greenspace datasets
+
 total_acres = bind_rows(dataset1_gs_calc, dataset2_gs_calc)
   
-#Final dataset
-Greenspace_data = total_acres |>
-  pivot_wider(names_from = year_group,
+# Create final dataset
+
+greenspace_data = total_acres |>
+  pivot_wider(names_from = data_years,
               values_from = acres_sum)
+
 ```
 
-The final Greenspace dataset (`Greenspace_data`) includes `r nrow(greenspace_df)` observations and `r ncol(greenspace_df)` variables. Variables include `borough`, `2016-2018`, and `2019-2021`. Entries represent total acres of greenspace.
+The two datasets were then combined into a single `total_acres` dataframe, with a new `year_group` variable added to indicate the time period. Finally, the `greenspace_data` dataset was created by pivoting the `total_acres` dataframe to have columns for the 2016-2018 and 2019-2021 time periods. 
+
+The final Greenspace dataset (`greenspace_data`) includes `r nrow(greenspace_df)` observations and `r ncol(greenspace_df)` variables. Variables include `borough`, `2016-2018`, and `2019-2021`. Entries represent total acres of greenspace.
 
 ## Temperature data
 
-used this [website](https://open-meteo.com/en/docs/historical-weather-api) and recorded the coordinates of 5 boroughs and extracted the temperatrue information by daily in a timeframe between 2016 and 2021.
-
+The temperature data was obtained by extracting daily information from the [Open-Meteo historical weather API](https://open-meteo.com/en/docs/historical-weather-api) for the five boroughs of New York City: Manhattan, Bronx, Brooklyn, Queens, and Staten Island. Separate CSV files were loaded for each borough, with the file names corresponding to the borough names and the first two rows skipped during the import.
 
 ```{r}
 
@@ -298,9 +382,15 @@ staten_island = read_csv("data/staten_island.csv",skip = 2) |>
   janitor::clean_names()
 ```
 
-I then merged the data by borough and divided into two groups to compare.
+The data cleaning process involved several steps. First, a new `borough` variable was added to each borough-specific dataset, with the value set to the corresponding borough name. The `time` variable containing date information in the format "YYYY-MM-DD" was converted to an appropriate date format using the as.Date() function.
+
+Subsequently, borough-specific datasets were merged into a single `all_temp` dataframe ānd the `borough` variable was converted to a factor data type. A new `data_years` column was created, which grouped the data into two time periods: "2016-2018" and "2019-2021", based on the year of the date column.
+
+The `all_temp` dataframe was then grouped by `data_years` and `borough`, and the `avg_temperature` variable was calculated as the mean of the `temperature_2m_mean_c` values.
+
 
 ```{r}
+
 all_temp = bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |> 
   mutate(borough = as.factor(borough)) |>
   mutate(date = as.Date(time, format = "%Y-%m-%d")) |> 
@@ -310,12 +400,24 @@ all_temp = bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |>
   summarise(avg_temperature = mean(temperature_2m_mean_c, na.rm = TRUE))
 ```
 
-## Full data
+The final temperature dataset `all_temp` contains the following key variables:
 
-```{r eval = FALSE}
+* `temperature_2m_max_c`: The maximum temperature in degrees Celsius
+* `temperature_2m_mean_c`: The mean temperature in degrees Celsius
+* `borough`: The borough the temperature data corresponds to (as a factor)
+* `date`: The date of the temperature measurement (as a Date object)
+* `data_years`: The time period the data belongs to ("2016-2018" or "2019-2021")
+* `avg_temperature`: The average temperature in degrees Celsius for each borough and time period
+
+# Data Merging
+
+```{r}
+
+# Combine the cleaned pediatric admissions data for 2016-2018 and 2019-2021
+
 full_data = bind_rows(ed_2016_2018, ed_2019_2021) |> 
   left_join(all_temp, by = c("data_years","borough"), relationship = "many-to-many") |> 
-  left_join(tidy_analysis_pm, by = c("data_years", "borough"), relationship = "many-to-many") |> 
+  left_join(tidy_analysis_pm_long, by = c("data_years", "borough"), relationship = "many-to-many") |> 
   left_join(total_acres, by = c("data_years","borough"), relationship = "many-to-many") |> 
   mutate(data_years = as.factor(data_years),
          borough = as.factor(borough),
@@ -324,7 +426,7 @@ full_data = bind_rows(ed_2016_2018, ed_2019_2021) |>
          zip_code_rate = as.numeric(zip_code_rate)) |> 
   drop_na()
 
-#dropped 74 NAs in zip_code_rate
+# Create separate datasets for emergency department visits and hospitalizations
 
 full_data_ed = full_data |> 
   filter(indicator == "ed_visits_rate")
@@ -332,80 +434,23 @@ full_data_ed = full_data |>
 full_data_hosp = full_data |> 
   filter(indicator == "hosp_rate")
 
-# Start from here
+# Create a new dataset with additional derived variables
 
 full_data2 = full_data |> 
   group_by(indicator, borough, data_years) |> 
   mutate(borough_rate = mean(zip_code_rate, na.rm = TRUE)) |> 
   ungroup()
 
-summary(full_data)
-
-
+# Save the full dataset to a CSV file
 
 write.csv(full_data, "data/NYC_total.csv", row.names = FALSE)
-```
-
-```{r eval = FALSE}
-
-#ED and hospitalization rate between year groups and borough
-
-ggplot(full_data, aes(x = data_years, y = zip_code_rate, fill = borough)) +
-  geom_violin(trim = FALSE, alpha = 0.7) +
-  facet_wrap( ~ indicator) +
-  labs(title = "Distribution of ED, Hospitalization Rates Between Year Groups and Zipcode",
-       x = "Year Group",
-       y = "Rate",
-       fill = "Borough") +
-  theme_minimal()
-
-#ED and Hospitalization rate histogram between year groups and borough
-
-library(plotly)
-
-a = ggplot(full_data2, aes(x = data_years, y = borough_rate, fill = borough)) +
-  geom_col(position = "dodge") +
-  facet_wrap( ~ indicator) +
-  labs(
-    title = "Borough ED, Hospitalization Rate by Year Group",
-    x = "Year",
-    y = "Rate",
-    fill = "Borough"
-  ) +
-  theme_minimal()
-
-ggplotly(a)
-
-#Average temperature by date group and borough
-
-ggplot(data = all_temp, aes(x = data_years, y = avg_temperature, color = borough)) +
-  geom_point(size = 3) +
-  geom_line(aes(group = borough), size = 1) +
-  labs(title = "Average Temperature by Date Group and Borough",
-       x = "Date Group",
-       y = "Average Temperature") +
-  theme_minimal()
-
-#Average PM2.5 by date group and borough
-
-ggplot(full_data, aes(x = data_years, y = average_pm2.5, color = borough)) +
-  geom_point(size = 3) +
-  geom_line(aes(group = borough), size = 1) +
-  labs(title = "Average PM2.5 by Date Group and Borough",
-       x = "Date Group",
-       y = "Average PM2.5") +
-  theme_minimal()
-
-# ED visit linear regression
-
-fit = lm(zip_code_rate ~ average_pm2.5 + avg_temperature + borough, data = full_data_ed)
-summary(fit)
-
-fit2 = lm(zip_code_rate ~ average_pm2.5 + avg_temperature + borough + percentage, data = full_data_hosp)
-summary(fit2)
-
-# try analysis with one exposure at a time by borough
-
-
 
 ```
+
+The data merging process involved combining multiple datasets to create a comprehensive dataset for analyzing pediatric asthma health outcomes and environmental factors across New York City. The process began by combining pediatric asthma admission datasets from two time periods (2016-2018 and 2019-2021), creating a base dataset containing emergency department visits and hospitalization rates.
+
+Environmental data was then systematically merged with this base dataset. Temperature data was added first, followed by PM2.5 data, and finally greenspace measurements. All merges were performed using borough and time period as matching variables. Data quality was maintained by standardizing categorical variables, formatting numeric measurements, and removing incomplete records.
+
+From this dataset, two data subsets were created: one containing emergency department visits and another containing hospitalizations data. A third dataset was developed to include borough-level statistics, calculating average rates for each combination of health indicator, borough, and time period.
+
+The final merged dataset was exported as a CSV file, providing a complete, analysis-ready file combining relevant health variables with environmental factors at both ZIP code and borough levels across the two time periods of interest.
