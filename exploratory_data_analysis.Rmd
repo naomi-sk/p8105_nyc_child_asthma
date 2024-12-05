@@ -14,21 +14,6 @@ output:
 # Load libraries
 
 library(tidyverse)
-library(patchwork)
-library(plotly)
-
-```
-
-# Exploratory Data Analysis
-
-## ED Admissions and Hospitalization
-
-## PM2.5 
-Plot comparisons by year/borough. 
-
-```{r}
-
-library(tidyverse)
 library(rvest)
 library(readxl)
 library(plotly)
@@ -37,17 +22,39 @@ library(sf)
 library(shiny)
 library(leaflet)
 library(scales)
+library(patchwork)
 
 ```
 
+# Exploratory Data Analysis
+
+## ED Admissions and Hospitalization
+
 ```{r}
 
+# Load ED data for 2016-2018
+
+ed_2016_2018 = 
+  read_csv("data/ed_2016_2018.csv")
+
+# Load ED data for 2019-2021
+
+ed_2019_2021 = 
+  read_csv("data/ed_2019_2021.csv")
+
+
+
+```
+
+
+## PM2.5 
+
+Plot comparisons by year/borough. 
+
+```{r}
 particulate_matter = 
   read_csv("data/Air_Quality_20231208.csv")
 
-```
-
-```{r}
 tidy_analysis_pm = 
   particulate_matter |>
   janitor::clean_names() |>
@@ -78,6 +85,7 @@ tidy_analysis_pm =
     values_from = average_pm2.5,
     names_prefix = "avg_pm2.5_"
   )
+
 ```
 
 ```{r}

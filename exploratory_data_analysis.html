@@ -374,33 +374,34 @@ div.tocify {
 <h1>Exploratory Data Analysis</h1>
 <div id="ed-admissions-and-hospitalization" class="section level2">
 <h2>ED Admissions and Hospitalization</h2>
+<pre class="r"><code># Load ED data for 2016-2018
+
+ed_2016_2018 = 
+  read_csv(&quot;data/ed_2016_2018.csv&quot;)</code></pre>
+<pre><code>## Rows: 354 Columns: 5
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## chr (3): data_years, borough, indicator
+## dbl (2): zip_code, zip_code_rate
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<pre class="r"><code># Load ED data for 2019-2021
+
+ed_2019_2021 = 
+  read_csv(&quot;data/ed_2019_2021.csv&quot;)</code></pre>
+<pre><code>## Rows: 354 Columns: 5
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## chr (3): data_years, borough, indicator
+## dbl (2): zip_code, zip_code_rate
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 </div>
 <div id="pm2.5" class="section level2">
 <h2>PM2.5</h2>
 <p>Plot comparisons by year/borough.</p>
-<pre class="r"><code>library(tidyverse)
-library(rvest)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;rvest&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:readr&#39;:
-## 
-##     guess_encoding</code></pre>
-<pre class="r"><code>library(readxl)
-library(plotly)
-library(flexdashboard)
-library(sf)</code></pre>
-<pre><code>## Linking to GEOS 3.12.2, GDAL 3.9.3, PROJ 9.4.1; sf_use_s2() is TRUE</code></pre>
-<pre class="r"><code>library(shiny)
-library(leaflet)
-library(scales)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;scales&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:purrr&#39;:
-## 
-##     discard</code></pre>
-<pre><code>## The following object is masked from &#39;package:readr&#39;:
-## 
-##     col_factor</code></pre>
 <pre class="r"><code>particulate_matter = 
   read_csv(&quot;data/Air_Quality_20231208.csv&quot;)</code></pre>
 <pre><code>## Rows: 16218 Columns: 12
@@ -453,7 +454,7 @@ library(scales)</code></pre>
     y = &quot;PM2.5 Values&quot;,
     fill = &quot;Year Group&quot;
   ) </code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <p>make knitr chart that shows with in numbers differences between
 years</p>
 <p>Show map of PM2.5 levels per UH42 index across years.</p>
@@ -524,7 +525,7 @@ years</p>
 <h2>Greenspace</h2>
 <div id="borough-and-year-comparison" class="section level4">
 <h4>Borough and Year Comparison</h4>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <p>Bronx had the least amount of greenspace, followed by Manhattan,
 Brooklyn, and Queens. Staten Island had the highest amount of
 greenspace. This trend is similar between both year groups.</p>
@@ -579,7 +580,7 @@ increase (258.720 acres) in greenspaces and Manhattan had the least
 </div>
 <div id="greenspace-types" class="section level4">
 <h4>Greenspace Types</h4>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
 <p>In terms of total acres, flagship parks make up the largest
 proportion of NYC greenspace. This trend is similar for both year
 groups.</p>

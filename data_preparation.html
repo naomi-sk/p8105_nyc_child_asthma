@@ -416,6 +416,10 @@ ed_2016_2018 &lt;- read_csv(&quot;data/ed_data_csv.csv&quot;, skip = 2) |&gt;
     )
   )
 
+# Save cleaned data
+
+write.csv(ed_2016_2018, &quot;data/ed_2016_2018.csv&quot;, row.names = FALSE)
+
 # Load and clean data for 2019-2021
 
 ed_2019_2021 &lt;- read_csv(&quot;data/ed_data_csv.csv&quot;, skip = 2) |&gt;
@@ -448,7 +452,11 @@ ed_2019_2021 &lt;- read_csv(&quot;data/ed_data_csv.csv&quot;, skip = 2) |&gt;
       borough == &quot;Richmond&quot; ~ &quot;Staten Island&quot;,
       TRUE ~ borough
     )
-  )</code></pre>
+  )
+
+# Save cleaned data
+
+write.csv(ed_2019_2021, &quot;data/ed_2019_2021.csv&quot;, row.names = FALSE)</code></pre>
 <p>The pediatric admissions data was sourced from the <a
 href="https://apps.health.ny.gov/public/tabvis/PHIG_Public/asthma/">New
 York State Asthma Dashboard</a>, which compiles information from the

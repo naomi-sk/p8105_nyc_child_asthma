@@ -64,6 +64,10 @@ ed_2016_2018 <- read_csv("data/ed_data_csv.csv", skip = 2) |>
     )
   )
 
+# Save cleaned data
+
+write.csv(ed_2016_2018, "data/ed_2016_2018.csv", row.names = FALSE)
+
 # Load and clean data for 2019-2021
 
 ed_2019_2021 <- read_csv("data/ed_data_csv.csv", skip = 2) |>
@@ -97,6 +101,11 @@ ed_2019_2021 <- read_csv("data/ed_data_csv.csv", skip = 2) |>
       TRUE ~ borough
     )
   )
+
+# Save cleaned data
+
+write.csv(ed_2019_2021, "data/ed_2019_2021.csv", row.names = FALSE)
+
 ```
 
 The pediatric admissions data was sourced from the [New York State Asthma Dashboard](https://apps.health.ny.gov/public/tabvis/PHIG_Public/asthma/), which compiles information from the Behavioral Risk Factor Surveillance System (BRFSS) and Statewide Planning and Research Cooperative System (SPARCS) databases. Separate datasets were obtained for the 2016-2018 and 2019-2021 time periods, each loaded from a CSV file while skipping the first two rows.
