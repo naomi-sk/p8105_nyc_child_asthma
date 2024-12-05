@@ -12,9 +12,9 @@
 <meta name="author" content="" />
 
 
-<title>Exploratory Data Analysis</title>
+<title>exploratory_data_analysis.knit</title>
 
-<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cerulean.min.css" rel="stylesheet" />
@@ -36,8 +36,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -366,17 +366,17 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Exploratory Data Analysis</h1>
-<h4 class="author"></h4>
 
 </div>
 
 
 <div id="exploratory-data-analysis" class="section level1">
 <h1>Exploratory Data Analysis</h1>
+<div id="ed-admissions-and-hospitalization" class="section level2">
+<h2>ED Admissions and Hospitalization</h2>
 </div>
-<div id="pm2.5" class="section level1">
-<h1>PM2.5</h1>
+<div id="pm2.5" class="section level2">
+<h2>PM2.5</h2>
 <p>Plot comparisons by year/borough.</p>
 <pre class="r"><code>library(tidyverse)
 library(rvest)</code></pre>
@@ -389,7 +389,7 @@ library(rvest)</code></pre>
 library(plotly)
 library(flexdashboard)
 library(sf)</code></pre>
-<pre><code>## Linking to GEOS 3.11.0, GDAL 3.5.3, PROJ 9.1.0; sf_use_s2() is TRUE</code></pre>
+<pre><code>## Linking to GEOS 3.12.2, GDAL 3.9.3, PROJ 9.4.1; sf_use_s2() is TRUE</code></pre>
 <pre class="r"><code>library(shiny)
 library(leaflet)
 library(scales)</code></pre>
@@ -504,7 +504,7 @@ years</p>
   ) </code></pre>
 <pre class="r"><code>uhf42_map &lt;- st_read(&quot;data/UHF_42_DOHMH_2009.shp&quot;) </code></pre>
 <pre><code>## Reading layer `UHF_42_DOHMH_2009&#39; from data source 
-##   `/Users/serenating/Data Science/p8105_nyc_child_asthma/data/UHF_42_DOHMH_2009.shp&#39; 
+##   `C:\Users\naomi\Desktop\Fall 2024\Data Science\p8105_nyc_child_asthma\data\UHF_42_DOHMH_2009.shp&#39; 
 ##   using driver `ESRI Shapefile&#39;
 ## Simple feature collection with 43 features and 6 fields
 ## Geometry type: MULTIPOLYGON
@@ -520,8 +520,8 @@ years</p>
   uhf42_map |&gt;
   left_join(tidy_uhf42_pm, by = &quot;UHFCODE&quot;) </code></pre>
 </div>
-<div id="greenspace" class="section level1">
-<h1>Greenspace</h1>
+<div id="greenspace" class="section level2">
+<h2>Greenspace</h2>
 <div id="borough-and-year-comparison" class="section level4">
 <h4>Borough and Year Comparison</h4>
 <p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
@@ -696,6 +696,10 @@ for both year group.</p>
 Flagship Park, Community Park, Nature Area, Parkway, Waterfront
 Facility, and Neighborhood Park. We also see that the top 3 greenspace
 types are different for each borough.</p>
+</div>
+</div>
+<div id="temperature" class="section level2">
+<h2>Temperature</h2>
 </div>
 </div>
 

@@ -1,5 +1,5 @@
 ---
-title: "Exploratory Data Analysis"
+title: ""
 author: ""
 date: ""
 output: 
@@ -10,17 +10,24 @@ output:
 ---
 
 ```{r, include=FALSE}
+
+# Load libraries
+
 library(tidyverse)
 library(patchwork)
 library(plotly)
+
 ```
 
 # Exploratory Data Analysis
 
-# PM2.5 
+## ED Admissions and Hospitalization
+
+## PM2.5 
 Plot comparisons by year/borough. 
 
 ```{r}
+
 library(tidyverse)
 library(rvest)
 library(readxl)
@@ -30,11 +37,14 @@ library(sf)
 library(shiny)
 library(leaflet)
 library(scales)
+
 ```
 
 ```{r}
+
 particulate_matter = 
   read_csv("data/Air_Quality_20231208.csv")
+
 ```
 
 ```{r}
@@ -152,7 +162,7 @@ map_uhf42 <-
 
 
 
-# Greenspace
+## Greenspace
 
 
 ```{r greenspace clean, include=FALSE}
@@ -267,6 +277,7 @@ type2B = type2A |>
 ```
 
 ```{r binded, include=FALSE}
+
 binded = bind_rows(type1B, type2B) |>
   group_by(typecategory, year_group) |>
   summarise(acres_total = sum(acres_sum, na.rm = TRUE))
@@ -274,6 +285,7 @@ binded = bind_rows(type1B, type2B) |>
 
 
 ```{r, echo=FALSE}
+
 binded |> 
    mutate(year_group = case_match(year_group,
       "year1" ~ "2016-2018",
@@ -288,7 +300,9 @@ binded |>
 In terms of total acres, flagship parks make up the largest proportion of NYC greenspace. This trend is similar for both year groups.
 
 ```{r, echo=FALSE}
+
 #increase in acres by type
+
 Total_acres_table_test = binded |>
   pivot_wider(names_from = year_group,
               values_from = acres_total) |>
@@ -299,6 +313,7 @@ table_type = Total_acres_table_test |>
   arrange(desc(diff))
 
 knitr::kable(table_type, col.names = c("Greenspace Type", "2016-2018", "2019-2021", "Difference"))
+
 ```
 
 7 of the 21 greenspace types had an increase in total acres between the two year groups. No change was seen in the remaining greenspace types. 
@@ -306,6 +321,7 @@ knitr::kable(table_type, col.names = c("Greenspace Type", "2016-2018", "2019-202
 **Top 3 Greenspace Types (Total Acres) Across Boroughs**
 
 ```{r, echo=FALSE, message = FALSE}
+
 perBor = bind_rows(type1B, type2B) |>
   group_by(typecategory, year_group, borough) |>
   summarise(acres_total = sum(acres_sum, na.rm = TRUE)) 
@@ -382,4 +398,8 @@ knitr::kable(top3_bor_gstype, col.names = c("Borough", "Highest", "Second Highes
 The total acres of each greenspace type for each borough is the same for both year group. 
 
 Top categories of greenspace types across the boroughs include Flagship Park, Community Park, Nature Area, Parkway, Waterfront Facility, and Neighborhood Park. We also see that the top 3 greenspace types are different for each borough.
+
+
+## Temperature
+
 
