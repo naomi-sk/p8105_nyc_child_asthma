@@ -1,5 +1,5 @@
 ---
-title: "Predictor-Outcome Associations"
+title: ""
 author: ""
 date: ""
 output: 
@@ -9,4 +9,69 @@ output:
     theme: cerulean
 ---
 
-# Title
+# Predictor-Outcome Associations
+
+## PM2.5  
+
+### ED Admissions
+
+* Odds Ratios for ED admissions, by time period
+
+```{r}
+
+
+```
+
+### ED Hospitalizations
+
+* Odds Ratios for ED hospitalizations, by time period
+
+```{r}
+
+
+
+```
+
+## Greenspace
+
+### ED Admissions
+
+* Odds Ratios for ED admissions, by time period
+
+```{r}
+
+
+
+```
+
+### ED Hospitalizations
+
+* Odds Ratios for ED hospitalizations, by time period
+
+```{r}
+
+
+
+```
+
+## Temperature
+
+### ED Admissions
+
+* Odds Ratios for ED admissions, by time period
+
+```{r}
+
+
+
+```
+
+### ED Hospitalizations
+
+* Odds Ratios for ED hospitalizations, by time period
+
+```{r}
+
+
+
+```

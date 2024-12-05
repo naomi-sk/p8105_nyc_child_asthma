@@ -64,6 +64,10 @@ ed_2016_2018 <- read_csv("data/ed_data_csv.csv", skip = 2) |>
     )
   )
 
+# Save cleaned data
+
+write.csv(ed_2016_2018, "data/ed_2016_2018.csv", row.names = FALSE)
+
 # Load and clean data for 2019-2021
 
 ed_2019_2021 <- read_csv("data/ed_data_csv.csv", skip = 2) |>
@@ -97,6 +101,11 @@ ed_2019_2021 <- read_csv("data/ed_data_csv.csv", skip = 2) |>
       TRUE ~ borough
     )
   )
+
+# Save cleaned data
+
+write.csv(ed_2019_2021, "data/ed_2019_2021.csv", row.names = FALSE)
+
 ```
 
 The pediatric admissions data was sourced from the [New York State Asthma Dashboard](https://apps.health.ny.gov/public/tabvis/PHIG_Public/asthma/), which compiles information from the Behavioral Risk Factor Surveillance System (BRFSS) and Statewide Planning and Research Cooperative System (SPARCS) databases. Separate datasets were obtained for the 2016-2018 and 2019-2021 time periods, each loaded from a CSV file while skipping the first two rows.
@@ -361,43 +370,49 @@ The temperature data was obtained by extracting daily information from the [Open
 
 ```{r}
 
-manhattan = read_csv("data/manhattan.csv",skip = 2) |>
+# Load raw temperature data for each borough
+
+manhattan = read_csv("data/manhattan.csv",skip = 3) |>
   mutate(Borough = "Manhattan") |> 
   janitor::clean_names()
 
-bronx = read_csv("data/bronx.csv",skip = 2) |>
+bronx = read_csv("data/bronx.csv",skip = 3) |>
   mutate(Borough = "Bronx") |> 
   janitor::clean_names()
 
-brooklyn = read_csv("data/brooklyn.csv",skip = 2) |>
+brooklyn = read_csv("data/brooklyn.csv",skip = 3) |>
   mutate(Borough = "Brooklyn") |> 
   janitor::clean_names()
 
-queens = read_csv("data/queens.csv",skip = 2) |>
+queens = read_csv("data/queens.csv",skip = 3) |>
   mutate(Borough = "Queens") |> 
   janitor::clean_names()
 
-staten_island = read_csv("data/staten_island.csv",skip = 2) |>
+staten_island = read_csv("data/staten_island.csv",skip = 3) |>
   mutate(Borough = "Staten Island") |> 
   janitor::clean_names()
+
 ```
 
 The data cleaning process involved several steps. First, a new `borough` variable was added to each borough-specific dataset, with the value set to the corresponding borough name. The `time` variable containing date information in the format "YYYY-MM-DD" was converted to an appropriate date format using the as.Date() function.
 
 Subsequently, borough-specific datasets were merged into a single `all_temp` dataframe ānd the `borough` variable was converted to a factor data type. A new `data_years` column was created, which grouped the data into two time periods: "2016-2018" and "2019-2021", based on the year of the date column.
 
-The `all_temp` dataframe was then grouped by `data_years` and `borough`, and the `avg_temperature` variable was calculated as the mean of the `temperature_2m_mean_c` values.
+The `all_temp` dataframe was then grouped by `data_years` and `borough`, and the `avg_temperature` variable was calculated as the mean of the `temperature_2m_mean` values.
 
 
 ```{r}
 
-all_temp = bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |> 
-  mutate(borough = as.factor(borough)) |>
-  mutate(date = as.Date(time, format = "%Y-%m-%d")) |> 
+# Combine borough temperature data into merged dataset
+
+all_temp <- bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |> 
+  mutate(borough = as.factor(borough)) |> 
+  mutate(date = as.Date(time, format = "%d/%m/%Y")) |>  # Corrected date format
   mutate(data_years = ifelse(year(date) %in% 2016:2018, "2016-2018", "2019-2021")) |> 
-  select(temperature_2m_max_c:data_years) |> 
-  group_by(data_years, borough) |>
-  summarise(avg_temperature = mean(temperature_2m_mean_c, na.rm = TRUE))
+  select(temperature_2m_max:data_years) |> 
+  group_by(data_years, borough) |> 
+  summarise(avg_temperature = mean(temperature_2m_mean, na.rm = TRUE))
+
 ```
 
 The final temperature dataset `all_temp` contains the following key variables:
@@ -434,16 +449,16 @@ full_data_ed = full_data |>
 full_data_hosp = full_data |> 
   filter(indicator == "hosp_rate")
 
-# Create a new dataset with additional derived variables
+# Create a new dataset with additional derived variables (borough_rates)
 
 full_data2 = full_data |> 
   group_by(indicator, borough, data_years) |> 
   mutate(borough_rate = mean(zip_code_rate, na.rm = TRUE)) |> 
   ungroup()
 
-# Save the full dataset to a CSV file
+# Save the full dataset to a CSV file (including borough_rates)
 
-write.csv(full_data, "data/NYC_total.csv", row.names = FALSE)
+write.csv(full_data2, "data/NYC_total.csv", row.names = FALSE)
 
 ```
 

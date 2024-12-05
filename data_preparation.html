@@ -416,6 +416,10 @@ ed_2016_2018 &lt;- read_csv(&quot;data/ed_data_csv.csv&quot;, skip = 2) |&gt;
     )
   )
 
+# Save cleaned data
+
+write.csv(ed_2016_2018, &quot;data/ed_2016_2018.csv&quot;, row.names = FALSE)
+
 # Load and clean data for 2019-2021
 
 ed_2019_2021 &lt;- read_csv(&quot;data/ed_data_csv.csv&quot;, skip = 2) |&gt;
@@ -448,7 +452,11 @@ ed_2019_2021 &lt;- read_csv(&quot;data/ed_data_csv.csv&quot;, skip = 2) |&gt;
       borough == &quot;Richmond&quot; ~ &quot;Staten Island&quot;,
       TRUE ~ borough
     )
-  )</code></pre>
+  )
+
+# Save cleaned data
+
+write.csv(ed_2019_2021, &quot;data/ed_2019_2021.csv&quot;, row.names = FALSE)</code></pre>
 <p>The pediatric admissions data was sourced from the <a
 href="https://apps.health.ny.gov/public/tabvis/PHIG_Public/asthma/">New
 York State Asthma Dashboard</a>, which compiles information from the
@@ -757,23 +765,25 @@ historical weather API</a> for the five boroughs of New York City:
 Manhattan, Bronx, Brooklyn, Queens, and Staten Island. Separate CSV
 files were loaded for each borough, with the file names corresponding to
 the borough names and the first two rows skipped during the import.</p>
-<pre class="r"><code>manhattan = read_csv(&quot;data/manhattan.csv&quot;,skip = 2) |&gt;
+<pre class="r"><code># Load raw temperature data for each borough
+
+manhattan = read_csv(&quot;data/manhattan.csv&quot;,skip = 3) |&gt;
   mutate(Borough = &quot;Manhattan&quot;) |&gt; 
   janitor::clean_names()
 
-bronx = read_csv(&quot;data/bronx.csv&quot;,skip = 2) |&gt;
+bronx = read_csv(&quot;data/bronx.csv&quot;,skip = 3) |&gt;
   mutate(Borough = &quot;Bronx&quot;) |&gt; 
   janitor::clean_names()
 
-brooklyn = read_csv(&quot;data/brooklyn.csv&quot;,skip = 2) |&gt;
+brooklyn = read_csv(&quot;data/brooklyn.csv&quot;,skip = 3) |&gt;
   mutate(Borough = &quot;Brooklyn&quot;) |&gt; 
   janitor::clean_names()
 
-queens = read_csv(&quot;data/queens.csv&quot;,skip = 2) |&gt;
+queens = read_csv(&quot;data/queens.csv&quot;,skip = 3) |&gt;
   mutate(Borough = &quot;Queens&quot;) |&gt; 
   janitor::clean_names()
 
-staten_island = read_csv(&quot;data/staten_island.csv&quot;,skip = 2) |&gt;
+staten_island = read_csv(&quot;data/staten_island.csv&quot;,skip = 3) |&gt;
   mutate(Borough = &quot;Staten Island&quot;) |&gt; 
   janitor::clean_names()</code></pre>
 <p>The data cleaning process involved several steps. First, a new
@@ -790,14 +800,16 @@ column was created, which grouped the data into two time periods:
 <p>The <code>all_temp</code> dataframe was then grouped by
 <code>data_years</code> and <code>borough</code>, and the
 <code>avg_temperature</code> variable was calculated as the mean of the
-<code>temperature_2m_mean_c</code> values.</p>
-<pre class="r"><code>all_temp = bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |&gt; 
-  mutate(borough = as.factor(borough)) |&gt;
-  mutate(date = as.Date(time, format = &quot;%Y-%m-%d&quot;)) |&gt; 
+<code>temperature_2m_mean</code> values.</p>
+<pre class="r"><code># Combine borough temperature data into merged dataset
+
+all_temp &lt;- bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |&gt; 
+  mutate(borough = as.factor(borough)) |&gt; 
+  mutate(date = as.Date(time, format = &quot;%d/%m/%Y&quot;)) |&gt;  # Corrected date format
   mutate(data_years = ifelse(year(date) %in% 2016:2018, &quot;2016-2018&quot;, &quot;2019-2021&quot;)) |&gt; 
-  select(temperature_2m_max_c:data_years) |&gt; 
-  group_by(data_years, borough) |&gt;
-  summarise(avg_temperature = mean(temperature_2m_mean_c, na.rm = TRUE))</code></pre>
+  select(temperature_2m_max:data_years) |&gt; 
+  group_by(data_years, borough) |&gt; 
+  summarise(avg_temperature = mean(temperature_2m_mean, na.rm = TRUE))</code></pre>
 <p>The final temperature dataset <code>all_temp</code> contains the
 following key variables:</p>
 <ul>
@@ -839,16 +851,16 @@ full_data_ed = full_data |&gt;
 full_data_hosp = full_data |&gt; 
   filter(indicator == &quot;hosp_rate&quot;)
 
-# Create a new dataset with additional derived variables
+# Create a new dataset with additional derived variables (borough_rates)
 
 full_data2 = full_data |&gt; 
   group_by(indicator, borough, data_years) |&gt; 
   mutate(borough_rate = mean(zip_code_rate, na.rm = TRUE)) |&gt; 
   ungroup()
 
-# Save the full dataset to a CSV file
+# Save the full dataset to a CSV file (including borough_rates)
 
-write.csv(full_data, &quot;data/NYC_total.csv&quot;, row.names = FALSE)</code></pre>
+write.csv(full_data2, &quot;data/NYC_total.csv&quot;, row.names = FALSE)</code></pre>
 <p>The data merging process involved combining multiple datasets to
 create a comprehensive dataset for analyzing pediatric asthma health
 outcomes and environmental factors across New York City. The process

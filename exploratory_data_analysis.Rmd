@@ -1,5 +1,5 @@
 ---
-title: "Exploratory Data Analysis"
+title: ""
 author: ""
 date: ""
 output: 
@@ -7,20 +7,21 @@ output:
     toc: true
     toc_float: true
     theme: cerulean
+    code_folding: hide
 ---
 
 ```{r, include=FALSE}
-library(tidyverse)
-library(patchwork)
-library(plotly)
-```
 
-# Exploratory Data Analysis
+# Set global knit options
 
-# PM2.5 
-Plot comparisons by year/borough. 
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  echo = TRUE 
+)
 
-```{r}
+# Load libraries
+
 library(tidyverse)
 library(rvest)
 library(readxl)
@@ -30,14 +31,207 @@ library(sf)
 library(shiny)
 library(leaflet)
 library(scales)
+library(patchwork)
+library(ggplot2)
+
 ```
+
+# Exploratory Data Analysis
+
+## Comparison of ED Admissions and Hospitalizations between 2016-2018 and 2019-2021
+
+```{r}
+
+# Load ED data for 2016-2018
+
+ed_2016_2018 = 
+  read_csv("data/ed_2016_2018.csv")
+
+# Load ED data for 2019-2021
+
+ed_2019_2021 = 
+  read_csv("data/ed_2019_2021.csv")
+
+# Load NYC zipcode shapefile
+
+nyc_zip_sf <- st_read("shapefiles/geo_export_8df5c38c-c74c-4840-9d00-da16c0201e07.shp", quiet = TRUE)
+
+# Combine datasets
+
+all_data <- bind_rows(
+  ed_2016_2018 %>% mutate(period = "2016-2018"),
+  ed_2019_2021 %>% mutate(period = "2019-2021")
+)
+
+# Create borough averages for both indicators
+
+borough_data <- all_data %>%
+  group_by(borough, period, indicator) %>%
+  summarize(avg_rate = mean(zip_code_rate, na.rm = TRUE))
+
+# Create the map_data
+
+borough_data <- borough_data %>%
+  rename(boro_name = borough)
+
+map_data <- nyc_zip_sf %>%
+  left_join(borough_data, by = "boro_name")
+
+```
+
+### ED Admissions
+
+
+```{r}
+
+# Create simple borough-level summaries
+
+borough_summary <- all_data %>%
+  group_by(borough, period, indicator) %>%
+  summarize(
+    avg_rate = round(mean(zip_code_rate, na.rm = TRUE), 1),
+    .groups = "drop"  # This explicitly drops the grouping
+  )
+
+# Create separate tables for ED visits and hospitalizations
+
+ed_summary <- borough_summary %>%
+  filter(indicator == "ed_visits_rate") %>%
+  pivot_wider(
+    names_from = period,
+    values_from = avg_rate
+  ) %>%
+  mutate(
+    percent_change = round(((`2019-2021` - `2016-2018`) / `2016-2018` * 100), 1)
+  ) %>%
+  arrange(desc(`2016-2018`))
+
+hosp_summary <- borough_summary %>%
+  filter(indicator == "hosp_rate") %>%
+  pivot_wider(
+    names_from = period,
+    values_from = avg_rate
+  ) %>%
+  mutate(
+    percent_change = round(((`2019-2021` - `2016-2018`) / `2016-2018` * 100), 1)
+  ) %>%
+  arrange(desc(`2016-2018`))
+
+# Print ED Visits Summary
+
+cat("\nAsthma ED Visit Rates by Borough\n(per 10,000 children aged 0-17)\n")
+ed_summary %>%
+  select(-indicator) %>%
+  knitr::kable(
+    col.names = c("Borough", "2016-2018", "2019-2021", "% Change")
+  )
+
+
+```
+
+For ED Admissions:
+
+* The Bronx had notably higher rates than other boroughs in both periods (347.7 and 180.7 per 10,000 children)
+* All boroughs saw substantial decreases between 2016-2018 and 2019-2021 (ranging from about 43-48%)
+* Even after decreases, the Bronx's 2019-2021 rate (180.7) remained higher than any other borough's 2016-2018 rates
+
+```{r}
+
+# Create ED Visits Map 
+
+ed_plot <- ggplot() +
+  geom_sf(data = filter(map_data, indicator == "ed_visits_rate"), 
+          aes(fill = avg_rate)) +
+  facet_wrap(~period) +
+  scale_fill_viridis_c(
+    name = "Borough Average of\nED Visit Rates\nper 10,000 Children\nAged 0-17 Years", 
+    option = "plasma"
+  ) +
+  theme_minimal() +
+  labs(title = "Asthma ED Visit Rates by NYC Borough",
+       subtitle = "Children aged 0-17 years") +
+  theme(
+    plot.title = element_text(size = 12),
+    legend.position = "right",
+    legend.key.height = unit(2, "cm")
+  )
+
+# Display plot
+
+ed_plot
+
+```
+
+Looking at the ED visit rates map across the two time periods (2016-2018 and 2019-2021), we can observe several key patterns:
+
+* There appears to be a general decrease in ED visit rates from 2016-2018 to 2019-2021 across most NYC boroughs, as indicated by the darker purple colors in the later period.
+* The Bronx (the northernmost borough) shows notably higher ED visit rates than other boroughs in both time periods, with rates exceeding 300 per 10,000 children aged 0-17 years in 2016-2018.
+* Manhattan and Brooklyn by comparison appear to have moderate rates, while Staten Island (the southernmost borough) consistently shows lower ED visit rates in both periods.
+
+The most striking change between the two periods is the apparent reduction in ED visits during 2019-2021, which could potentially be related to the COVID-19 pandemic's impact on healthcare utilization patterns.
+
+### ED Hospitalizations
+
+
+```{r}
+
+# Print Hospitalization Summary
+
+cat("\nAsthma Hospitalization Rates by Borough\n(per 10,000 children aged 0-17)\n")
+hosp_summary %>%
+  select(-indicator) %>%
+  knitr::kable(
+    col.names = c("Borough", "2016-2018", "2019-2021", "% Change")
+  )
+
+```
+
+For ED hospitalizations, compared to ED Admissions rates:
+
+* Similar pattern with the Bronx having the highest rates (58.5 and 36.8 per 10,000 children)
+* All boroughs showed considerable decreases between 2016-2018 and 2019-2021 (ranging from about 32-40%)
+* Queens and Staten Island had the lowest hospitalization rates in both periods
+
+```{r}
+
+# Create Hospitalizations Map 
+
+hosp_plot <- ggplot() +
+  geom_sf(data = filter(map_data, indicator == "hosp_rate"), 
+          aes(fill = avg_rate)) +
+  facet_wrap(~period) +
+  scale_fill_viridis_c(
+    name = "Borough Average of\nHospitalization Rates\nper 10,000 Children\nAged 0-17 Years", 
+    option = "plasma"
+  ) +
+  theme_minimal() +
+  labs(title = "Asthma Hospitalization Rates by NYC Borough",
+       subtitle = "Children aged 0-17 years") +
+  theme(plot.title = element_text(size = 12))
+
+# Display plot
+
+hosp_plot
+
+```
+
+Considering hospitalization rates across the two time periods (2016-2018 and 2019-2021), there are notable patterns:
+
+* Similar to ED visits, there appears to be a general decrease in hospitalization rates from 2016-2018 to 2019-2021 across NYC boroughs, as shown by the darker purple colors in the later period.
+* The Bronx again shows notably higher hospitalization rates compared to other boroughs in both periods, reaching over 50 per 10,000 children aged 0-17 years in 2016-2018.
+* Geographic disparities persist in both periods, with Staten Island consistently showing lower hospitalization rates.
+* When compared to the ED visit rates, the hospitalization rates are notably lower (scale of 0-50 versus 0-300), suggesting that while many children visit the ED for asthma, a smaller proportion require hospitalization.
+
+Overall, the consistent geographic disparities in ED visits and hospitalizations, particularly the higher rates in the Bronx, confirm the unequal distribution of child asthma burden across New York City. This suggests underlying socioeconomic and/or environmental factors affecting childhood asthma rates across different parts of the city.
+
+## PM2.5 
+
+Plot comparisons by year/borough. 
 
 ```{r}
 particulate_matter = 
   read_csv("data/Air_Quality_20231208.csv")
-```
 
-```{r}
 tidy_analysis_pm = 
   particulate_matter |>
   janitor::clean_names() |>
@@ -68,6 +262,7 @@ tidy_analysis_pm =
     values_from = average_pm2.5,
     names_prefix = "avg_pm2.5_"
   )
+
 ```
 
 ```{r}
@@ -134,7 +329,7 @@ tidy_uhf42_pm =
 ```
 
 ```{r}
-uhf42_map <- st_read("data/UHF_42_DOHMH_2009.shp") 
+uhf42_map <- st_read("data/UHF_42_DOHMH_2009.shp", quiet = TRUE) 
 
 tidy_uhf42_pm <- 
   tidy_uhf42_pm |>
@@ -152,7 +347,7 @@ map_uhf42 <-
 
 
 
-# Greenspace
+## Greenspace
 
 
 ```{r greenspace clean, include=FALSE}
@@ -267,6 +462,7 @@ type2B = type2A |>
 ```
 
 ```{r binded, include=FALSE}
+
 binded = bind_rows(type1B, type2B) |>
   group_by(typecategory, year_group) |>
   summarise(acres_total = sum(acres_sum, na.rm = TRUE))
@@ -274,6 +470,7 @@ binded = bind_rows(type1B, type2B) |>
 
 
 ```{r, echo=FALSE}
+
 binded |> 
    mutate(year_group = case_match(year_group,
       "year1" ~ "2016-2018",
@@ -288,7 +485,9 @@ binded |>
 In terms of total acres, flagship parks make up the largest proportion of NYC greenspace. This trend is similar for both year groups.
 
 ```{r, echo=FALSE}
+
 #increase in acres by type
+
 Total_acres_table_test = binded |>
   pivot_wider(names_from = year_group,
               values_from = acres_total) |>
@@ -299,6 +498,7 @@ table_type = Total_acres_table_test |>
   arrange(desc(diff))
 
 knitr::kable(table_type, col.names = c("Greenspace Type", "2016-2018", "2019-2021", "Difference"))
+
 ```
 
 7 of the 21 greenspace types had an increase in total acres between the two year groups. No change was seen in the remaining greenspace types. 
@@ -306,6 +506,7 @@ knitr::kable(table_type, col.names = c("Greenspace Type", "2016-2018", "2019-202
 **Top 3 Greenspace Types (Total Acres) Across Boroughs**
 
 ```{r, echo=FALSE, message = FALSE}
+
 perBor = bind_rows(type1B, type2B) |>
   group_by(typecategory, year_group, borough) |>
   summarise(acres_total = sum(acres_sum, na.rm = TRUE)) 
@@ -382,4 +583,8 @@ knitr::kable(top3_bor_gstype, col.names = c("Borough", "Highest", "Second Highes
 The total acres of each greenspace type for each borough is the same for both year group. 
 
 Top categories of greenspace types across the boroughs include Flagship Park, Community Park, Nature Area, Parkway, Waterfront Facility, and Neighborhood Park. We also see that the top 3 greenspace types are different for each borough.
+
+
+## Temperature
+
 

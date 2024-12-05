@@ -9,4 +9,10 @@ output:
     theme: cerulean
 ---
 
-# Linear Model Effects Model
+# General Linear Model
+
+```{r}
+
+
+
+```
