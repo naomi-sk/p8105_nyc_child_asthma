@@ -1,10 +1,8 @@
 name: "Child Asthma in NYC"
 output_dir: "."
 navbar:
-  title: "Navigation"
+  title: "Home"
   right:
-    - text: "Home"
-      href: index.html
     - text: "Data Preparation"
       href: data_preparation.html
     - text: "Analyses"

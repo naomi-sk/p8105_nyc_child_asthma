@@ -1,14 +1,49 @@
 ---
-title: "Home"
+title: ""
 author: ""
 date: ""
 output: 
   html_document:
-    toc: true
+    toc: false
     toc_float: true
     theme: cerulean
 ---
 
-# Title
+<style>
+h1 {
+  text-align: center;
+}
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
 
-Screencast placeholder.
+</style>
+
+# Mapping New York City's Environmental Impact on Pediatric Asthma
+
+![](images/child_asthma_image.png){width=80% fig.align='center'}
+
+
+Our project seeks to analyze how environmental factors shape children's respiratory health in New York City during a time of increasing climate change. As urban environments face rising temperatures, changing air quality patterns, and pressures on existing greenspace, understanding these environmental impacts on pediatric asthma is critical to addressing the burden of asthma in New York City, particularly in communities facing health inequities. 
+
+Using mixed-effects modeling and other statistical methods, we analyze data across two time periods (2016-2018 and 2019-2021) to investigate the relationships between emergency department visits, air quality (PM2.5), temperature patterns, and greenspace distribution, examining how these climate-sensitive factors affect children's health outcomes across different areas of New York City.
+
+
+
+
+
+## Main Research Questions:
+
+* What is the relationship between environmental factors (PM2.5, temperature, greenspace) and pediatric asthma ED rates?
+* Which environmental factors show the strongest associations with pediatric asthma rates?
+* How do these environmental health burdens differ across different areas of New York City?
+
+We believe that understanding these relationships is crucial for informing equitable, climate-resilient urban planning policies and public health initiatives aimed at protecting and improving children's health in New York City, especially in communities most vulnerable to environmental stressors.
+
+
+
+## Screencast
+
+[placeholder]
