@@ -2,6 +2,7 @@ name: "Child Asthma in NYC"
 output_dir: "."
 navbar:
   title: "Home"
+  href: index.html
   right:
     - text: "Data Preparation"
       href: data_preparation.html
