@@ -449,16 +449,16 @@ full_data_ed = full_data |>
 full_data_hosp = full_data |> 
   filter(indicator == "hosp_rate")
 
-# Create a new dataset with additional derived variables
+# Create a new dataset with additional derived variables (borough_rates)
 
 full_data2 = full_data |> 
   group_by(indicator, borough, data_years) |> 
   mutate(borough_rate = mean(zip_code_rate, na.rm = TRUE)) |> 
   ungroup()
 
-# Save the full dataset to a CSV file
+# Save the full dataset to a CSV file (including borough_rates)
 
-write.csv(full_data, "data/NYC_total.csv", row.names = FALSE)
+write.csv(full_data2, "data/NYC_total.csv", row.names = FALSE)
 
 ```
 

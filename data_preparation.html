@@ -851,16 +851,16 @@ full_data_ed = full_data |&gt;
 full_data_hosp = full_data |&gt; 
   filter(indicator == &quot;hosp_rate&quot;)
 
-# Create a new dataset with additional derived variables
+# Create a new dataset with additional derived variables (borough_rates)
 
 full_data2 = full_data |&gt; 
   group_by(indicator, borough, data_years) |&gt; 
   mutate(borough_rate = mean(zip_code_rate, na.rm = TRUE)) |&gt; 
   ungroup()
 
-# Save the full dataset to a CSV file
+# Save the full dataset to a CSV file (including borough_rates)
 
-write.csv(full_data, &quot;data/NYC_total.csv&quot;, row.names = FALSE)</code></pre>
+write.csv(full_data2, &quot;data/NYC_total.csv&quot;, row.names = FALSE)</code></pre>
 <p>The data merging process involved combining multiple datasets to
 create a comprehensive dataset for analyzing pediatric asthma health
 outcomes and environmental factors across New York City. The process
