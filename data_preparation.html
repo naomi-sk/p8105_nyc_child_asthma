@@ -377,6 +377,178 @@ div.tocify {
 
 <div id="data-preparation" class="section level1">
 <h1>Data Preparation</h1>
+<div id="pm2.5-data" class="section level2">
+<h2>PM2.5 data</h2>
+<pre class="r"><code>library(tidyverse)
+library(rvest)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;rvest&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:readr&#39;:
+## 
+##     guess_encoding</code></pre>
+<pre class="r"><code>library(readxl)
+library(plotly)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;plotly&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:ggplot2&#39;:
+## 
+##     last_plot</code></pre>
+<pre><code>## The following object is masked from &#39;package:stats&#39;:
+## 
+##     filter</code></pre>
+<pre><code>## The following object is masked from &#39;package:graphics&#39;:
+## 
+##     layout</code></pre>
+<p>Import and clean PM2.5 data from website: <a
+href="https://www.kaggle.com/datasets/sahityasetu/new-york-city-air-quality?resource=download"
+class="uri">https://www.kaggle.com/datasets/sahityasetu/new-york-city-air-quality?resource=download</a>.</p>
+<pre class="r"><code>particulate_matter = 
+  read_csv(&quot;data/Air_Quality_20231208.csv&quot;)</code></pre>
+<pre><code>## Rows: 16218 Columns: 12
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## chr (7): Name, Measure, Measure Info, Geo Type Name, Geo Place Name, Time Pe...
+## dbl (4): Unique ID, Indicator ID, Geo Join ID, Data Value
+## lgl (1): Message
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<p>The raw data has 16218 rows and 12 columns.</p>
+<p>The columns are Unique ID, Indicator ID, Name, Measure, Measure Info,
+Geo Type Name, Geo Join ID, Geo Place Name, Time Period, Start_Date,
+Data Value, and Message.</p>
+<p>Unique ID: A unique identifier assigned to each row in the
+dataset.</p>
+<p>Indicator ID: A code assigned to each indicator or measure of air
+quality being tracked.</p>
+<p>Name: The name or label given to the indicator or measure being
+tracked.</p>
+<p>Measure: The unit of measurement used to quantify the air quality
+indicator, such as parts per billion (ppb) for ozone or sulfur
+dioxide.</p>
+<p>Measure Info: Additional information about the measurement or
+calculation of the air quality indicator, if applicable.</p>
+<p>Geo Type Name: The type of geographic area being tracked, such as
+community districts (CDs) or boroughs.</p>
+<p>Geo Join ID: A unique identifier assigned to each geographic area
+being tracked.</p>
+<p>Geo Place Name: The name of the specific geographic area being
+tracked, such as Coney Island or the Bronx.</p>
+<p>Time Period: The time period during which the air quality measurement
+was taken, such as a specific season or winter of a particular year.</p>
+<p>Start_Date: The date on which the air quality measurement period
+began.</p>
+<p>Data Value: The value of the air quality indicator for the specific
+geographic area and time period being tracked.</p>
+<p>Message: Additional information or notes about the air quality
+measurement or data value, if applicable.</p>
+<p>As it stands, these data are not “tidy”: Unique ID should be a
+character, as should Indicator ID and Geo Join ID.</p>
+<p>We are interested in PM2.5 so we can filter name to “Fine particles
+(PM 2.5)”. I should note there is name option “Asthma emergency
+department visits due to PM2.5”, “Respiratory hospitalizations due to
+PM2.5 (age 20+)”, “Cardiovascular hospitalizations due to PM2.5 (age
+40+)”, “Deaths due to PM2.5”, “Respiratory hospitalizations due to PM2.5
+(age 20+)”, corresponding to annual rates(18+, 30+, etc.) that could be
+interesting to look at in secondary analyses.</p>
+<p>Further filter to years of interest, we will be looking to compare
+2016-2018 to 2019-2021.</p>
+<p>We will make two datasets, one for analysis in which we will filter
+by borough and create a new column that has the average PM2.5 across
+2016-2018 and 2019-2021.</p>
+<pre class="r"><code>tidy_analysis_pm = 
+  particulate_matter |&gt;
+  janitor::clean_names() |&gt;
+    mutate(
+    unique_id = as.character(unique_id),
+    indicator_id = as.character(indicator_id),
+    geo_join_id = as.character(geo_join_id)) |&gt;
+  filter(name == &quot;Fine particles (PM 2.5)&quot;) |&gt;
+  filter(time_period %in% c(&quot;Annual Average 2016&quot;, &quot;Annual Average 2017&quot;,
+                            &quot;Annual Average 2018&quot;, &quot;Annual Average 2019&quot;,
+                            &quot;Annual Average 2020&quot;, &quot;Annual Average 2021&quot;)) |&gt;
+  filter(geo_type_name == &quot;Borough&quot;) |&gt;
+  select(-unique_id, -indicator_id, -start_date) |&gt;
+    rename(borough = geo_place_name) |&gt;
+  mutate(
+    period = case_when(
+      time_period %in% c(&quot;Annual Average 2016&quot;, &quot;Annual Average 2017&quot;, &quot;Annual Average 2018&quot;) ~ &quot;2016-2018&quot;,
+      time_period %in% c(&quot;Annual Average 2019&quot;, &quot;Annual Average 2020&quot;, &quot;Annual Average 2021&quot;) ~ &quot;2019-2021&quot;
+    )
+  ) |&gt;
+  group_by(borough, period) |&gt;
+  summarize(
+    average_pm2.5 = mean(data_value, na.rm = TRUE),
+    .groups = &quot;drop&quot;
+  ) |&gt;
+  pivot_wider(
+    names_from = period,
+    values_from = average_pm2.5,
+    names_prefix = &quot;avg_pm2.5_&quot;
+  )</code></pre>
+<p>Cleaned analysis PM2.5 dataset has 5 rows and 3 columns.</p>
+<p>I made a new dataset that is by borough and individual years to be
+used in the visualization step.</p>
+<p>I will also make a visualization that describes Asthma emergency
+department visits due to PM2.5 for Estimated annual rate (under age 18)
+for UHF42 neighborhoods across all boroughs.</p>
+<pre class="r"><code>tidy_pm_asthmahospitalizations = 
+  particulate_matter |&gt;
+  janitor::clean_names() |&gt;
+    mutate(
+    unique_id = as.character(unique_id),
+    indicator_id = as.character(indicator_id),
+    geo_join_id = as.character(geo_join_id)) |&gt;
+  filter(name == &quot;Asthma emergency department visits due to PM2.5&quot;) |&gt;
+  filter(geo_type_name == &quot;UHF42&quot;) |&gt;
+  filter(time_period %in% c(&quot;2012-2014&quot;,&quot;2015-2017&quot;)) |&gt;
+    rename(pm2.5_mcgm3 = data_value) |&gt;
+  select(name, measure, geo_type_name, geo_join_id, geo_place_name, time_period, pm2.5_mcgm3)
+
+tidy_pm_asthmahospitalizations</code></pre>
+<pre><code>## # A tibble: 168 × 7
+##    name             measure geo_type_name geo_join_id geo_place_name time_period
+##    &lt;chr&gt;            &lt;chr&gt;   &lt;chr&gt;         &lt;chr&gt;       &lt;chr&gt;          &lt;chr&gt;      
+##  1 Asthma emergenc… Estima… UHF42         201         Greenpoint     2012-2014  
+##  2 Asthma emergenc… Estima… UHF42         201         Greenpoint     2015-2017  
+##  3 Asthma emergenc… Estima… UHF42         101         Kingsbridge -… 2012-2014  
+##  4 Asthma emergenc… Estima… UHF42         301         Washington He… 2012-2014  
+##  5 Asthma emergenc… Estima… UHF42         501         Port Richmond  2012-2014  
+##  6 Asthma emergenc… Estima… UHF42         501         Port Richmond  2015-2017  
+##  7 Asthma emergenc… Estima… UHF42         203         Bedford Stuyv… 2015-2017  
+##  8 Asthma emergenc… Estima… UHF42         105         Crotona -Trem… 2015-2017  
+##  9 Asthma emergenc… Estima… UHF42         206         Borough Park   2015-2017  
+## 10 Asthma emergenc… Estima… UHF42         107         Hunts Point -… 2015-2017  
+## # ℹ 158 more rows
+## # ℹ 1 more variable: pm2.5_mcgm3 &lt;dbl&gt;</code></pre>
+<pre class="r"><code>tidy_visualization_pm = 
+  particulate_matter |&gt;
+  janitor::clean_names() |&gt;
+    mutate(
+    unique_id = as.character(unique_id),
+    indicator_id = as.character(indicator_id),
+    geo_join_id = as.character(geo_join_id)) |&gt;
+  filter(name == &quot;Fine particles (PM 2.5)&quot;) |&gt;
+  filter(time_period %in% c(&quot;Annual Average 2016&quot;, &quot;Annual Average 2017&quot;,
+                            &quot;Annual Average 2018&quot;, &quot;Annual Average 2019&quot;,
+                            &quot;Annual Average 2020&quot;, &quot;Annual Average 2021&quot;)) |&gt;
+  filter(geo_type_name == &quot;CD&quot;) |&gt;
+    rename(pm2.5_mcgm3 = data_value) </code></pre>
+<pre class="r"><code>geography = 
+  read_excel(&quot;data/geoid_borough_name_nyc.xlsx&quot;) |&gt;
+  rename(geo_join_id = ID) |&gt;
+  mutate(geo_join_id = 
+           as.character(geo_join_id))</code></pre>
+<pre class="r"><code>pm_for_vis = 
+    left_join(tidy_visualization_pm, geography, by = c(&quot;geo_join_id&quot;)) |&gt;
+    rename(neighborhood = Name) |&gt;
+    rename(borough = Borough) |&gt;
+   select(name, neighborhood, borough, time_period, pm2.5_mcgm3)</code></pre>
+<p>Cleaned visualization PM2.5 dataset has 354 rows and 5 columns.</p>
+<p>This merged on the geo_join_id column for each community district. I
+renamed some variables for clarity and selected the variables of
+interest for visualization.</p>
+</div>
 <div id="greenspace-data" class="section level2">
 <h2>Greenspace data</h2>
 <p>For more information on the dataset and its data dictionary, click <a
