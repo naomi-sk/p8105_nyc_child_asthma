@@ -424,6 +424,20 @@ The final temperature dataset `all_temp` contains the following key variables:
 * `data_years`: The time period the data belongs to ("2016-2018" or "2019-2021")
 * `avg_temperature`: The average temperature in degrees Celsius for each borough and time period
 
+## Heat Vulnerability Index
+
+```{r}
+
+hvi_df = read_csv("data/Heat_Vulnerability_Index_Rankings_20241205 (1).csv") |> 
+  janitor::clean_names() |> 
+  mutate(zip_code = as.double(zip_code_tabulation_area_zcta_2020),
+         hvi = as.factor(heat_vulnerability_index_hvi)) |> 
+  select(zip_code, hvi)
+
+
+```
+
+
 # Data Merging
 
 ```{r}
@@ -434,6 +448,7 @@ full_data = bind_rows(ed_2016_2018, ed_2019_2021) |>
   left_join(all_temp, by = c("data_years","borough"), relationship = "many-to-many") |> 
   left_join(tidy_analysis_pm_long, by = c("data_years", "borough"), relationship = "many-to-many") |> 
   left_join(total_acres, by = c("data_years","borough"), relationship = "many-to-many") |> 
+  left_join(hvi_df, by = "zip_code", relationship = "many-to-many") |> # new line to add HVI
   mutate(data_years = as.factor(data_years),
          borough = as.factor(borough),
          zip_code = as.factor(zip_code),

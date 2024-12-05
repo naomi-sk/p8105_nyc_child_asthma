@@ -827,6 +827,14 @@ Date object)</li>
 Celsius for each borough and time period</li>
 </ul>
 </div>
+<div id="heat-vulnerability-index" class="section level2">
+<h2>Heat Vulnerability Index</h2>
+<pre class="r"><code>hvi_df = read_csv(&quot;data/Heat_Vulnerability_Index_Rankings_20241205 (1).csv&quot;) |&gt; 
+  janitor::clean_names() |&gt; 
+  mutate(zip_code = as.double(zip_code_tabulation_area_zcta_2020),
+         hvi = as.factor(heat_vulnerability_index_hvi)) |&gt; 
+  select(zip_code, hvi)</code></pre>
+</div>
 </div>
 <div id="data-merging" class="section level1">
 <h1>Data Merging</h1>
@@ -836,6 +844,7 @@ full_data = bind_rows(ed_2016_2018, ed_2019_2021) |&gt;
   left_join(all_temp, by = c(&quot;data_years&quot;,&quot;borough&quot;), relationship = &quot;many-to-many&quot;) |&gt; 
   left_join(tidy_analysis_pm_long, by = c(&quot;data_years&quot;, &quot;borough&quot;), relationship = &quot;many-to-many&quot;) |&gt; 
   left_join(total_acres, by = c(&quot;data_years&quot;,&quot;borough&quot;), relationship = &quot;many-to-many&quot;) |&gt; 
+  left_join(hvi_df, by = &quot;zip_code&quot;, relationship = &quot;many-to-many&quot;) |&gt; # new line to add HVI
   mutate(data_years = as.factor(data_years),
          borough = as.factor(borough),
          zip_code = as.factor(zip_code),
