@@ -34,6 +34,7 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
@@ -222,6 +223,9 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
 
 
@@ -364,6 +368,14 @@ div.tocify {
 
 <div id="header">
 
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
 
 
 
@@ -372,48 +384,139 @@ div.tocify {
 
 <div id="exploratory-data-analysis" class="section level1">
 <h1>Exploratory Data Analysis</h1>
-<div id="ed-admissions-and-hospitalization" class="section level2">
-<h2>ED Admissions and Hospitalization</h2>
+<div
+id="comparison-of-ed-admissions-and-hospitalizations-between-2016-2018-and-2019-2021"
+class="section level2">
+<h2>Comparison of ED Admissions and Hospitalizations between 2016-2018
+and 2019-2021</h2>
 <pre class="r"><code># Load ED data for 2016-2018
 
 ed_2016_2018 = 
-  read_csv(&quot;data/ed_2016_2018.csv&quot;)</code></pre>
-<pre><code>## Rows: 354 Columns: 5
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (3): data_years, borough, indicator
-## dbl (2): zip_code, zip_code_rate
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code># Load ED data for 2019-2021
+  read_csv(&quot;data/ed_2016_2018.csv&quot;)
+
+# Load ED data for 2019-2021
 
 ed_2019_2021 = 
-  read_csv(&quot;data/ed_2019_2021.csv&quot;)</code></pre>
-<pre><code>## Rows: 354 Columns: 5
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (3): data_years, borough, indicator
-## dbl (2): zip_code, zip_code_rate
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+  read_csv(&quot;data/ed_2019_2021.csv&quot;)
+
+# Load NYC zipcode shapefile
+
+nyc_zip_sf &lt;- st_read(&quot;shapefiles/geo_export_8df5c38c-c74c-4840-9d00-da16c0201e07.shp&quot;, quiet = TRUE)
+
+# Combine datasets
+
+all_data &lt;- bind_rows(
+  ed_2016_2018 %&gt;% mutate(period = &quot;2016-2018&quot;),
+  ed_2019_2021 %&gt;% mutate(period = &quot;2019-2021&quot;)
+)
+
+# Create borough averages for both indicators
+
+borough_data &lt;- all_data %&gt;%
+  group_by(borough, period, indicator) %&gt;%
+  summarize(avg_rate = mean(zip_code_rate, na.rm = TRUE))
+
+# Create the map_data
+
+borough_data &lt;- borough_data %&gt;%
+  rename(boro_name = borough)
+
+map_data &lt;- nyc_zip_sf %&gt;%
+  left_join(borough_data, by = &quot;boro_name&quot;)</code></pre>
+<div id="ed-admissions" class="section level3">
+<h3>ED Admissions</h3>
+<pre class="r"><code># Create ED Visits Map 
+
+ed_plot &lt;- ggplot() +
+  geom_sf(data = filter(map_data, indicator == &quot;ed_visits_rate&quot;), 
+          aes(fill = avg_rate)) +
+  facet_wrap(~period) +
+  scale_fill_viridis_c(
+    name = &quot;Borough Average of\nED Visit Rates\nper 10,000 Children\nAged 0-17 Years&quot;, 
+    option = &quot;plasma&quot;
+  ) +
+  theme_minimal() +
+  labs(title = &quot;Asthma ED Visit Rates by NYC Borough&quot;,
+       subtitle = &quot;Children aged 0-17 years&quot;) +
+  theme(
+    plot.title = element_text(size = 12),
+    legend.position = &quot;right&quot;,
+    legend.key.height = unit(2, &quot;cm&quot;)
+  )
+
+# Display plot
+
+ed_plot</code></pre>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>Looking at the ED visit rates map across the two time periods
+(2016-2018 and 2019-2021), we can observe several key patterns:</p>
+<ul>
+<li>There appears to be a general decrease in ED visit rates from
+2016-2018 to 2019-2021 across most NYC boroughs, as indicated by the
+darker purple colors in the later period.</li>
+<li>The Bronx (the northernmost borough) shows notably higher ED visit
+rates than other boroughs in both time periods, with rates exceeding 300
+per 10,000 children aged 0-17 years in 2016-2018.</li>
+<li>Manhattan and Brooklyn by comparison appear to have moderate rates,
+while Staten Island (the southernmost borough) consistently shows lower
+ED visit rates in both periods.</li>
+</ul>
+<p>The most striking change between the two periods is the apparent
+reduction in ED visits during 2019-2021, which could potentially be
+related to the COVID-19 pandemic’s impact on healthcare utilization
+patterns.</p>
+</div>
+<div id="ed-hospitalizations" class="section level3">
+<h3>ED Hospitalizations</h3>
+<pre class="r"><code># Create Hospitalizations Map 
+
+hosp_plot &lt;- ggplot() +
+  geom_sf(data = filter(map_data, indicator == &quot;hosp_rate&quot;), 
+          aes(fill = avg_rate)) +
+  facet_wrap(~period) +
+  scale_fill_viridis_c(
+    name = &quot;Borough Average of\nHospitalization Rates\nper 10,000 Children\nAged 0-17 Years&quot;, 
+    option = &quot;plasma&quot;
+  ) +
+  theme_minimal() +
+  labs(title = &quot;Asthma Hospitalization Rates by NYC Borough&quot;,
+       subtitle = &quot;Children aged 0-17 years&quot;) +
+  theme(plot.title = element_text(size = 12))
+
+# Display plot
+
+hosp_plot</code></pre>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Considering hospitalization rates across the two time periods
+(2016-2018 and 2019-2021), there are notable patterns:</p>
+<ul>
+<li>Similar to ED visits, there appears to be a general decrease in
+hospitalization rates from 2016-2018 to 2019-2021 across NYC boroughs,
+as shown by the darker purple colors in the later period.</li>
+<li>The Bronx again shows notably higher hospitalization rates compared
+to other boroughs in both periods, reaching over 50 per 10,000 children
+aged 0-17 years in 2016-2018.</li>
+<li>Geographic disparities persist in both periods, with Staten Island
+consistently showing lower hospitalization rates.</li>
+<li>When compared to the ED visit rates, the hospitalization rates are
+notably lower (scale of 0-50 versus 0-300), suggesting that while many
+children visit the ED for asthma, a smaller proportion require
+hospitalization.</li>
+</ul>
+<p>Overall, the consistent geographic disparities in ED visits and
+hospitalizations, particularly the higher rates in the Bronx, confirm
+the unequal distribution of child asthma burden across New York City.
+This suggests underlying socioeconomic and/or environmental factors
+affecting childhood asthma rates across different parts of the city.</p>
+</div>
 </div>
 <div id="pm2.5" class="section level2">
 <h2>PM2.5</h2>
 <p>Plot comparisons by year/borough.</p>
 <pre class="r"><code>particulate_matter = 
-  read_csv(&quot;data/Air_Quality_20231208.csv&quot;)</code></pre>
-<pre><code>## Rows: 16218 Columns: 12
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (7): Name, Measure, Measure Info, Geo Type Name, Geo Place Name, Time Pe...
-## dbl (4): Unique ID, Indicator ID, Geo Join ID, Data Value
-## lgl (1): Message
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>tidy_analysis_pm = 
+  read_csv(&quot;data/Air_Quality_20231208.csv&quot;)
+
+tidy_analysis_pm = 
   particulate_matter |&gt;
   janitor::clean_names() |&gt;
     mutate(
@@ -454,7 +557,7 @@ ed_2019_2021 =
     y = &quot;PM2.5 Values&quot;,
     fill = &quot;Year Group&quot;
   ) </code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 <p>make knitr chart that shows with in numbers differences between
 years</p>
 <p>Show map of PM2.5 levels per UH42 index across years.</p>
@@ -465,15 +568,6 @@ years</p>
            as.character(geo_join_id))</code></pre>
 <pre class="r"><code>particulate_matter = 
   read_csv(&quot;data/Air_Quality_20231208.csv&quot;)</code></pre>
-<pre><code>## Rows: 16218 Columns: 12
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (7): Name, Measure, Measure Info, Geo Type Name, Geo Place Name, Time Pe...
-## dbl (4): Unique ID, Indicator ID, Geo Join ID, Data Value
-## lgl (1): Message
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 <pre class="r"><code>tidy_uhf42_pm = 
   particulate_matter |&gt;
   janitor::clean_names() |&gt;
@@ -503,16 +597,9 @@ years</p>
     values_from = average_pm2.5,
     names_prefix = &quot;avg_pm2.5_&quot;
   ) </code></pre>
-<pre class="r"><code>uhf42_map &lt;- st_read(&quot;data/UHF_42_DOHMH_2009.shp&quot;) </code></pre>
-<pre><code>## Reading layer `UHF_42_DOHMH_2009&#39; from data source 
-##   `C:\Users\naomi\Desktop\Fall 2024\Data Science\p8105_nyc_child_asthma\data\UHF_42_DOHMH_2009.shp&#39; 
-##   using driver `ESRI Shapefile&#39;
-## Simple feature collection with 43 features and 6 fields
-## Geometry type: MULTIPOLYGON
-## Dimension:     XY
-## Bounding box:  xmin: 913090.8 ymin: 120053.5 xmax: 1067310 ymax: 272932
-## Projected CRS: NAD83 / New York Long Island (ftUS)</code></pre>
-<pre class="r"><code>tidy_uhf42_pm &lt;- 
+<pre class="r"><code>uhf42_map &lt;- st_read(&quot;data/UHF_42_DOHMH_2009.shp&quot;, quiet = TRUE) 
+
+tidy_uhf42_pm &lt;- 
   tidy_uhf42_pm |&gt;
   rename(UHFCODE = geo_join_id) |&gt;
   mutate(
@@ -525,7 +612,7 @@ years</p>
 <h2>Greenspace</h2>
 <div id="borough-and-year-comparison" class="section level4">
 <h4>Borough and Year Comparison</h4>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>Bronx had the least amount of greenspace, followed by Manhattan,
 Brooklyn, and Queens. Staten Island had the highest amount of
 greenspace. This trend is similar between both year groups.</p>
@@ -580,7 +667,7 @@ increase (258.720 acres) in greenspaces and Manhattan had the least
 </div>
 <div id="greenspace-types" class="section level4">
 <h4>Greenspace Types</h4>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 <p>In terms of total acres, flagship parks make up the largest
 proportion of NYC greenspace. This trend is similar for both year
 groups.</p>
@@ -739,6 +826,11 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
 
 <script>
 $(document).ready(function ()  {
