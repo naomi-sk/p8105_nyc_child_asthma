@@ -375,6 +375,162 @@ div.tocify {
 <div id="exploratory-data-analysis" class="section level1">
 <h1>Exploratory Data Analysis</h1>
 </div>
+<div id="pm2.5" class="section level1">
+<h1>PM2.5</h1>
+<p>Plot comparisons by year/borough.</p>
+<pre class="r"><code>library(tidyverse)
+library(rvest)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;rvest&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:readr&#39;:
+## 
+##     guess_encoding</code></pre>
+<pre class="r"><code>library(readxl)
+library(plotly)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;plotly&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:ggplot2&#39;:
+## 
+##     last_plot</code></pre>
+<pre><code>## The following object is masked from &#39;package:stats&#39;:
+## 
+##     filter</code></pre>
+<pre><code>## The following object is masked from &#39;package:graphics&#39;:
+## 
+##     layout</code></pre>
+<pre class="r"><code>library(flexdashboard)
+library(sf)</code></pre>
+<pre><code>## Linking to GEOS 3.11.0, GDAL 3.5.3, PROJ 9.1.0; sf_use_s2() is TRUE</code></pre>
+<pre class="r"><code>library(shiny)
+library(leaflet)
+library(scales)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;scales&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     discard</code></pre>
+<pre><code>## The following object is masked from &#39;package:readr&#39;:
+## 
+##     col_factor</code></pre>
+<pre class="r"><code>particulate_matter = 
+  read_csv(&quot;data/Air_Quality_20231208.csv&quot;)</code></pre>
+<pre><code>## Rows: 16218 Columns: 12
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## chr (7): Name, Measure, Measure Info, Geo Type Name, Geo Place Name, Time Pe...
+## dbl (4): Unique ID, Indicator ID, Geo Join ID, Data Value
+## lgl (1): Message
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<pre class="r"><code>tidy_analysis_pm = 
+  particulate_matter |&gt;
+  janitor::clean_names() |&gt;
+    mutate(
+    unique_id = as.character(unique_id),
+    indicator_id = as.character(indicator_id),
+    geo_join_id = as.character(geo_join_id)) |&gt;
+  filter(name == &quot;Fine particles (PM 2.5)&quot;) |&gt;
+  filter(time_period %in% c(&quot;Annual Average 2016&quot;, &quot;Annual Average 2017&quot;,
+                            &quot;Annual Average 2018&quot;, &quot;Annual Average 2019&quot;,
+                            &quot;Annual Average 2020&quot;, &quot;Annual Average 2021&quot;)) |&gt;
+  filter(geo_type_name == &quot;Borough&quot;) |&gt;
+  select(-unique_id, -indicator_id, -start_date) |&gt;
+    rename(borough = geo_place_name) |&gt;
+  mutate(
+    period = case_when(
+      time_period %in% c(&quot;Annual Average 2016&quot;, &quot;Annual Average 2017&quot;, &quot;Annual Average 2018&quot;) ~ &quot;2016-2018&quot;,
+      time_period %in% c(&quot;Annual Average 2019&quot;, &quot;Annual Average 2020&quot;, &quot;Annual Average 2021&quot;) ~ &quot;2019-2021&quot;
+    )
+  ) |&gt;
+  group_by(borough, period) |&gt;
+  summarize(
+    average_pm2.5 = mean(data_value, na.rm = TRUE),
+    .groups = &quot;drop&quot;
+  ) |&gt;
+  pivot_wider(
+    names_from = period,
+    values_from = average_pm2.5,
+    names_prefix = &quot;avg_pm2.5_&quot;
+  )</code></pre>
+<pre class="r"><code>tidy_analysis_pm |&gt;
+  pivot_longer(cols = -borough, names_to = &quot;Year_Group&quot;, values_to = &quot;PM2.5&quot;) |&gt; 
+  mutate(borough = factor(borough, levels = unique(borough[order(PM2.5)]))) |&gt; 
+  ggplot(aes(x = borough, y = PM2.5, fill = Year_Group)) +
+  geom_bar(position = &quot;dodge&quot;, stat = &quot;identity&quot;) +
+   labs(
+    title = &quot;Average PM2.5 Levels by Borough (2016-2018 vs 2019-2021)&quot;,
+    x = &quot;Borough&quot;,
+    y = &quot;PM2.5 Values&quot;,
+    fill = &quot;Year Group&quot;
+  ) </code></pre>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>make knitr chart that shows with in numbers differences between
+years</p>
+<p>Show map of PM2.5 levels per UH42 index across years.</p>
+<pre class="r"><code>geography = 
+  read_excel(&quot;data/geoid_borough_name_nyc.xlsx&quot;) |&gt;
+  rename(geo_join_id = ID) |&gt;
+  mutate(geo_join_id = 
+           as.character(geo_join_id))</code></pre>
+<pre class="r"><code>particulate_matter = 
+  read_csv(&quot;data/Air_Quality_20231208.csv&quot;)</code></pre>
+<pre><code>## Rows: 16218 Columns: 12
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## chr (7): Name, Measure, Measure Info, Geo Type Name, Geo Place Name, Time Pe...
+## dbl (4): Unique ID, Indicator ID, Geo Join ID, Data Value
+## lgl (1): Message
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<pre class="r"><code>tidy_uhf42_pm = 
+  particulate_matter |&gt;
+  janitor::clean_names() |&gt;
+    mutate(
+    unique_id = as.character(unique_id),
+    indicator_id = as.character(indicator_id),
+    geo_join_id = as.character(geo_join_id)) |&gt;
+  filter(name == &quot;Fine particles (PM 2.5)&quot;) |&gt;
+  filter(time_period %in% c(&quot;Annual Average 2016&quot;, &quot;Annual Average 2017&quot;,
+                            &quot;Annual Average 2018&quot;, &quot;Annual Average 2019&quot;,
+                            &quot;Annual Average 2020&quot;, &quot;Annual Average 2021&quot;)) |&gt;
+  filter(geo_type_name == &quot;UHF42&quot;) |&gt;
+  select(-unique_id, -indicator_id, -start_date) |&gt;
+  mutate(
+    period = case_when(
+      time_period %in% c(&quot;Annual Average 2016&quot;, &quot;Annual Average 2017&quot;, &quot;Annual Average 2018&quot;) ~ &quot;2016_2018&quot;,
+      time_period %in% c(&quot;Annual Average 2019&quot;, &quot;Annual Average 2020&quot;, &quot;Annual Average 2021&quot;) ~ &quot;2019_2021&quot;
+    )
+  ) |&gt;
+  group_by(geo_place_name, geo_join_id, period) |&gt;
+  summarize(
+    average_pm2.5 = mean(data_value, na.rm = TRUE),
+    .groups = &quot;drop&quot;
+  ) |&gt;
+  pivot_wider(
+    names_from = period,
+    values_from = average_pm2.5,
+    names_prefix = &quot;avg_pm2.5_&quot;
+  ) </code></pre>
+<pre class="r"><code>uhf42_map &lt;- st_read(&quot;data/UHF_42_DOHMH_2009.shp&quot;) </code></pre>
+<pre><code>## Reading layer `UHF_42_DOHMH_2009&#39; from data source 
+##   `/Users/shayneestill/Desktop/Data Science I/p8105_nyc_child_asthma/data/UHF_42_DOHMH_2009.shp&#39; 
+##   using driver `ESRI Shapefile&#39;
+## Simple feature collection with 43 features and 6 fields
+## Geometry type: MULTIPOLYGON
+## Dimension:     XY
+## Bounding box:  xmin: 913090.8 ymin: 120053.5 xmax: 1067310 ymax: 272932
+## Projected CRS: NAD83 / New York Long Island (ftUS)</code></pre>
+<pre class="r"><code>tidy_uhf42_pm &lt;- 
+  tidy_uhf42_pm |&gt;
+  rename(UHFCODE = geo_join_id) |&gt;
+  mutate(
+    UHFCODE = as.double(UHFCODE))</code></pre>
+<pre class="r"><code>map_uhf42 &lt;- 
+  uhf42_map |&gt;
+  left_join(tidy_uhf42_pm, by = &quot;UHFCODE&quot;) </code></pre>
+</div>
 <div id="greenspace" class="section level1">
 <h1>Greenspace</h1>
 </div>
