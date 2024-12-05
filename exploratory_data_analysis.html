@@ -377,6 +377,181 @@ div.tocify {
 </div>
 <div id="greenspace" class="section level1">
 <h1>Greenspace</h1>
+<div id="borough-and-year-comparison" class="section level4">
+<h4>Borough and Year Comparison</h4>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>Bronx had the least amount of greenspace, followed by Manhattan,
+Brooklyn, and Queens. Staten Island had the highest amount of
+greenspace. This trend is similar between both year groups.</p>
+</div>
+<div id="greenspace-increase" class="section level4">
+<h4>Greenspace increase</h4>
+<p>Comparing between the two year groups, Staten Island had the largest
+increase (258.720 acres) in greenspaces and Manhattan had the least
+(0.345 acres).</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">borough</th>
+<th align="right">2016-2018</th>
+<th align="right">2019-2021</th>
+<th align="right">Difference</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Staten Island</td>
+<td align="right">2812.520</td>
+<td align="right">3071.240</td>
+<td align="right">258.720</td>
+</tr>
+<tr class="even">
+<td align="left">Bronx</td>
+<td align="right">1130.236</td>
+<td align="right">1249.861</td>
+<td align="right">119.625</td>
+</tr>
+<tr class="odd">
+<td align="left">Queens</td>
+<td align="right">2171.277</td>
+<td align="right">2182.771</td>
+<td align="right">11.494</td>
+</tr>
+<tr class="even">
+<td align="left">Brooklyn</td>
+<td align="right">1794.986</td>
+<td align="right">1795.942</td>
+<td align="right">0.956</td>
+</tr>
+<tr class="odd">
+<td align="left">Manhattan</td>
+<td align="right">1715.288</td>
+<td align="right">1715.633</td>
+<td align="right">0.345</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="greenspace-types" class="section level4">
+<h4>Greenspace Types</h4>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>In terms of total acres, flagship parks make up the largest
+proportion of NYC greenspace. This trend is similar for both year
+groups.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Greenspace Type</th>
+<th align="right">2016-2018</th>
+<th align="right">2019-2021</th>
+<th align="right">Difference</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Neighborhood Park</td>
+<td align="right">910.00857</td>
+<td align="right">1169.62510</td>
+<td align="right">259.617</td>
+</tr>
+<tr class="even">
+<td align="left">Managed Sites</td>
+<td align="right">483.30350</td>
+<td align="right">602.39850</td>
+<td align="right">119.095</td>
+</tr>
+<tr class="odd">
+<td align="left">Nature Area</td>
+<td align="right">3084.62632</td>
+<td align="right">3117.48632</td>
+<td align="right">32.860</td>
+</tr>
+<tr class="even">
+<td align="left">Undeveloped</td>
+<td align="right">190.17075</td>
+<td align="right">191.35675</td>
+<td align="right">1.186</td>
+</tr>
+<tr class="odd">
+<td align="left">Waterfront Facility</td>
+<td align="right">2277.16100</td>
+<td align="right">2277.69100</td>
+<td align="right">0.530</td>
+</tr>
+<tr class="even">
+<td align="left">Garden</td>
+<td align="right">17.20095</td>
+<td align="right">17.59995</td>
+<td align="right">0.399</td>
+</tr>
+<tr class="odd">
+<td align="left">Playground</td>
+<td align="right">137.85455</td>
+<td align="right">138.15355</td>
+<td align="right">0.299</td>
+</tr>
+</tbody>
+</table>
+<p>7 of the 21 greenspace types had an increase in total acres between
+the two year groups. No change was seen in the remaining greenspace
+types.</p>
+<p><strong>Top 3 Greenspace Types (Total Acres) Across
+Boroughs</strong></p>
+<table>
+<colgroup>
+<col width="14%" />
+<col width="26%" />
+<col width="31%" />
+<col width="28%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Borough</th>
+<th align="left">Highest</th>
+<th align="left">Second Highest</th>
+<th align="left">Third Highest</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Bronx</td>
+<td align="left">Flagship Park (1532.62)</td>
+<td align="left">Parkway (585.51)</td>
+<td align="left">Nature Area (312.15)</td>
+</tr>
+<tr class="even">
+<td align="left">Brooklyn</td>
+<td align="left">Community Park (1487.77)</td>
+<td align="left">Parkway (827.95)</td>
+<td align="left">Flagship Park (571.31)</td>
+</tr>
+<tr class="odd">
+<td align="left">Queens</td>
+<td align="left">Flagship Park (1631.46)</td>
+<td align="left">Waterfront Facility (1093.79)</td>
+<td align="left">Community Park (973.11)</td>
+</tr>
+<tr class="even">
+<td align="left">Manhattan</td>
+<td align="left">Community Park (1098.39)</td>
+<td align="left">Flagship Park (1094.31)</td>
+<td align="left">Neighborhood Park (207.73)</td>
+</tr>
+<tr class="odd">
+<td align="left">Staten Island</td>
+<td align="left">Nature Area (1690.97)</td>
+<td align="left">Community Park (1371.96)</td>
+<td align="left">Flagship Park (760.79)</td>
+</tr>
+</tbody>
+</table>
+<p>The total acres of each greenspace type for each borough is the same
+for both year group.</p>
+<p>Top categories of greenspace types across the boroughs include
+Flagship Park, Community Park, Nature Area, Parkway, Waterfront
+Facility, and Neighborhood Park. We also see that the top 3 greenspace
+types are different for each borough.</p>
+</div>
 </div>
 
 
