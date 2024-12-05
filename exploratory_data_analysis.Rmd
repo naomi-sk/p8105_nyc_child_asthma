@@ -154,3 +154,232 @@ map_uhf42 <-
 
 # Greenspace
 
+
+```{r greenspace clean, include=FALSE}
+greenspace_clean = read_csv("./data/Parks_Properties_20241126.csv", na = c("NA", ".", "")) |>
+  janitor::clean_names() |> 
+  mutate(
+    borough = case_match(borough, #renamed borough according to data dictionary
+      "R" ~ "Staten Island",
+      "Q" ~ "Queens",
+      "X" ~ "Bronx",
+      "B" ~ "Brooklyn",
+      "M" ~ "Manhattan"),
+    typecategory = as.factor(typecategory), #converted char variables into factors
+    borough = as.factor(borough)) |>
+  separate(acquisitiondate, into = c("year", "month", "day"), sep = "-") |>
+  select(year, borough, acres, typecategory) |> 
+  filter(year < 2022 | is.na(year))
+```
+
+
+
+#### Borough and Year Comparison
+
+```{r first year, include=FALSE}
+#2016-2018 dataset
+dataset1_gs = greenspace_clean |>
+  filter(year < 2019 | is.na(year)) |> 
+  group_by(year, borough) |>
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = "drop")
+
+dataset1_gs_calc = dataset1_gs |> 
+  group_by(borough) |> 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
+  mutate(year_group = "2016-2018")
+```
+
+```{r second year, include=FALSE}
+#2019-2021 dataset
+dataset2_gs = greenspace_clean |>
+  filter(year < 2022 | is.na(year)) |>
+  group_by(year, borough) |>
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = "drop")
+
+dataset2_gs_calc = dataset2_gs |> 
+  group_by(borough) |> 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
+  mutate(year_group = "2019-2021")
+```
+
+```{r total acres dataset, echo=FALSE}
+total_acres = bind_rows(dataset1_gs_calc, dataset2_gs_calc)
+  
+#total acres dataset
+Greenspace_data = total_acres |>
+  pivot_wider(names_from = year_group,
+              values_from = acres_sum)
+```
+
+```{r, echo=FALSE}
+ggplot(total_acres, aes(x = reorder(borough, acres_sum), y = acres_sum, fill = year_group)) + 
+  geom_bar(stat = "identity", position = "dodge", alpha = 0.7) + 
+  labs(x = "Borough", y = "Greenspace (Total Acres)", title = "Greenspaces Across Borough by Year Group") +
+  theme_minimal()
+```
+
+Bronx had the least amount of greenspace, followed by Manhattan, Brooklyn, and Queens. Staten Island had the highest amount of greenspace. This trend is similar between both year groups.
+
+#### Greenspace increase
+
+Comparing between the two year groups, Staten Island had the largest increase (258.720 acres) in greenspaces and Manhattan had the least (0.345 acres).
+
+```{r Total acres table, echo=FALSE}
+
+Greenspace_data |>
+  mutate(
+    Difference = round(`2019-2021` - `2016-2018`, 3)) |>
+  arrange(desc(Difference)) |>
+  knitr::kable()
+```
+
+#### Greenspace Types
+
+```{r, include=FALSE}
+types_nyc = greenspace_clean |>
+  select(-borough) |>
+  group_by(typecategory) |>
+  summarise(acres_tp = mean(acres, na.rm = TRUE), .groups = "drop")
+```
+
+```{r, include=FALSE}
+type1A = greenspace_clean |>
+  filter(year < 2019 | is.na(year)) |> 
+  group_by(year, borough, typecategory) |>
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = "drop")
+
+type1B = type1A |> 
+  group_by(borough, typecategory) |> 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
+  mutate(year_group = "year1") #2016-2018
+```
+
+```{r, include=FALSE}
+type2A = greenspace_clean |>
+  filter(year < 2022 | is.na(year)) |>
+  group_by(year, borough, typecategory) |>
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = "drop")
+
+type2B = type2A |> 
+  group_by(borough, typecategory) |> 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
+  mutate(year_group = "year2") #2019-2021
+```
+
+```{r binded, include=FALSE}
+binded = bind_rows(type1B, type2B) |>
+  group_by(typecategory, year_group) |>
+  summarise(acres_total = sum(acres_sum, na.rm = TRUE))
+```
+
+
+```{r, echo=FALSE}
+binded |> 
+   mutate(year_group = case_match(year_group,
+      "year1" ~ "2016-2018",
+      "year2" ~ "2019-2021")) |>
+  ggplot(aes(x = reorder(typecategory, acres_total), y = acres_total, fill = year_group)) + 
+  geom_bar(stat = "identity", position = "dodge", width = 0.6) +
+  labs(x = "Greenspace Types", y = "Total Acres", title = "Total Acres of NYC Greenspace by Type and Year Group") +
+    theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+```
+
+In terms of total acres, flagship parks make up the largest proportion of NYC greenspace. This trend is similar for both year groups.
+
+```{r, echo=FALSE}
+#increase in acres by type
+Total_acres_table_test = binded |>
+  pivot_wider(names_from = year_group,
+              values_from = acres_total) |>
+  mutate(diff = round(year2 - year1, 3))
+
+table_type = Total_acres_table_test |>
+  filter(diff > 0) |>
+  arrange(desc(diff))
+
+knitr::kable(table_type, col.names = c("Greenspace Type", "2016-2018", "2019-2021", "Difference"))
+```
+
+7 of the 21 greenspace types had an increase in total acres between the two year groups. No change was seen in the remaining greenspace types. 
+
+**Top 3 Greenspace Types (Total Acres) Across Boroughs**
+
+```{r, echo=FALSE, message = FALSE}
+perBor = bind_rows(type1B, type2B) |>
+  group_by(typecategory, year_group, borough) |>
+  summarise(acres_total = sum(acres_sum, na.rm = TRUE)) 
+
+Bronx_perBor = perBor |> 
+  filter(borough == "Bronx") |>
+  mutate(acres_total = round(acres_total, 2)) |>
+  pivot_wider(
+    names_from = year_group,
+    values_from = acres_total) |>
+  arrange(desc(year1)) |>
+  filter(year1 > 200) #keep top 3
+
+Brook_perBor = perBor |> 
+  filter(borough == "Brooklyn") |>
+  mutate(acres_total = round(acres_total, 2)) |>
+  pivot_wider(
+    names_from = year_group,
+    values_from = acres_total) |>
+  arrange(desc(year1)) |>
+  filter(year1 > 500) #keep top 3
+
+Man_perBor = perBor |> 
+  filter(borough == "Manhattan") |>
+  mutate(acres_total = round(acres_total, 2)) |>
+  pivot_wider(
+    names_from = year_group,
+    values_from = acres_total) |>
+  arrange(desc(year1)) |>
+  filter(year1 > 200) #keep top 3
+
+Q_perBor = perBor |> 
+  filter(borough == "Queens") |>
+  mutate(acres_total = round(acres_total, 2)) |>
+  pivot_wider(
+    names_from = year_group,
+    values_from = acres_total) |>
+  arrange(desc(year1)) |>
+  filter(year1 > 900) #keep top 3
+
+SI_perBor = perBor |> 
+  filter(borough == "Staten Island") |>
+  mutate(acres_total = round(acres_total, 2)) |>
+  pivot_wider(
+    names_from = year_group,
+    values_from = acres_total) |>
+  arrange(desc(year1)) |>
+  filter(year1 > 760) #keep top 3
+
+#bind them together
+top3_bor_gstype = bind_rows(Bronx_perBor, Brook_perBor, Q_perBor, Man_perBor, SI_perBor) |>
+  select(borough, typecategory, year1, year2) |>
+#Since total acres didn't change for the top 3 categories for each borough between the years, update year variable.
+  rename(acres = year1) |>
+  select(-year2) |>
+  group_by(borough) |>
+  mutate(rank = rank(-acres)) |>
+  ungroup() |>
+  mutate(
+    rank = case_match(rank,
+      1 ~ "First",
+      2 ~ "Second",
+      3 ~ "Third"),
+    typecategory = paste(typecategory, " (", acres, ")", sep = "")) |>
+    select(-acres) |>
+  pivot_wider(
+    names_from = rank,
+    values_from = typecategory) 
+
+knitr::kable(top3_bor_gstype, col.names = c("Borough", "Highest", "Second Highest", "Third Highest"))
+ 
+```
+
+The total acres of each greenspace type for each borough is the same for both year group. 
+
+Top categories of greenspace types across the boroughs include Flagship Park, Community Park, Nature Area, Parkway, Waterfront Facility, and Neighborhood Park. We also see that the top 3 greenspace types are different for each borough.
+
