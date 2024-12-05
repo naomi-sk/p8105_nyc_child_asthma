@@ -81,6 +81,60 @@ map_data <- nyc_zip_sf %>%
 
 ### ED Admissions
 
+
+```{r}
+
+# Create simple borough-level summaries
+
+borough_summary <- all_data %>%
+  group_by(borough, period, indicator) %>%
+  summarize(
+    avg_rate = round(mean(zip_code_rate, na.rm = TRUE), 1),
+    .groups = "drop"  # This explicitly drops the grouping
+  )
+
+# Create separate tables for ED visits and hospitalizations
+
+ed_summary <- borough_summary %>%
+  filter(indicator == "ed_visits_rate") %>%
+  pivot_wider(
+    names_from = period,
+    values_from = avg_rate
+  ) %>%
+  mutate(
+    percent_change = round(((`2019-2021` - `2016-2018`) / `2016-2018` * 100), 1)
+  ) %>%
+  arrange(desc(`2016-2018`))
+
+hosp_summary <- borough_summary %>%
+  filter(indicator == "hosp_rate") %>%
+  pivot_wider(
+    names_from = period,
+    values_from = avg_rate
+  ) %>%
+  mutate(
+    percent_change = round(((`2019-2021` - `2016-2018`) / `2016-2018` * 100), 1)
+  ) %>%
+  arrange(desc(`2016-2018`))
+
+# Print ED Visits Summary
+
+cat("\nAsthma ED Visit Rates by Borough\n(per 10,000 children aged 0-17)\n")
+ed_summary %>%
+  select(-indicator) %>%
+  knitr::kable(
+    col.names = c("Borough", "2016-2018", "2019-2021", "% Change")
+  )
+
+
+```
+
+For ED Admissions:
+
+* The Bronx had notably higher rates than other boroughs in both periods (347.7 and 180.7 per 10,000 children)
+* All boroughs saw substantial decreases between 2016-2018 and 2019-2021 (ranging from about 43-48%)
+* Even after decreases, the Bronx's 2019-2021 rate (180.7) remained higher than any other borough's 2016-2018 rates
+
 ```{r}
 
 # Create ED Visits Map 
@@ -117,6 +171,26 @@ Looking at the ED visit rates map across the two time periods (2016-2018 and 201
 The most striking change between the two periods is the apparent reduction in ED visits during 2019-2021, which could potentially be related to the COVID-19 pandemic's impact on healthcare utilization patterns.
 
 ### ED Hospitalizations
+
+
+```{r}
+
+# Print Hospitalization Summary
+
+cat("\nAsthma Hospitalization Rates by Borough\n(per 10,000 children aged 0-17)\n")
+hosp_summary %>%
+  select(-indicator) %>%
+  knitr::kable(
+    col.names = c("Borough", "2016-2018", "2019-2021", "% Change")
+  )
+
+```
+
+For ED hospitalizations, compared to ED Admissions rates:
+
+* Similar pattern with the Bronx having the highest rates (58.5 and 36.8 per 10,000 children)
+* All boroughs showed considerable decreases between 2016-2018 and 2019-2021 (ranging from about 32-40%)
+* Queens and Staten Island had the lowest hospitalization rates in both periods
 
 ```{r}
 
