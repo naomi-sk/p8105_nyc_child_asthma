@@ -917,6 +917,63 @@ summary(fit2)</code></pre>
 ## F-statistic: 25.88 on 7 and 287 DF,  p-value: &lt; 2.2e-16</code></pre>
 </div>
 </div>
+<div id="greenspace-data" class="section level1">
+<h1>Greenspace data</h1>
+<p>For more information on the dataset and its data dictionary, click <a
+href="https://data.cityofnewyork.us/Recreation/Parks-Properties/enfh-gkve/about_data">here</a>.</p>
+<pre class="r"><code>greenspace_df = read_csv(&quot;./data/Parks_Properties_20241126.csv&quot;, na = c(&quot;NA&quot;, &quot;.&quot;, &quot;&quot;)) |&gt;
+  janitor::clean_names() </code></pre>
+<p>The original <code>greenspace_df</code> dataset (2051 observations
+and 34 variables) contains information on Greenspaces in NYC.</p>
+<p>Variables of interest include <code>acquisitiondate</code>,
+<code>acres</code>, <code>borough</code>, and
+<code>typecategory</code>.</p>
+<p><strong>Data cleaning</strong></p>
+<pre class="r"><code>greenspace_clean = greenspace_df |&gt;
+  mutate(
+    borough = case_match(borough, #renamed borough according to data dictionary
+      &quot;R&quot; ~ &quot;Staten Island&quot;,
+      &quot;Q&quot; ~ &quot;Queens&quot;,
+      &quot;X&quot; ~ &quot;Bronx&quot;,
+      &quot;B&quot; ~ &quot;Brooklyn&quot;,
+      &quot;M&quot; ~ &quot;Manhattan&quot;),
+    typecategory = as.factor(typecategory), #converted char variables into factors
+    borough = as.factor(borough)) |&gt;
+  separate(acquisitiondate, into = c(&quot;year&quot;, &quot;month&quot;, &quot;day&quot;), sep = &quot;-&quot;) |&gt;
+  select(year, borough, acres, typecategory) |&gt; 
+  filter(year &lt; 2022 | is.na(year))</code></pre>
+<pre class="r"><code>#Greenspace dataset: 2016-2018
+dataset1_gs = greenspace_clean |&gt;
+  filter(year &lt; 2019 | is.na(year)) |&gt; 
+  group_by(year, borough) |&gt;
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = &quot;drop&quot;)
+
+dataset1_gs_calc = dataset1_gs |&gt; 
+  group_by(borough) |&gt; 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = &quot;drop&quot;) |&gt; 
+  mutate(year_group = &quot;2016-2018&quot;)</code></pre>
+<pre class="r"><code>#Greenspace dataset: 2019-2021
+dataset2_gs = greenspace_clean |&gt;
+  filter(year &lt; 2022 | is.na(year)) |&gt;
+  group_by(year, borough) |&gt;
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = &quot;drop&quot;)
+
+dataset2_gs_calc = dataset2_gs |&gt; 
+  group_by(borough) |&gt; 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = &quot;drop&quot;) |&gt; 
+  mutate(year_group = &quot;2019-2021&quot;)</code></pre>
+<pre class="r"><code>#bind 
+total_acres = bind_rows(dataset1_gs_calc, dataset2_gs_calc)
+  
+#Final dataset
+Greenspace_data = total_acres |&gt;
+  pivot_wider(names_from = year_group,
+              values_from = acres_sum)</code></pre>
+<p>The final Greenspace dataset (<code>Greenspace_data</code>) includes
+2051 observations and 34 variables. Variables include
+<code>borough</code>, <code>2016-2018</code>, and
+<code>2019-2021</code>. Entries represent total acres of greenspace.</p>
+</div>
 
 
 
