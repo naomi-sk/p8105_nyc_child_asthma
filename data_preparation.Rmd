@@ -370,43 +370,49 @@ The temperature data was obtained by extracting daily information from the [Open
 
 ```{r}
 
-manhattan = read_csv("data/manhattan.csv",skip = 2) |>
+# Load raw temperature data for each borough
+
+manhattan = read_csv("data/manhattan.csv",skip = 3) |>
   mutate(Borough = "Manhattan") |> 
   janitor::clean_names()
 
-bronx = read_csv("data/bronx.csv",skip = 2) |>
+bronx = read_csv("data/bronx.csv",skip = 3) |>
   mutate(Borough = "Bronx") |> 
   janitor::clean_names()
 
-brooklyn = read_csv("data/brooklyn.csv",skip = 2) |>
+brooklyn = read_csv("data/brooklyn.csv",skip = 3) |>
   mutate(Borough = "Brooklyn") |> 
   janitor::clean_names()
 
-queens = read_csv("data/queens.csv",skip = 2) |>
+queens = read_csv("data/queens.csv",skip = 3) |>
   mutate(Borough = "Queens") |> 
   janitor::clean_names()
 
-staten_island = read_csv("data/staten_island.csv",skip = 2) |>
+staten_island = read_csv("data/staten_island.csv",skip = 3) |>
   mutate(Borough = "Staten Island") |> 
   janitor::clean_names()
+
 ```
 
 The data cleaning process involved several steps. First, a new `borough` variable was added to each borough-specific dataset, with the value set to the corresponding borough name. The `time` variable containing date information in the format "YYYY-MM-DD" was converted to an appropriate date format using the as.Date() function.
 
 Subsequently, borough-specific datasets were merged into a single `all_temp` dataframe ānd the `borough` variable was converted to a factor data type. A new `data_years` column was created, which grouped the data into two time periods: "2016-2018" and "2019-2021", based on the year of the date column.
 
-The `all_temp` dataframe was then grouped by `data_years` and `borough`, and the `avg_temperature` variable was calculated as the mean of the `temperature_2m_mean_c` values.
+The `all_temp` dataframe was then grouped by `data_years` and `borough`, and the `avg_temperature` variable was calculated as the mean of the `temperature_2m_mean` values.
 
 
 ```{r}
 
-all_temp = bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |> 
-  mutate(borough = as.factor(borough)) |>
-  mutate(date = as.Date(time, format = "%Y-%m-%d")) |> 
+# Combine borough temperature data into merged dataset
+
+all_temp <- bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |> 
+  mutate(borough = as.factor(borough)) |> 
+  mutate(date = as.Date(time, format = "%d/%m/%Y")) |>  # Corrected date format
   mutate(data_years = ifelse(year(date) %in% 2016:2018, "2016-2018", "2019-2021")) |> 
-  select(temperature_2m_max_c:data_years) |> 
-  group_by(data_years, borough) |>
-  summarise(avg_temperature = mean(temperature_2m_mean_c, na.rm = TRUE))
+  select(temperature_2m_max:data_years) |> 
+  group_by(data_years, borough) |> 
+  summarise(avg_temperature = mean(temperature_2m_mean, na.rm = TRUE))
+
 ```
 
 The final temperature dataset `all_temp` contains the following key variables:
