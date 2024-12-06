@@ -1065,6 +1065,10 @@ all_temp_borough = all_temp |&gt;
   select(temperature_2m_max:data_years) |&gt; 
   group_by(data_years, borough) |&gt; 
   summarise(avg_temperature = mean(temperature_2m_mean, na.rm = TRUE))</code></pre>
+<div id="monthly-mean-temperature-by-borough" class="section level4">
+<h4>Monthly Mean temperature by borough</h4>
+<p>This graph shows the monthly mean temperature change by Borough
+between 2016 and 2021.</p>
 <pre class="r"><code># Monthly Mean temperature
 
 all_temp_month = all_temp |&gt; 
@@ -1082,6 +1086,12 @@ ggplot(all_temp_month, aes(x = months, y = avg_month, color = borough)) +
   ) +
   theme_minimal()</code></pre>
 <p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
+</div>
+<div id="max-min-mean-temperature-trend-by-year-and-borough"
+class="section level4">
+<h4>Max, Min, Mean temperature trend by year and borough</h4>
+<p>This 5 plots shows the highest temperature mean, lowest temperature
+mean, and total mean temperature by year and borough.</p>
 <pre class="r"><code># Max, Min, Mean temperature trend by year and borough
 
 mean_temp_year = all_temp |&gt; 
@@ -1118,6 +1128,11 @@ ggplot(long_data, aes(x = years, y = Temperature, color = Temperature_Type, grou
   theme_minimal() +                    
   facet_wrap(~ borough)  </code></pre>
 <p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+</div>
+<div id="average-temperature-change-by-borough" class="section level4">
+<h4>Average temperature change by borough</h4>
+<p>There has been mean temperature change between years but it is steady
+overall across the boroughs.</p>
 <pre class="r"><code>#average temperature table
 
 mean_temp_table = mean_temp_year |&gt; 
@@ -1190,9 +1205,13 @@ knitr::kable(mean_temp_table)</code></pre>
 </tr>
 </tbody>
 </table>
-<div id="average-temperature-by-date-group-and-borough"
-class="section level3">
-<h3>Average temperature by date group and borough</h3>
+</div>
+<div id="average-temperature-by-year-group-and-borough"
+class="section level4">
+<h4>Average temperature by year group and borough</h4>
+<p>In terms of analysis by the year group 2016-2018 and 2019-2021. There
+has been mean temperature increase among all boroughs. Manhattan and
+Bronx showed the biggest increase.</p>
 <pre class="r"><code>ggplot(data = all_temp_borough, aes(x = data_years, y = avg_temperature, color = borough)) +
   geom_point(size = 3) +
   geom_line(aes(group = borough), size = 1) +

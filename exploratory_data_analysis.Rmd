@@ -671,6 +671,10 @@ all_temp_borough = all_temp |>
 ```
 
 
+#### Monthly Mean temperature by borough
+
+This graph shows the monthly mean temperature change by Borough between 2016 and 2021.
+
 ```{r}
 
 # Monthly Mean temperature
@@ -690,6 +694,10 @@ ggplot(all_temp_month, aes(x = months, y = avg_month, color = borough)) +
   ) +
   theme_minimal()
 ```
+
+#### Max, Min, Mean temperature trend by year and borough
+
+This 5 plots shows the highest temperature mean, lowest temperature mean, and total mean temperature by year and borough.
 
 ```{r}
 # Max, Min, Mean temperature trend by year and borough
@@ -730,6 +738,11 @@ ggplot(long_data, aes(x = years, y = Temperature, color = Temperature_Type, grou
   
 ```
 
+#### Average temperature change by borough
+
+There has been mean temperature change between years but it is steady overall across the boroughs.
+
+
 ```{r}
 
 #average temperature table
@@ -745,7 +758,9 @@ knitr::kable(mean_temp_table)
 ```
 
 
-### Average temperature by date group and borough
+#### Average temperature by year group and borough
+
+In terms of analysis by the year group 2016-2018 and 2019-2021. There has been mean temperature increase among all boroughs. Manhattan and Bronx showed the biggest increase.
 
 ```{r}
 
