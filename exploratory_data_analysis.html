@@ -14,7 +14,7 @@
 
 <title>exploratory_data_analysis.knit</title>
 
-<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cerulean.min.css" rel="stylesheet" />
@@ -37,8 +37,8 @@
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -384,11 +384,9 @@ div.tocify {
 
 <div id="exploratory-data-analysis" class="section level1">
 <h1>Exploratory Data Analysis</h1>
-<div
-id="comparison-of-ed-admissions-and-hospitalizations-between-2016-2018-and-2019-2021"
+<div id="ed-visits-and-hospitalizations-between-2016-2018-and-2019-2021"
 class="section level2">
-<h2>Comparison of ED Admissions and Hospitalizations between 2016-2018
-and 2019-2021</h2>
+<h2>ED Visits and Hospitalizations between 2016-2018 and 2019-2021</h2>
 <pre class="r"><code># Load ED data for 2016-2018
 
 ed_2016_2018 = 
@@ -423,52 +421,11 @@ borough_data &lt;- borough_data %&gt;%
 
 map_data &lt;- nyc_zip_sf %&gt;%
   left_join(borough_data, by = &quot;boro_name&quot;)</code></pre>
-<div id="ed-admissions" class="section level3">
-<h3>ED Admissions</h3>
-<pre class="r"><code># Create simple borough-level summaries
-
-borough_summary &lt;- all_data %&gt;%
-  group_by(borough, period, indicator) %&gt;%
-  summarize(
-    avg_rate = round(mean(zip_code_rate, na.rm = TRUE), 1),
-    .groups = &quot;drop&quot;  # This explicitly drops the grouping
-  )
-
-# Create separate tables for ED visits and hospitalizations
-
-ed_summary &lt;- borough_summary %&gt;%
-  filter(indicator == &quot;ed_visits_rate&quot;) %&gt;%
-  pivot_wider(
-    names_from = period,
-    values_from = avg_rate
-  ) %&gt;%
-  mutate(
-    percent_change = round(((`2019-2021` - `2016-2018`) / `2016-2018` * 100), 1)
-  ) %&gt;%
-  arrange(desc(`2016-2018`))
-
-hosp_summary &lt;- borough_summary %&gt;%
-  filter(indicator == &quot;hosp_rate&quot;) %&gt;%
-  pivot_wider(
-    names_from = period,
-    values_from = avg_rate
-  ) %&gt;%
-  mutate(
-    percent_change = round(((`2019-2021` - `2016-2018`) / `2016-2018` * 100), 1)
-  ) %&gt;%
-  arrange(desc(`2016-2018`))
-
-# Print ED Visits Summary
-
-cat(&quot;\nAsthma ED Visit Rates by Borough\n(per 10,000 children aged 0-17)\n&quot;)</code></pre>
-<pre><code>## 
-## Asthma ED Visit Rates by Borough
-## (per 10,000 children aged 0-17)</code></pre>
-<pre class="r"><code>ed_summary %&gt;%
-  select(-indicator) %&gt;%
-  knitr::kable(
-    col.names = c(&quot;Borough&quot;, &quot;2016-2018&quot;, &quot;2019-2021&quot;, &quot;% Change&quot;)
-  )</code></pre>
+<div
+id="emergency-department-visit-rates-per-10000-children-aged-0-17-years"
+class="section level3">
+<h3>Emergency Department Visit Rates per 10,000 children (Aged 0-17
+Years)</h3>
 <table>
 <thead>
 <tr class="header">
@@ -511,15 +468,12 @@ cat(&quot;\nAsthma ED Visit Rates by Borough\n(per 10,000 children aged 0-17)\n&
 </tr>
 </tbody>
 </table>
-<p>For ED Admissions:</p>
-<ul>
-<li>The Bronx had notably higher rates than other boroughs in both
-periods (347.7 and 180.7 per 10,000 children)</li>
-<li>All boroughs saw substantial decreases between 2016-2018 and
-2019-2021 (ranging from about 43-48%)</li>
-<li>Even after decreases, the Bronx’s 2019-2021 rate (180.7) remained
-higher than any other borough’s 2016-2018 rates</li>
-</ul>
+<p>For ED visits, the Bronx had notably higher rates than other boroughs
+in both periods, with 347.7 and 180.7 per 10,000 children, respectively.
+All boroughs experienced substantial decreases between 2016-2018 and
+2019-2021, ranging from about 43% to 48%. Despite these decreases, the
+Bronx’s 2019-2021 rate of 180.7 remained higher than any other borough’s
+rates from 2016-2018.</p>
 <pre class="r"><code># Create ED Visits Map 
 
 ed_plot &lt;- ggplot() +
@@ -536,7 +490,10 @@ ed_plot &lt;- ggplot() +
   theme(
     plot.title = element_text(size = 12),
     legend.position = &quot;right&quot;,
-    legend.key.height = unit(2, &quot;cm&quot;)
+    legend.key.height = unit(2, &quot;cm&quot;),
+    axis.text = element_blank(),      
+    axis.ticks = element_blank(),     
+    panel.grid = element_blank()      
   )
 
 # Display plot
@@ -561,19 +518,10 @@ reduction in ED visits during 2019-2021, which could potentially be
 related to the COVID-19 pandemic’s impact on healthcare utilization
 patterns.</p>
 </div>
-<div id="ed-hospitalizations" class="section level3">
-<h3>ED Hospitalizations</h3>
-<pre class="r"><code># Print Hospitalization Summary
-
-cat(&quot;\nAsthma Hospitalization Rates by Borough\n(per 10,000 children aged 0-17)\n&quot;)</code></pre>
-<pre><code>## 
-## Asthma Hospitalization Rates by Borough
-## (per 10,000 children aged 0-17)</code></pre>
-<pre class="r"><code>hosp_summary %&gt;%
-  select(-indicator) %&gt;%
-  knitr::kable(
-    col.names = c(&quot;Borough&quot;, &quot;2016-2018&quot;, &quot;2019-2021&quot;, &quot;% Change&quot;)
-  )</code></pre>
+<div id="asthma-hospitalization-rate-per-10000-children-aged-0-17-years"
+class="section level3">
+<h3>Asthma hospitalization rate per 10,000 children (aged 0-17
+years)</h3>
 <table>
 <thead>
 <tr class="header">
@@ -616,15 +564,12 @@ cat(&quot;\nAsthma Hospitalization Rates by Borough\n(per 10,000 children aged 0
 </tr>
 </tbody>
 </table>
-<p>For ED hospitalizations, compared to ED Admissions rates:</p>
-<ul>
-<li>Similar pattern with the Bronx having the highest rates (58.5 and
-36.8 per 10,000 children)</li>
-<li>All boroughs showed considerable decreases between 2016-2018 and
-2019-2021 (ranging from about 32-40%)</li>
-<li>Queens and Staten Island had the lowest hospitalization rates in
-both periods</li>
-</ul>
+<p>For hospitalizations, a similar pattern emerged compared to ED visit
+rates, with the Bronx having the highest rates at 58.5 and 36.8 per
+10,000 children in the two periods. All boroughs showed considerable
+decreases between 2016-2018 and 2019-2021, ranging from approximately
+32% to 40%. Queens and Staten Island consistently had the lowest
+hospitalization rates in both periods.</p>
 <pre class="r"><code># Create Hospitalizations Map 
 
 hosp_plot &lt;- ggplot() +
@@ -638,7 +583,13 @@ hosp_plot &lt;- ggplot() +
   theme_minimal() +
   labs(title = &quot;Asthma Hospitalization Rates by NYC Borough&quot;,
        subtitle = &quot;Children aged 0-17 years&quot;) +
-  theme(plot.title = element_text(size = 12))
+  theme(
+    plot.title = element_text(size = 12),
+    panel.grid = element_blank(),         
+    axis.text = element_blank(),           
+    axis.ticks = element_blank(),         
+    axis.title = element_blank()         
+  )
 
 # Display plot
 
@@ -667,11 +618,14 @@ This suggests underlying socioeconomic and/or environmental factors
 affecting childhood asthma rates across different parts of the city.</p>
 </div>
 </div>
-<div id="pm2.5" class="section level2">
-<h2>PM2.5</h2>
-<p>Plot comparisons by year/borough.</p>
-<pre class="r"><code>particulate_matter = 
+<div id="fine-particulate-matter-pm2.5" class="section level2">
+<h2>Fine Particulate Matter (PM2.5)</h2>
+<pre class="r"><code># Load PM data
+
+particulate_matter = 
   read_csv(&quot;data/Air_Quality_20231208.csv&quot;)
+
+# Produce tidied PM dataset for analysis
 
 tidy_analysis_pm = 
   particulate_matter |&gt;
@@ -703,7 +657,12 @@ tidy_analysis_pm =
     values_from = average_pm2.5,
     names_prefix = &quot;avg_pm2.5_&quot;
   )</code></pre>
-<pre class="r"><code>tidy_analysis_pm |&gt;
+<div id="average-pm2.5-levels-μgm³-between-2016-2018-and-2019-2021"
+class="section level3">
+<h3>Average PM2.5 Levels (μg/m³) Between 2016-2018 and 2019-2021</h3>
+<pre class="r"><code># Plot of average PM2.5 levels by borough between 2016-2018 and 2019-2021
+
+tidy_analysis_pm |&gt;
   pivot_longer(cols = -borough, names_to = &quot;Year_Group&quot;, values_to = &quot;PM2.5&quot;) |&gt; 
   mutate(borough = factor(borough, levels = unique(borough[order(PM2.5)]))) |&gt; 
   ggplot(aes(x = borough, y = PM2.5, fill = Year_Group)) +
@@ -720,7 +679,6 @@ tidy_analysis_pm =
 tidy_analysis_pm_diff &lt;- 
   tidy_analysis_pm |&gt;
   mutate(pm2.5_difference = `avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`)
-
 
 knitr::kable(tidy_analysis_pm_diff, col.names = c(&quot;borough&quot;, &quot;avg_pm2.5_2016-2018&quot;, &quot;avg_pm2.5_2019-2021&quot;, &quot;pm2.5_difference&quot;))</code></pre>
 <table>
@@ -771,15 +729,34 @@ knitr::kable(tidy_analysis_pm_diff, col.names = c(&quot;borough&quot;, &quot;avg
 </tr>
 </tbody>
 </table>
-<p>Show map of PM2.5 levels per UH42 index across years.</p>
-<pre class="r"><code>geography = 
+<p>PM2.5 levels demonstrated consistent declines across all NYC boroughs
+between 2016-2018 and 2019-2021, as shown in both the bar plot and
+supporting data table. Manhattan maintained the highest concentrations
+in both periods (8.72 and 7.63 μg/m³ respectively), which is notably
+higher than other boroughs as evident by the tallest bars in the graph.
+The magnitude of improvement was remarkably uniform in the Bronx and
+Brooklyn, with the table showing identical reductions of 1.02 μg/m³ for
+both boroughs, while Queens experienced the smallest decrease at 0.72
+μg/m³. Staten Island consistently maintained the lowest PM2.5 levels
+among all boroughs, with averages dropping from 6.68 to 5.87 μg/m³, as
+evidenced by the shortest bars in the plot.</p>
+</div>
+<div
+id="pm2.5-levels-by-united-hospital-fund-uhf42-neighborhoods-2016-2018-vs.-2019-2021"
+class="section level3">
+<h3>PM2.5 Levels by United Hospital Fund (UHF42) Neighborhoods,
+2016-2018 vs. 2019-2021</h3>
+<pre class="r"><code># Load NYC geospatial data
+
+geography = 
   read_excel(&quot;data/geoid_borough_name_nyc.xlsx&quot;) |&gt;
   rename(geo_join_id = ID) |&gt;
   mutate(geo_join_id = 
-           as.character(geo_join_id))</code></pre>
-<pre class="r"><code>particulate_matter = 
-  read_csv(&quot;data/Air_Quality_20231208.csv&quot;)</code></pre>
-<pre class="r"><code>tidy_uhf42_pm = 
+           as.character(geo_join_id))
+
+# Tidy dataset for geospatial PM analysis
+
+tidy_uhf42_pm = 
   particulate_matter |&gt;
   janitor::clean_names() |&gt;
     mutate(
@@ -807,23 +784,30 @@ knitr::kable(tidy_analysis_pm_diff, col.names = c(&quot;borough&quot;, &quot;avg
     names_from = period,
     values_from = average_pm2.5,
     names_prefix = &quot;avg_pm2.5_&quot;
-  ) </code></pre>
-<pre class="r"><code>uhf42_map &lt;- st_read(&quot;data/UHF_42_DOHMH_2009.shp&quot;, quiet = TRUE) 
+  ) 
+
+# Load shapefiles map for UHF data
+
+uhf42_map &lt;- st_read(&quot;data/UHF_42_DOHMH_2009.shp&quot;, quiet = TRUE) 
 
 tidy_uhf42_pm &lt;- 
   tidy_uhf42_pm |&gt;
   rename(UHFCODE = geo_join_id) |&gt;
   mutate(
-    UHFCODE = as.double(UHFCODE))</code></pre>
-<pre class="r"><code>map_uhf42 &lt;- 
+    UHFCODE = as.double(UHFCODE))
+
+# Combine geospatial data and PM data
+
+map_uhf42 &lt;- 
   uhf42_map |&gt;
   left_join(tidy_uhf42_pm, by = &quot;UHFCODE&quot;) |&gt;
   pivot_longer(cols = starts_with(&quot;avg_pm2.5_&quot;), 
                names_to = &quot;time_period&quot;, 
-               values_to = &quot;avg_pm2.5&quot;)</code></pre>
-<p>Make a heat map showing differences across UHF42 neighborhoods from
-2016-2018 to 2019-2021.</p>
-<pre class="r"><code>heat_map_pm2.5 &lt;- ggplot() +
+               values_to = &quot;avg_pm2.5&quot;)
+
+# Produce heat map 
+
+heat_map_pm2.5 &lt;- ggplot() +
   geom_sf(data = map_uhf42, aes(fill = avg_pm2.5)) +
   facet_wrap(~time_period, ncol = 2) +
   scale_fill_viridis_c(option = &quot;plasma&quot;, na.value = &quot;grey50&quot;) +
@@ -838,24 +822,29 @@ tidy_uhf42_pm &lt;-
     legend.key.height = unit(2, &quot;cm&quot;)
   )
 
+# Show heat map for PM2.5 
+
 heat_map_pm2.5</code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-15-1.png" width="672" />
-Looking at the PM2.5(ug/m3) levels across the two time periods(2016-2018
-and 2019-2021), we can observe several key patterns: - Overall, there is
-a general decrease in PM2.5 levels from 2016-2018 and 2019-2021 across
-the majority of UHF42 neighborhoods, as the 2019-2021 map has much
-darkers colors indicating lower PM2.5 levels. - Midtown Manhattan shows
-the highest PM2.5 levels across both time periods. - Staten Island shows
-the lowest PM2.5 levels across all boroughs.</p>
-<p>We hypothesize that the COVID-19 pandemic resulted in significantly
-reduced traffic and industrial pollution, resulting in lower PM2.5
-levels in 2019-2021 compared to 2016-2018.</p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>Looking at the PM2.5 levels across the two time periods (2016-2018
+and 2019-2021), we can observe a general decrease in PM2.5
+concentrations across the majority of UHF42 neighborhoods, as shown by
+the more prevalent darker purple coloring in the 2019-2021 map
+indicating lower levels. Midtown Manhattan shows consistently high PM2.5
+levels across both time periods, appearing as yellow and orange areas on
+the maps, while Staten Island maintains the lowest PM2.5 levels across
+all boroughs, shown by consistent dark purple coloring.</p>
+<p>The marked improvement in air quality from 2016-2018 to 2019-2021
+likely reflects the impact of the COVID-19 pandemic, which resulted in
+significantly reduced traffic and industrial pollution during this
+period.</p>
+</div>
 </div>
 <div id="greenspace" class="section level2">
 <h2>Greenspace</h2>
 <div id="borough-and-year-comparison" class="section level4">
 <h4>Borough and Year Comparison</h4>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 <p>Bronx had the least amount of greenspace, followed by Manhattan,
 Brooklyn, and Queens. Staten Island had the highest amount of
 greenspace. This trend is similar between both year groups.</p>
@@ -910,7 +899,7 @@ increase (258.720 acres) in greenspaces and Manhattan had the least
 </div>
 <div id="greenspace-types" class="section level4">
 <h4>Greenspace Types</h4>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
 <p>In terms of total acres, flagship parks make up the largest
 proportion of NYC greenspace. This trend is similar for both year
 groups.</p>
@@ -1085,7 +1074,7 @@ ggplot(all_temp_month, aes(x = months, y = avg_month, color = borough)) +
     color = &quot;Borough&quot;
   ) +
   theme_minimal()</code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
 </div>
 <div id="max-min-mean-temperature-trend-by-year-and-borough"
 class="section level4">
@@ -1127,7 +1116,7 @@ ggplot(long_data, aes(x = years, y = Temperature, color = Temperature_Type, grou
                &quot;mean_temp&quot; = &quot;Mean Temperature&quot;)) +
   theme_minimal() +                    
   facet_wrap(~ borough)  </code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
 </div>
 <div id="average-temperature-change-by-borough" class="section level4">
 <h4>Average temperature change by borough</h4>
@@ -1219,7 +1208,7 @@ Bronx showed the biggest increase.</p>
        x = &quot;Date Group&quot;,
        y = &quot;Average Temperature&quot;) +
   theme_minimal()</code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-28-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
 </div>
 </div>
 </div>
