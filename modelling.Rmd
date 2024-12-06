@@ -1,5 +1,5 @@
 ---
-title: "Modelling"
+title: ""
 author: ""
 date: ""
 output: 
@@ -9,10 +9,174 @@ output:
     theme: cerulean
 ---
 
-# General Linear Model
+# Modeling using Linear Model
+
+## data cleaning
+```{r}
+library(tidyverse)
+library(broom)
+library(patchwork)
+
+full_data2 = read_csv("data/NYC_total.csv")
+
+# For graphing I had to change hvi as a numeric value to get the trend line
+#data for graph ed 2016-2018
+full_data2_ed_1 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "ed_visits_rate") |> #filtering only ed_visits
+  filter(data_years == "2016-2018")
+  
+#data for graph ed 2016-2018
+full_data2_ed_2 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "ed_visits_rate") |> #filtering only ed_visits
+  filter(data_years == "2019-2021")
+  
+#data for graph hosp 2016-2018
+full_data2_hosp_1 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "hosp_rate") |>  #filtering only hospitalization rate
+  filter(data_years == "2016-2018")
+
+#data for graph hosp 2019-2021
+full_data2_hosp_2 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "hosp_rate") |>  #filtering only hospitalization rate
+  filter(data_years == "2019-2021")
+
+#data for analysis hvi is a factor variable
+
+#data for analysis ed 2016-2018
+full_data2_ed_3 = full_data2 |> 
+  filter(indicator == "ed_visits_rate") |>  # filtering only ed_visits
+  filter(data_years == "2016-2018")
+
+#data for analysis ed 2019-2021
+full_data2_ed_4 = full_data2 |> 
+  filter(indicator == "ed_visits_rate") |>  # filtering only ed_visits
+  filter(data_years == "2019-2021")
+
+#data for analysis hosp 2016-2018
+full_data2_hosp_3 = full_data2 |> 
+  filter(indicator == "hosp_rate") |>  #filtering only hospitlization rate
+  filter(data_years == "2016-2018")
+
+#data for analysis hosp 2019-2021
+full_data2_hosp_4 = full_data2 |> 
+  filter(indicator == "hosp_rate") |>  #filtering only hospitlization rate
+  filter(data_years == "2019-2021")
+```
+
+
+
+## Models
+
+rate = how many people visited per 10,000
+
+### ED 2016-2018 linear model
 
 ```{r}
 
+fit = lm(zip_code_rate ~ borough + hvi, data = full_data2_ed_3) # outcome for ed_visit rate and hvi, borough as variable
 
+results_table = tidy(fit) # change it to a table form
 
+results_table = results_table[, !(names(results_table) %in% "statistic")] |> #remove statistic column
+  knitr::kable(digit = 3) # set digit to 3
+  
+results_table
+
+```
+
+During 2016-2018, Queens was the borough that had lowest ED visit rate and zipcode with hvi score 1 had the lowest risk of ED visit. In contrast, Bronx was the borough had the highest ED visit rate and zipcode with hvi score 5 had the highest rate of ED visit.
+
+### ED 2019-2021 linear model
+
+```{r}
+fit2 = lm(zip_code_rate ~ borough + hvi, data = full_data2_ed_4) #outcome for hosp_rate and hvi, borough as variable
+
+results_table2 = tidy(fit2) # change it to a table form
+
+results_table2 = results_table2[, !(names(results_table2) %in% "statistic")] |> #remove statistic column
+  knitr::kable(digit = 3) # set digit to 3
+  
+results_table2
+```
+
+During 2019-2021, Queens was the borough that had lowest ED visit rate and zipcode with hvi score 1 had the lowest ED visit rate. In contrast, Bronx was the borough had the highest ED visit rate and zipcode with hvi score 5 had the highest rate of ED visit.
+
+### Hosp 2016-2018 linear model
+
+```{r}
+fit3 = lm(zip_code_rate ~ borough + hvi, data = full_data2_hosp_3)
+
+results_table3 = tidy(fit3) # change it to a table form
+
+results_table3 = results_table3[, !(names(results_table3) %in% "statistic")] |> #remove statistic column
+  knitr::kable(digit = 3) # set digit to 3
+  
+results_table3
+```
+
+During 2016-2018, Queens was the borough that had lowest hospitalization rate and zipcode with hvi score 1 had the lowest hospitalization rate. In contrast, Bronx was the borough had the highest hospitalization rate and zipcode with hvi score 5 had the highest rate of hospitalization.
+
+### Hosp 2019-2021 linear model
+
+```{r}
+fit4 = lm(zip_code_rate ~ borough + hvi, data = full_data2_hosp_4)
+
+results_table4 = tidy(fit4) # change it to a table form
+
+results_table4 = results_table4[, !(names(results_table4) %in% "statistic")] |> #remove statistic column
+  knitr::kable(digit = 3) # set digit to 3
+  
+results_table4
+
+```
+
+During 2019-2021, Queens was the borough that had lowest hospitalization rate and zipcode with hvi score 1 had the lowest hospitalization rate. In contrast, Bronx was the borough had the highest hospitalization rate and zipcode with hvi score 5 had the highest rate of hospitalization.
+
+Overall, all models shows the borough had the lowest ED and hospitalization rate is Queens and zipcodes having lower HVI score. We can infer that area with lower zip codes tend to have lower rates of ED and Hospitalization for children with respiratory problems.
+
+## mean hvi per borough
+```{r}
+daa = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> # changing hvi to numeric for calculating the mean
+  group_by(borough) |> 
+  summarise(hvi_mean = mean(hvi)) # calculating the mean hvi per borough
+
+knitr::kable(daa)
+```
+
+It turns out to be there are other factors that we haven't take in to account because borough with the lowest hvi mean was Staten Island.
+
+### plot
+
+```{r}
+
+plot1 = ggplot(full_data2_ed_1, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = "blue", alpha = 0.6) +  # Data points
+  geom_smooth(method = "lm", color = "red", se = TRUE) +  # Regression line with confidence interval
+  labs(title = "ED Visit rate per HVI score (2016-2018)", x = "HVI", y = "ED Visit Rate") +
+  theme_minimal()
+
+plot2 = ggplot(full_data2_ed_2, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = "blue", alpha = 0.6) +  # Data points
+  geom_smooth(method = "lm", color = "red", se = TRUE) +  # Regression line with confidence interval
+  labs(title = "ED Visit rate per HVI score (2019-2021)", x = "HVI", y = "ED Visit Rate") +
+  theme_minimal()
+
+plot3 = ggplot(full_data2_hosp_1, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = "blue", alpha = 0.6) +  # Data points
+  geom_smooth(method = "lm", color = "red", se = TRUE) +  # Regression line with confidence interval
+  labs(title = "Hospitalization rate per HVI score (2016-2018)", x = "HVI", y = "Hospitalization Rate") +
+  theme_minimal()
+
+plot4 = ggplot(full_data2_hosp_2, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = "blue", alpha = 0.6) +  # Data points
+  geom_smooth(method = "lm", color = "red", se = TRUE) +  # Regression line with confidence interval
+  labs(title = "Hospitalization rate per HVI score (2019-2021)", x = "HVI", y = "Hospitalization Rate") +
+  theme_minimal()
+
+(plot1 + plot2) / (plot3 + plot4)
 ```

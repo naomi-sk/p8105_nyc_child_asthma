@@ -12,9 +12,9 @@
 <meta name="author" content="" />
 
 
-<title>Modelling</title>
+<title>modelling.knit</title>
 
-<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cerulean.min.css" rel="stylesheet" />
@@ -36,8 +36,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -366,14 +366,420 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Modelling</h1>
-<h4 class="author"></h4>
 
 </div>
 
 
-<div id="general-linear-model" class="section level1">
-<h1>General Linear Model</h1>
+<div id="modeling-using-linear-model" class="section level1">
+<h1>Modeling using Linear Model</h1>
+<div id="data-cleaning" class="section level2">
+<h2>data cleaning</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+## ✔ dplyr     1.1.4     ✔ readr     2.1.5
+## ✔ forcats   1.0.0     ✔ stringr   1.5.1
+## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+## ✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+## ✔ purrr     1.0.2     
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+<pre class="r"><code>library(broom)
+library(patchwork)
+
+full_data2 = read_csv(&quot;data/NYC_total.csv&quot;)</code></pre>
+<pre><code>## Rows: 634 Columns: 10
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## chr (3): data_years, borough, indicator
+## dbl (7): zip_code, zip_code_rate, avg_temperature, pm2.5_level, acres_sum, h...
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<pre class="r"><code># For graphing I had to change hvi as a numeric value to get the trend line
+#data for graph ed 2016-2018
+full_data2_ed_1 = full_data2 |&gt; 
+  mutate(hvi = as.numeric(hvi)) |&gt; 
+  filter(indicator == &quot;ed_visits_rate&quot;) |&gt; #filtering only ed_visits
+  filter(data_years == &quot;2016-2018&quot;)
+  
+#data for graph ed 2016-2018
+full_data2_ed_2 = full_data2 |&gt; 
+  mutate(hvi = as.numeric(hvi)) |&gt; 
+  filter(indicator == &quot;ed_visits_rate&quot;) |&gt; #filtering only ed_visits
+  filter(data_years == &quot;2019-2021&quot;)
+  
+#data for graph hosp 2016-2018
+full_data2_hosp_1 = full_data2 |&gt; 
+  mutate(hvi = as.numeric(hvi)) |&gt; 
+  filter(indicator == &quot;hosp_rate&quot;) |&gt;  #filtering only hospitalization rate
+  filter(data_years == &quot;2016-2018&quot;)
+
+#data for graph hosp 2019-2021
+full_data2_hosp_2 = full_data2 |&gt; 
+  mutate(hvi = as.numeric(hvi)) |&gt; 
+  filter(indicator == &quot;hosp_rate&quot;) |&gt;  #filtering only hospitalization rate
+  filter(data_years == &quot;2019-2021&quot;)
+
+#data for analysis hvi is a factor variable
+
+#data for analysis ed 2016-2018
+full_data2_ed_3 = full_data2 |&gt; 
+  filter(indicator == &quot;ed_visits_rate&quot;) |&gt;  # filtering only ed_visits
+  filter(data_years == &quot;2016-2018&quot;)
+
+#data for analysis ed 2019-2021
+full_data2_ed_4 = full_data2 |&gt; 
+  filter(indicator == &quot;ed_visits_rate&quot;) |&gt;  # filtering only ed_visits
+  filter(data_years == &quot;2019-2021&quot;)
+
+#data for analysis hosp 2016-2018
+full_data2_hosp_3 = full_data2 |&gt; 
+  filter(indicator == &quot;hosp_rate&quot;) |&gt;  #filtering only hospitlization rate
+  filter(data_years == &quot;2016-2018&quot;)
+
+#data for analysis hosp 2019-2021
+full_data2_hosp_4 = full_data2 |&gt; 
+  filter(indicator == &quot;hosp_rate&quot;) |&gt;  #filtering only hospitlization rate
+  filter(data_years == &quot;2019-2021&quot;)</code></pre>
+</div>
+<div id="models" class="section level2">
+<h2>Models</h2>
+<p>rate = how many people visited per 10,000</p>
+<div id="ed-2016-2018-linear-model" class="section level3">
+<h3>ED 2016-2018 linear model</h3>
+<pre class="r"><code>fit = lm(zip_code_rate ~ borough + hvi, data = full_data2_ed_3) # outcome for ed_visit rate and hvi, borough as variable
+
+results_table = tidy(fit) # change it to a table form
+
+results_table = results_table[, !(names(results_table) %in% &quot;statistic&quot;)] |&gt; #remove statistic column
+  knitr::kable(digit = 3) # set digit to 3
+  
+results_table</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">(Intercept)</td>
+<td align="right">68.358</td>
+<td align="right">28.085</td>
+<td align="right">0.016</td>
+</tr>
+<tr class="even">
+<td align="left">boroughBrooklyn</td>
+<td align="right">-158.440</td>
+<td align="right">22.653</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="odd">
+<td align="left">boroughManhattan</td>
+<td align="right">-37.827</td>
+<td align="right">24.314</td>
+<td align="right">0.122</td>
+</tr>
+<tr class="even">
+<td align="left">boroughQueens</td>
+<td align="right">-169.356</td>
+<td align="right">21.400</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="odd">
+<td align="left">boroughStaten Island</td>
+<td align="right">-113.008</td>
+<td align="right">32.551</td>
+<td align="right">0.001</td>
+</tr>
+<tr class="even">
+<td align="left">hvi</td>
+<td align="right">69.150</td>
+<td align="right">5.452</td>
+<td align="right">0.000</td>
+</tr>
+</tbody>
+</table>
+<p>During 2016-2018, Queens was the borough that had lowest ED visit
+rate and zipcode with hvi score 1 had the lowest risk of ED visit. In
+contrast, Bronx was the borough had the highest ED visit rate and
+zipcode with hvi score 5 had the highest rate of ED visit.</p>
+</div>
+<div id="ed-2019-2021-linear-model" class="section level3">
+<h3>ED 2019-2021 linear model</h3>
+<pre class="r"><code>fit2 = lm(zip_code_rate ~ borough + hvi, data = full_data2_ed_4) #outcome for hosp_rate and hvi, borough as variable
+
+results_table2 = tidy(fit2) # change it to a table form
+
+results_table2 = results_table2[, !(names(results_table2) %in% &quot;statistic&quot;)] |&gt; #remove statistic column
+  knitr::kable(digit = 3) # set digit to 3
+  
+results_table2</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">(Intercept)</td>
+<td align="right">38.544</td>
+<td align="right">14.538</td>
+<td align="right">0.009</td>
+</tr>
+<tr class="even">
+<td align="left">boroughBrooklyn</td>
+<td align="right">-81.901</td>
+<td align="right">11.612</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="odd">
+<td align="left">boroughManhattan</td>
+<td align="right">-18.588</td>
+<td align="right">12.526</td>
+<td align="right">0.140</td>
+</tr>
+<tr class="even">
+<td align="left">boroughQueens</td>
+<td align="right">-88.609</td>
+<td align="right">10.981</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="odd">
+<td align="left">boroughStaten Island</td>
+<td align="right">-55.996</td>
+<td align="right">16.715</td>
+<td align="right">0.001</td>
+</tr>
+<tr class="even">
+<td align="left">hvi</td>
+<td align="right">35.180</td>
+<td align="right">2.840</td>
+<td align="right">0.000</td>
+</tr>
+</tbody>
+</table>
+<p>During 2019-2021, Queens was the borough that had lowest ED visit
+rate and zipcode with hvi score 1 had the lowest ED visit rate. In
+contrast, Bronx was the borough had the highest ED visit rate and
+zipcode with hvi score 5 had the highest rate of ED visit.</p>
+</div>
+<div id="hosp-2016-2018-linear-model" class="section level3">
+<h3>Hosp 2016-2018 linear model</h3>
+<pre class="r"><code>fit3 = lm(zip_code_rate ~ borough + hvi, data = full_data2_hosp_3)
+
+results_table3 = tidy(fit3) # change it to a table form
+
+results_table3 = results_table3[, !(names(results_table3) %in% &quot;statistic&quot;)] |&gt; #remove statistic column
+  knitr::kable(digit = 3) # set digit to 3
+  
+results_table3</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">(Intercept)</td>
+<td align="right">17.547</td>
+<td align="right">5.124</td>
+<td align="right">0.001</td>
+</tr>
+<tr class="even">
+<td align="left">boroughBrooklyn</td>
+<td align="right">-27.036</td>
+<td align="right">3.973</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="odd">
+<td align="left">boroughManhattan</td>
+<td align="right">-8.171</td>
+<td align="right">4.460</td>
+<td align="right">0.069</td>
+</tr>
+<tr class="even">
+<td align="left">boroughQueens</td>
+<td align="right">-30.619</td>
+<td align="right">3.767</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="odd">
+<td align="left">boroughStaten Island</td>
+<td align="right">-17.282</td>
+<td align="right">5.870</td>
+<td align="right">0.004</td>
+</tr>
+<tr class="even">
+<td align="left">hvi</td>
+<td align="right">10.143</td>
+<td align="right">1.018</td>
+<td align="right">0.000</td>
+</tr>
+</tbody>
+</table>
+<p>During 2016-2018, Queens was the borough that had lowest
+hospitalization rate and zipcode with hvi score 1 had the lowest
+hospitalization rate. In contrast, Bronx was the borough had the highest
+hospitalization rate and zipcode with hvi score 5 had the highest rate
+of hospitalization.</p>
+</div>
+<div id="hosp-2019-2021-linear-model" class="section level3">
+<h3>Hosp 2019-2021 linear model</h3>
+<pre class="r"><code>fit4 = lm(zip_code_rate ~ borough + hvi, data = full_data2_hosp_4)
+
+results_table4 = tidy(fit4) # change it to a table form
+
+results_table4 = results_table4[, !(names(results_table4) %in% &quot;statistic&quot;)] |&gt; #remove statistic column
+  knitr::kable(digit = 3) # set digit to 3
+  
+results_table4</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">(Intercept)</td>
+<td align="right">15.002</td>
+<td align="right">3.040</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="even">
+<td align="left">boroughBrooklyn</td>
+<td align="right">-17.650</td>
+<td align="right">2.263</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="odd">
+<td align="left">boroughManhattan</td>
+<td align="right">-5.561</td>
+<td align="right">2.618</td>
+<td align="right">0.035</td>
+</tr>
+<tr class="even">
+<td align="left">boroughQueens</td>
+<td align="right">-19.441</td>
+<td align="right">2.180</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="odd">
+<td align="left">boroughStaten Island</td>
+<td align="right">-13.552</td>
+<td align="right">3.524</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="even">
+<td align="left">hvi</td>
+<td align="right">5.227</td>
+<td align="right">0.599</td>
+<td align="right">0.000</td>
+</tr>
+</tbody>
+</table>
+<p>During 2019-2021, Queens was the borough that had lowest
+hospitalization rate and zipcode with hvi score 1 had the lowest
+hospitalization rate. In contrast, Bronx was the borough had the highest
+hospitalization rate and zipcode with hvi score 5 had the highest rate
+of hospitalization.</p>
+<p>Overall, all models shows the borough had the lowest ED and
+hospitalization rate is Queens and zipcodes having lower HVI score. We
+can infer that area with lower zip codes tend to have lower rates of ED
+and Hospitalization for children with respiratory problems.</p>
+</div>
+</div>
+<div id="mean-hvi-per-borough" class="section level2">
+<h2>mean hvi per borough</h2>
+<pre class="r"><code>daa = full_data2 |&gt; 
+  mutate(hvi = as.numeric(hvi)) |&gt; # changing hvi to numeric for calculating the mean
+  group_by(borough) |&gt; 
+  summarise(hvi_mean = mean(hvi)) # calculating the mean hvi per borough
+
+knitr::kable(daa)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">borough</th>
+<th align="right">hvi_mean</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Bronx</td>
+<td align="right">4.070707</td>
+</tr>
+<tr class="even">
+<td align="left">Brooklyn</td>
+<td align="right">3.653061</td>
+</tr>
+<tr class="odd">
+<td align="left">Manhattan</td>
+<td align="right">2.418605</td>
+</tr>
+<tr class="even">
+<td align="left">Queens</td>
+<td align="right">3.274419</td>
+</tr>
+<tr class="odd">
+<td align="left">Staten Island</td>
+<td align="right">2.068182</td>
+</tr>
+</tbody>
+</table>
+<p>It turns out to be there are other factors that we haven’t take in to
+account because borough with the lowest hvi mean was Staten Island.</p>
+<div id="plot" class="section level3">
+<h3>plot</h3>
+<pre class="r"><code>plot1 = ggplot(full_data2_ed_1, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = &quot;blue&quot;, alpha = 0.6) +  # Data points
+  geom_smooth(method = &quot;lm&quot;, color = &quot;red&quot;, se = TRUE) +  # Regression line with confidence interval
+  labs(title = &quot;ED Visit rate per HVI score (2016-2018)&quot;, x = &quot;HVI&quot;, y = &quot;ED Visit Rate&quot;) +
+  theme_minimal()
+
+plot2 = ggplot(full_data2_ed_2, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = &quot;blue&quot;, alpha = 0.6) +  # Data points
+  geom_smooth(method = &quot;lm&quot;, color = &quot;red&quot;, se = TRUE) +  # Regression line with confidence interval
+  labs(title = &quot;ED Visit rate per HVI score (2019-2021)&quot;, x = &quot;HVI&quot;, y = &quot;ED Visit Rate&quot;) +
+  theme_minimal()
+
+plot3 = ggplot(full_data2_hosp_1, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = &quot;blue&quot;, alpha = 0.6) +  # Data points
+  geom_smooth(method = &quot;lm&quot;, color = &quot;red&quot;, se = TRUE) +  # Regression line with confidence interval
+  labs(title = &quot;Hospitalization rate per HVI score (2016-2018)&quot;, x = &quot;HVI&quot;, y = &quot;Hospitalization Rate&quot;) +
+  theme_minimal()
+
+plot4 = ggplot(full_data2_hosp_2, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = &quot;blue&quot;, alpha = 0.6) +  # Data points
+  geom_smooth(method = &quot;lm&quot;, color = &quot;red&quot;, se = TRUE) +  # Regression line with confidence interval
+  labs(title = &quot;Hospitalization rate per HVI score (2019-2021)&quot;, x = &quot;HVI&quot;, y = &quot;Hospitalization Rate&quot;) +
+  theme_minimal()
+
+(plot1 + plot2) / (plot3 + plot4)</code></pre>
+<pre><code>## `geom_smooth()` using formula = &#39;y ~ x&#39;
+## `geom_smooth()` using formula = &#39;y ~ x&#39;
+## `geom_smooth()` using formula = &#39;y ~ x&#39;
+## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
+<p><img src="modelling_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+</div>
+</div>
 </div>
 
 
