@@ -10,14 +10,6 @@ output:
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
-```
-
-Column {data-width=4000}
------------------------------------------------------------------------
-
-### PM2.5
-
-```{r, include=FALSE}
 library(tidyverse)
 library(rvest)
 library(readxl)
@@ -29,8 +21,12 @@ library(leaflet)
 library(scales)
 library(patchwork)
 library(ggplot2)
-
 ```
+
+Column {data-width=4000}
+-----------------------------------------------------------------------
+
+### PM2.5
 
 ```{r, include=FALSE}
 particulate_matter = 
@@ -83,7 +79,6 @@ tidy_analysis_pm |>
   ) 
 ```
 
-
 ```{r, include=FALSE}
 
 # Print PM2.5 Summary
@@ -95,8 +90,6 @@ tidy_analysis_pm_diff <-
 
 knitr::kable(tidy_analysis_pm_diff, col.names = c("borough", "avg_pm2.5_2016-2018", "avg_pm2.5_2019-2021", "pm2.5_difference"))
 ```
-
-
 
 ```{r, include=FALSE}
 geography = 
@@ -285,11 +278,6 @@ ed_summary %>%
 
 ```
 
-For ED Admissions:
-
-* The Bronx had notably higher rates than other boroughs in both periods (347.7 and 180.7 per 10,000 children)
-* All boroughs saw substantial decreases between 2016-2018 and 2019-2021 (ranging from about 43-48%)
-* Even after decreases, the Bronx's 2019-2021 rate (180.7) remained higher than any other borough's 2016-2018 rates
 
 ```{r}
 
@@ -318,14 +306,6 @@ ggplotly(ed_plot)
 
 ```
 
-Looking at the ED visit rates map across the two time periods (2016-2018 and 2019-2021), we can observe several key patterns:
-
-* There appears to be a general decrease in ED visit rates from 2016-2018 to 2019-2021 across most NYC boroughs, as indicated by the darker purple colors in the later period.
-* The Bronx (the northernmost borough) shows notably higher ED visit rates than other boroughs in both time periods, with rates exceeding 300 per 10,000 children aged 0-17 years in 2016-2018.
-* Manhattan and Brooklyn by comparison appear to have moderate rates, while Staten Island (the southernmost borough) consistently shows lower ED visit rates in both periods.
-
-The most striking change between the two periods is the apparent reduction in ED visits during 2019-2021, which could potentially be related to the COVID-19 pandemic's impact on healthcare utilization patterns.
-
 Column {data-width=4000}
 -----------------------------------------------------------------------
 ### ED Hospitalizations
@@ -344,11 +324,6 @@ hosp_summary %>%
 
 ```
 
-For ED hospitalizations, compared to ED Admissions rates:
-
-* Similar pattern with the Bronx having the highest rates (58.5 and 36.8 per 10,000 children)
-* All boroughs showed considerable decreases between 2016-2018 and 2019-2021 (ranging from about 32-40%)
-* Queens and Staten Island had the lowest hospitalization rates in both periods
 
 ```{r}
 
@@ -375,14 +350,10 @@ ggplotly(hosp_plot)
 
 Column {data-width=4000}
 -----------------------------------------------------------------------
-### Temperature
 
 ```{r}
+rmarkdown::render("visualization.Rmd", output_format = "flexdashboard::flex_dashboard")
+```
 
 ```
 
-## Greenspace 
-
-```{r}
-
-```
