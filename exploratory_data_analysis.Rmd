@@ -38,7 +38,7 @@ library(ggplot2)
 
 # Exploratory Data Analysis
 
-## ED Visits and Hospitalizations between 2016-2018 and 2019-2021
+#### ED Visits and Hospitalizations between 2016-2018 and 2019-2021
 
 ```{r}
 
@@ -79,7 +79,7 @@ map_data <- nyc_zip_sf %>%
 
 ```
 
-### Emergency Department Visit Rates per 10,000 children (Aged 0-17 Years)
+#### Emergency Department Visit Rates per 10,000 children (Aged 0-17 Years)
 
 ```{r, echo=FALSE}
 
@@ -156,7 +156,7 @@ Looking at the ED visit rates map across the two time periods (2016-2018 and 201
 
 The most striking change between the two periods is the apparent reduction in ED visits during 2019-2021, which could potentially be related to the COVID-19 pandemic's impact on healthcare utilization patterns.
 
-### Asthma hospitalization rate per 10,000 children (aged 0-17 years)
+#### Asthma hospitalization rate per 10,000 children (aged 0-17 years)
 
 ```{r, echo=FALSE}
 
@@ -267,7 +267,7 @@ tidy_analysis_pm =
 
 ```
 
-### Average PM2.5 Levels (μg/m³) Between 2016-2018 and 2019-2021
+#### Average PM2.5 Levels (μg/m³) Between 2016-2018 and 2019-2021
 
 ```{r}
 
@@ -301,7 +301,7 @@ knitr::kable(tidy_analysis_pm_diff, col.names = c("borough", "avg_pm2.5_2016-201
 
 PM2.5 levels demonstrated consistent declines across all NYC boroughs between 2016-2018 and 2019-2021, as shown in both the bar plot and supporting data table. Manhattan maintained the highest concentrations in both periods (8.72 and 7.63 μg/m³ respectively), which is notably higher than other boroughs as evident by the tallest bars in the graph. The magnitude of improvement was remarkably uniform in the Bronx and Brooklyn, with the table showing identical reductions of 1.02 μg/m³ for both boroughs, while Queens experienced the smallest decrease at 0.72 μg/m³. Staten Island consistently maintained the lowest PM2.5 levels among all boroughs, with averages dropping from 6.68 to 5.87 μg/m³, as evidenced by the shortest bars in the plot.
 
-### PM2.5 Levels by United Hospital Fund (UHF42) Neighborhoods, 2016-2018 vs. 2019-2021
+#### PM2.5 Levels by United Hospital Fund (UHF42) Neighborhoods, 2016-2018 vs. 2019-2021
 
 ```{r}
 
@@ -398,6 +398,9 @@ The marked improvement in air quality from 2016-2018 to 2019-2021 likely reflect
 ## Greenspace
 
 ```{r greenspace clean, include=FALSE}
+
+# Load greenspace data
+
 greenspace_clean = read_csv("./data/Parks_Properties_20241126.csv", na = c("NA", ".", "")) |>
   janitor::clean_names() |> 
   mutate(
@@ -412,14 +415,15 @@ greenspace_clean = read_csv("./data/Parks_Properties_20241126.csv", na = c("NA",
   separate(acquisitiondate, into = c("year", "month", "day"), sep = "-") |>
   select(year, borough, acres, typecategory) |> 
   filter(year < 2022 | is.na(year))
+
 ```
-
-
 
 #### Borough and Year Comparison
 
-```{r first year, include=FALSE}
-#2016-2018 dataset
+```{r, include=FALSE}
+
+# Load 2016-2018 dataset
+
 dataset1_gs = greenspace_clean |>
   filter(year < 2019 | is.na(year)) |> 
   group_by(year, borough) |>
@@ -429,10 +433,13 @@ dataset1_gs_calc = dataset1_gs |>
   group_by(borough) |> 
   summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
   mutate(year_group = "2016-2018")
+
 ```
 
-```{r second year, include=FALSE}
-#2019-2021 dataset
+```{r, include=FALSE}
+
+# Load 2019-2021 dataset
+
 dataset2_gs = greenspace_clean |>
   filter(year < 2022 | is.na(year)) |>
   group_by(year, borough) |>
@@ -442,25 +449,33 @@ dataset2_gs_calc = dataset2_gs |>
   group_by(borough) |> 
   summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
   mutate(year_group = "2019-2021")
-```
 
-```{r total acres dataset, echo=FALSE}
-total_acres = bind_rows(dataset1_gs_calc, dataset2_gs_calc)
-  
-#total acres dataset
-Greenspace_data = total_acres |>
-  pivot_wider(names_from = year_group,
-              values_from = acres_sum)
 ```
 
 ```{r, echo=FALSE}
+
+total_acres = bind_rows(dataset1_gs_calc, dataset2_gs_calc)
+  
+# Total acres dataset
+
+Greenspace_data = total_acres |>
+  pivot_wider(names_from = year_group,
+              values_from = acres_sum)
+
+```
+
+```{r, echo=FALSE}
+
 ggplot(total_acres, aes(x = reorder(borough, acres_sum), y = acres_sum, fill = year_group)) + 
   geom_bar(stat = "identity", position = "dodge", alpha = 0.7) + 
   labs(x = "Borough", y = "Greenspace (Total Acres)", title = "Greenspaces Across Borough by Year Group") +
   theme_minimal()
+
 ```
 
-Bronx had the least amount of greenspace, followed by Manhattan, Brooklyn, and Queens. Staten Island had the highest amount of greenspace. This trend is similar between both year groups.
+Analysis of greenspace distribution across NYC boroughs shows consistent patterns between 2016-2018 and 2019-2021, with notable differences in total acreage between boroughs. Staten Island maintained substantially higher greenspace coverage than other boroughs in both periods, reaching approximately 3,000 total acres in 2019-2021. Queens ranked second with around 2,200 acres, while Brooklyn and Manhattan showed moderate levels of greenspace at approximately 1,800 acres each. 
+
+The Bronx consistently had the lowest greenspace coverage, though it showed a slight increase from around 1,100 acres in 2016-2018 to 1,200 acres in 2019-2021. The ranking of boroughs based on greenspace coverage was relatively consistent across both time periods, indicating fairly constant disparities in greenspace access over the time periods of interest.
 
 #### Greenspace increase
 

@@ -385,8 +385,8 @@ div.tocify {
 <div id="exploratory-data-analysis" class="section level1">
 <h1>Exploratory Data Analysis</h1>
 <div id="ed-visits-and-hospitalizations-between-2016-2018-and-2019-2021"
-class="section level2">
-<h2>ED Visits and Hospitalizations between 2016-2018 and 2019-2021</h2>
+class="section level4">
+<h4>ED Visits and Hospitalizations between 2016-2018 and 2019-2021</h4>
 <pre class="r"><code># Load ED data for 2016-2018
 
 ed_2016_2018 = 
@@ -421,11 +421,12 @@ borough_data &lt;- borough_data %&gt;%
 
 map_data &lt;- nyc_zip_sf %&gt;%
   left_join(borough_data, by = &quot;boro_name&quot;)</code></pre>
+</div>
 <div
 id="emergency-department-visit-rates-per-10000-children-aged-0-17-years"
-class="section level3">
-<h3>Emergency Department Visit Rates per 10,000 children (Aged 0-17
-Years)</h3>
+class="section level4">
+<h4>Emergency Department Visit Rates per 10,000 children (Aged 0-17
+Years)</h4>
 <table>
 <thead>
 <tr class="header">
@@ -519,9 +520,9 @@ related to the COVID-19 pandemic’s impact on healthcare utilization
 patterns.</p>
 </div>
 <div id="asthma-hospitalization-rate-per-10000-children-aged-0-17-years"
-class="section level3">
-<h3>Asthma hospitalization rate per 10,000 children (aged 0-17
-years)</h3>
+class="section level4">
+<h4>Asthma hospitalization rate per 10,000 children (aged 0-17
+years)</h4>
 <table>
 <thead>
 <tr class="header">
@@ -617,7 +618,6 @@ the unequal distribution of child asthma burden across New York City.
 This suggests underlying socioeconomic and/or environmental factors
 affecting childhood asthma rates across different parts of the city.</p>
 </div>
-</div>
 <div id="fine-particulate-matter-pm2.5" class="section level2">
 <h2>Fine Particulate Matter (PM2.5)</h2>
 <pre class="r"><code># Load PM data
@@ -658,8 +658,8 @@ tidy_analysis_pm =
     names_prefix = &quot;avg_pm2.5_&quot;
   )</code></pre>
 <div id="average-pm2.5-levels-μgm³-between-2016-2018-and-2019-2021"
-class="section level3">
-<h3>Average PM2.5 Levels (μg/m³) Between 2016-2018 and 2019-2021</h3>
+class="section level4">
+<h4>Average PM2.5 Levels (μg/m³) Between 2016-2018 and 2019-2021</h4>
 <pre class="r"><code># Plot of average PM2.5 levels by borough between 2016-2018 and 2019-2021
 
 tidy_analysis_pm |&gt;
@@ -743,9 +743,9 @@ evidenced by the shortest bars in the plot.</p>
 </div>
 <div
 id="pm2.5-levels-by-united-hospital-fund-uhf42-neighborhoods-2016-2018-vs.-2019-2021"
-class="section level3">
-<h3>PM2.5 Levels by United Hospital Fund (UHF42) Neighborhoods,
-2016-2018 vs. 2019-2021</h3>
+class="section level4">
+<h4>PM2.5 Levels by United Hospital Fund (UHF42) Neighborhoods,
+2016-2018 vs. 2019-2021</h4>
 <pre class="r"><code># Load NYC geospatial data
 
 geography = 
@@ -819,7 +819,11 @@ heat_map_pm2.5 &lt;- ggplot() +
   theme(
     plot.title = element_text(size = 12),
     legend.position = &quot;right&quot;,
-    legend.key.height = unit(2, &quot;cm&quot;)
+    legend.key.height = unit(2, &quot;cm&quot;),
+    panel.grid = element_blank(),          
+    axis.text = element_blank(),           
+    axis.ticks = element_blank(),         
+    axis.title = element_blank()          
   )
 
 # Show heat map for PM2.5 
@@ -844,10 +848,21 @@ period.</p>
 <h2>Greenspace</h2>
 <div id="borough-and-year-comparison" class="section level4">
 <h4>Borough and Year Comparison</h4>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
-<p>Bronx had the least amount of greenspace, followed by Manhattan,
-Brooklyn, and Queens. Staten Island had the highest amount of
-greenspace. This trend is similar between both year groups.</p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p>Analysis of greenspace distribution across NYC boroughs shows
+consistent patterns between 2016-2018 and 2019-2021, with notable
+differences in total acreage between boroughs. Staten Island maintained
+substantially higher greenspace coverage than other boroughs in both
+periods, reaching approximately 3,000 total acres in 2019-2021. Queens
+ranked second with around 2,200 acres, while Brooklyn and Manhattan
+showed moderate levels of greenspace at approximately 1,800 acres
+each.</p>
+<p>The Bronx consistently had the lowest greenspace coverage, though it
+showed a slight increase from around 1,100 acres in 2016-2018 to 1,200
+acres in 2019-2021. The ranking of boroughs based on greenspace coverage
+was relatively consistent across both time periods, indicating fairly
+constant disparities in greenspace access over the time periods of
+interest.</p>
 </div>
 <div id="greenspace-increase" class="section level4">
 <h4>Greenspace increase</h4>
@@ -899,7 +914,7 @@ increase (258.720 acres) in greenspaces and Manhattan had the least
 </div>
 <div id="greenspace-types" class="section level4">
 <h4>Greenspace Types</h4>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
 <p>In terms of total acres, flagship parks make up the largest
 proportion of NYC greenspace. This trend is similar for both year
 groups.</p>
@@ -1074,7 +1089,7 @@ ggplot(all_temp_month, aes(x = months, y = avg_month, color = borough)) +
     color = &quot;Borough&quot;
   ) +
   theme_minimal()</code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
 </div>
 <div id="max-min-mean-temperature-trend-by-year-and-borough"
 class="section level4">
@@ -1116,7 +1131,7 @@ ggplot(long_data, aes(x = years, y = Temperature, color = Temperature_Type, grou
                &quot;mean_temp&quot; = &quot;Mean Temperature&quot;)) +
   theme_minimal() +                    
   facet_wrap(~ borough)  </code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
 </div>
 <div id="average-temperature-change-by-borough" class="section level4">
 <h4>Average temperature change by borough</h4>
@@ -1208,7 +1223,7 @@ Bronx showed the biggest increase.</p>
        x = &quot;Date Group&quot;,
        y = &quot;Average Temperature&quot;) +
   theme_minimal()</code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
 </div>
 </div>
 </div>
