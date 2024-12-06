@@ -572,7 +572,6 @@ table_type = Total_acres_table_test |>
 
 knitr::kable(table_type, col.names = c("Greenspace Type", "2016-2018", "2019-2021", "Difference"))
 
-
 ```
 
 Between 2016-2018 and 2019-2021, neighborhood parks showed the largest expansion with an increase of 259.617 acres, followed by managed sites which grew by 119.095 acres. Nature areas experienced a notable increase of 32.860 acres, while undeveloped spaces, waterfront facilities, gardens, and playgrounds showed minimal changes, with increases ranging from 0.299 to 1.186 acres. The remaining 14 greenspace types maintained their original acreage with no changes observed during this period. This pattern indicates that recent greenspace development has primarily focused on expanding neighborhood parks and managed sites while preserving existing spaces in other categories.
@@ -673,7 +672,8 @@ The Bronx and Brooklyn both incorporate significant Parkway acreage as part of N
 ## Temperature
 
 ```{r}
-# Load raw temperature data for each borough
+
+# Load and clean raw temperature data for each borough
 
 manhattan = read_csv("data/manhattan.csv",skip = 3) |>
   mutate(Borough = "Manhattan") |> 
@@ -695,9 +695,8 @@ staten_island = read_csv("data/staten_island.csv",skip = 3) |>
   mutate(Borough = "Staten Island") |> 
   janitor::clean_names()
 
-```
+# Combine temperature data from all boroughs and format dates/times
 
-```{r}
 all_temp = bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |> 
   mutate(borough = as.factor(borough)) |> 
   mutate(date = as.Date(time, format = "%d/%m/%Y")) |> 
@@ -705,8 +704,10 @@ all_temp = bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |>
   mutate(years = year(date)) |> 
   mutate(months = as.Date(paste0(format(date, "%Y-%m"), "-01"), format = "%Y-%m-%d"))
 
+# Calculate average temperatures by borough and year group
+
 all_temp_borough = all_temp |> 
-  mutate(date = as.Date(time, format = "%d/%m/%Y")) |>  # Corrected date format
+  mutate(date = as.Date(time, format = "%d/%m/%Y")) |> 
   mutate(data_years = ifelse(year(date) %in% 2016:2018, "2016-2018", "2019-2021")) |> 
   select(temperature_2m_max:data_years) |> 
   group_by(data_years, borough) |> 
@@ -714,14 +715,11 @@ all_temp_borough = all_temp |>
 
 ```
 
-
-#### Monthly Mean temperature by borough
-
-This graph shows the monthly mean temperature change by Borough between 2016 and 2021.
+#### Monthly Mean temperature by Borough
 
 ```{r}
 
-# Monthly Mean temperature
+# Produce plot of monthly Mean temperature
 
 all_temp_month = all_temp |> 
   group_by(months, borough) |> 
@@ -737,14 +735,18 @@ ggplot(all_temp_month, aes(x = months, y = avg_month, color = borough)) +
     color = "Borough"
   ) +
   theme_minimal()
+
 ```
+
+The plot shows monthly mean temperatures across New York City's five boroughs from 2016 to 2021. There is a clear seasonal pattern, with temperatures peaking around 25°C in summer months and dropping to near 0°C in winter months. Notably, the temperature patterns are remarkably similar across all boroughs, with the lines closely overlapping throughout the time period. This suggests that despite their different geographic locations and urban landscapes, the boroughs experience very similar temperature patterns throughout the year. The consistency of these patterns persists across all years shown in the dataset.
 
 #### Max, Min, Mean temperature trend by year and borough
 
 This 5 plots shows the highest temperature mean, lowest temperature mean, and total mean temperature by year and borough.
 
 ```{r}
-# Max, Min, Mean temperature trend by year and borough
+
+# Mean temperature data
 
 mean_temp_year = all_temp |> 
   group_by(years, borough) |> 
@@ -755,6 +757,7 @@ mean_temp_year = all_temp |>
   ) |> 
   arrange(years, borough) 
 
+# Pivot to long format
 
 long_data <- mean_temp_year |> 
   pivot_longer(
@@ -762,6 +765,8 @@ long_data <- mean_temp_year |>
     names_to = "Temperature_Type",            
     values_to = "Temperature"             
   )
+
+# Produce plot of max, Min, Mean temperature trend by year and borough
 
 ggplot(long_data, aes(x = years, y = Temperature, color = Temperature_Type, group = Temperature_Type)) +
   geom_line(size = 1) +                   
@@ -772,24 +777,29 @@ ggplot(long_data, aes(x = years, y = Temperature, color = Temperature_Type, grou
     y = "Temperature (°C)",       
     color = "Mean Temperature Type"
   ) +
-    scale_color_manual(
-    values = c("high_temp" = "red", "low_temp" = "blue", "mean_temp" = "darkgreen"), # Color mapping
+  scale_color_manual(
+    values = c("high_temp" = "red", "low_temp" = "blue", "mean_temp" = "darkgreen"),
     labels = c("high_temp" = "Highest Temperature", 
                "low_temp" = "Lowest Temperature", 
                "mean_temp" = "Mean Temperature")) +
-  theme_minimal() +                    
-  facet_wrap(~ borough)  
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~ borough, scales = "free_x") +
+  theme(aspect.ratio = 0.6)
   
 ```
+
+This plot shows the temperature trends across New York City's five boroughs from 2016 to 2021, tracking the highest, lowest, and mean temperatures for each borough. Each borough shows similar patterns, with highest temperatures consistently around 17°C, mean temperatures around 12.5°C, and lowest temperatures around 8°C. The temperature patterns remain relatively stable across the six-year period, with only minor fluctuations in all temperature types. 
+
+All boroughs show a slight upward trend in temperatures from 2019 to 2020, particularly noticeable in the highest temperature lines. Despite their different locations and urban characteristics, the boroughs appear to have very similar temperature profiles throughout the study period, suggesting consistent climate patterns across New York City.
 
 #### Average temperature change by borough
 
 There has been mean temperature change between years but it is steady overall across the boroughs.
 
-
 ```{r}
 
-#average temperature table
+# Produce average temperature table
 
 mean_temp_table = mean_temp_year |> 
   select(borough, years, mean_temp) |> 
@@ -797,8 +807,8 @@ mean_temp_table = mean_temp_year |>
     names_from = borough,
     values_from = mean_temp
   )
-
 knitr::kable(mean_temp_table)
+
 ```
 
 
