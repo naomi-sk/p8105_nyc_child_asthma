@@ -3,11 +3,188 @@ title: "Visualization"
 author: ""
 date: ""
 output: 
-  html_document:
-    toc: true
-    toc_float: true
-    theme: cerulean
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
 ---
 
 # Visualizations
 
+## PM2.5
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(readxl)
+library(plotly)
+library(flexdashboard)
+library(sf)
+library(shiny)
+library(leaflet)
+library(scales)
+library(patchwork)
+library(ggplot2)
+
+```
+
+```{r}
+particulate_matter = 
+  read_csv("data/Air_Quality_20231208.csv")
+
+tidy_analysis_pm = 
+  particulate_matter |>
+  janitor::clean_names() |>
+    mutate(
+    unique_id = as.character(unique_id),
+    indicator_id = as.character(indicator_id),
+    geo_join_id = as.character(geo_join_id)) |>
+  filter(name == "Fine particles (PM 2.5)") |>
+  filter(time_period %in% c("Annual Average 2016", "Annual Average 2017",
+                            "Annual Average 2018", "Annual Average 2019",
+                            "Annual Average 2020", "Annual Average 2021")) |>
+  filter(geo_type_name == "Borough") |>
+  select(-unique_id, -indicator_id, -start_date) |>
+    rename(borough = geo_place_name) |>
+  mutate(
+    period = case_when(
+      time_period %in% c("Annual Average 2016", "Annual Average 2017", "Annual Average 2018") ~ "2016-2018",
+      time_period %in% c("Annual Average 2019", "Annual Average 2020", "Annual Average 2021") ~ "2019-2021"
+    )
+  ) |>
+  group_by(borough, period) |>
+  summarize(
+    average_pm2.5 = mean(data_value, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  pivot_wider(
+    names_from = period,
+    values_from = average_pm2.5,
+    names_prefix = "avg_pm2.5_"
+  )
+
+```
+
+```{r}
+tidy_analysis_pm |>
+  pivot_longer(cols = -borough, names_to = "Year_Group", values_to = "PM2.5") |> 
+  mutate(borough = factor(borough, levels = unique(borough[order(PM2.5)]))) |> 
+  ggplot(aes(x = borough, y = PM2.5, fill = Year_Group)) +
+  geom_bar(position = "dodge", stat = "identity") +
+   labs(
+    title = "Average PM2.5 Levels by Borough (2016-2018 vs 2019-2021)",
+    x = "Borough",
+    y = "PM2.5 Values",
+    fill = "Year Group"
+  ) 
+```
+
+
+```{r}
+
+# Print PM2.5 Summary
+
+tidy_analysis_pm_diff <- 
+  tidy_analysis_pm |>
+  mutate(pm2.5_difference = `avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`)
+
+
+knitr::kable(tidy_analysis_pm_diff, col.names = c("borough", "avg_pm2.5_2016-2018", "avg_pm2.5_2019-2021", "pm2.5_difference"))
+```
+
+
+
+```{r}
+geography = 
+  read_excel("data/geoid_borough_name_nyc.xlsx") |>
+  rename(geo_join_id = ID) |>
+  mutate(geo_join_id = 
+           as.character(geo_join_id))
+```
+
+```{r}
+particulate_matter = 
+  read_csv("data/Air_Quality_20231208.csv")
+```
+
+```{r}
+tidy_uhf42_pm = 
+  particulate_matter |>
+  janitor::clean_names() |>
+    mutate(
+    unique_id = as.character(unique_id),
+    indicator_id = as.character(indicator_id),
+    geo_join_id = as.character(geo_join_id)) |>
+  filter(name == "Fine particles (PM 2.5)") |>
+  filter(time_period %in% c("Annual Average 2016", "Annual Average 2017",
+                            "Annual Average 2018", "Annual Average 2019",
+                            "Annual Average 2020", "Annual Average 2021")) |>
+  filter(geo_type_name == "UHF42") |>
+  select(-unique_id, -indicator_id, -start_date) |>
+  mutate(
+    period = case_when(
+      time_period %in% c("Annual Average 2016", "Annual Average 2017", "Annual Average 2018") ~ "2016_2018",
+      time_period %in% c("Annual Average 2019", "Annual Average 2020", "Annual Average 2021") ~ "2019_2021"
+    )
+  ) |>
+  group_by(geo_place_name, geo_join_id, period) |>
+  summarize(
+    average_pm2.5 = mean(data_value, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  pivot_wider(
+    names_from = period,
+    values_from = average_pm2.5,
+    names_prefix = "avg_pm2.5_"
+  ) 
+```
+
+```{r}
+uhf42_map <- st_read("data/UHF_42_DOHMH_2009.shp", quiet = TRUE) 
+
+tidy_uhf42_pm <- 
+  tidy_uhf42_pm |>
+  rename(UHFCODE = geo_join_id) |>
+  mutate(
+    UHFCODE = as.double(UHFCODE))
+```
+
+
+```{r}
+map_uhf42 <- 
+  uhf42_map |>
+  left_join(tidy_uhf42_pm, by = "UHFCODE") |>
+  pivot_longer(cols = starts_with("avg_pm2.5_"), 
+               names_to = "time_period", 
+               values_to = "avg_pm2.5")
+```
+
+ 
+```{r}
+heat_map_pm2.5 <- ggplot() +
+  geom_sf(data = map_uhf42, aes(fill = avg_pm2.5)) +
+  facet_wrap(~time_period, ncol = 2) +
+  scale_fill_viridis_c(option = "plasma", na.value = "grey50") +
+  labs(
+    title = "PM2.5 (ug/m3) Levels by UHF42 Neighborhood",
+    fill = "PM2.5"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 12),
+    legend.position = "right",
+    legend.key.height = unit(2, "cm")
+  )
+
+heat_map_pm2.5
+
+```
+
+```{r}
+ggplotly(heat_map_pm2.5)
+```
+
+## ED 
+
+## Temp
+
+## Greenspace 
