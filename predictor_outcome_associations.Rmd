@@ -11,6 +11,24 @@ output:
 
 # Predictor-Outcome Associations
 
+```{r libraries, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r merged file, include=FALSE}
+
+#import merged file from data preparation page
+full_data2 = read_csv("data/NYC_total.csv", na = c("NA", ".", "")) |>
+  janitor::clean_names() |>
+    mutate(
+    data_years = as.factor(data_years),
+    borough = as.factor(borough),
+    indicator = as.factor(indicator),
+    zip_code = as.factor(zip_code))
+
+#convert categorical variables into factors
+```
 ## PM2.5  
 
 ### ED Admissions
@@ -33,16 +51,132 @@ output:
 ```
 
 ## Greenspace
-
 ### ED Admissions
 
-* Odds Ratios for ED admissions, by time period
 
-```{r}
+```{r GS file, include=FALSE}
+#clean merged file for greenspace and outcome comparisons across boroughs and year groups
+GS_assoc = full_data2 |>
+  rename(Year = data_years, Borough = borough) |> #renamed it to reflect on plots
+  select(Year, Borough, indicator, acres_sum, borough_rate)
+```
 
+#### Year Group Comparison
 
+```{r ed, echo=FALSE, message=FALSE}
+#clean data for Borough level ED visit rates and greenspace
+ED_assoc = GS_assoc |>
+  filter(indicator == "ed_visits_rate") |>
+  distinct() |>
+  select(-indicator)
+
+# Fit linear models for each year group and obtain values of interest
+EDmodels = ED_assoc |>
+  group_by(Year) |>
+  do(model = lm(borough_rate ~ acres_sum, data = .)) |> #linear model
+  mutate( 
+    slope = coef(model)[2], #calc slope, intercept, R², and correlation coefficient (R)
+    intercept = coef(model)[1],
+    r_squared = summary(model)$r.squared,
+    r = -sqrt(r_squared)) |> #negative correlation
+   select(-model, -intercept)
+
+# Plot the data and regression lines
+EDplot = ggplot(ED_assoc, aes(x = acres_sum, y = borough_rate, group = Year)) + 
+  geom_point(aes(color = Year)) + 
+  geom_smooth(method = "lm", aes(color = Year, group = Year), se = FALSE, linetype = "solid") +
+  theme_minimal() +
+  labs(title = "Greenspace and ED Visits Rate", 
+       x = "Greenspace (Total Acres)", 
+       y = "ED Visits Rate") +
+  theme(legend.position = "top")
+
+#plot
+EDplot
+
+#Make table of results
+knitr::kable(EDmodels, digits = 3)
+```
+
+For both year groups, total acres of borough-level greenspace is negatively associated with borough-level ED visit rate. Increased greenspace is associated with decreased hospitalization rate. 
+
+```{r hosp, echo=FALSE, message=FALSE}
+
+#clean data for Borough level hospitalization rates and greenspace
+hosp_assoc = GS_assoc |>
+  filter(indicator == "hosp_rate") |>
+  distinct() |>
+  select(-indicator)
+
+# Fit linear models for each year group and extract results
+hospmodels = hosp_assoc |>
+  group_by(Year) |>
+  do(model = lm(borough_rate ~ acres_sum, data = .)) |>
+  mutate(
+    slope = coef(model)[2],
+    intercept = coef(model)[1],
+    r_squared = summary(model)$r.squared,
+    r = -sqrt(r_squared)) |> #negative correlation
+   select(-model, -intercept)
+
+# Plot the data and regression lines
+hosplot = ggplot(hosp_assoc, aes(x = acres_sum, y = borough_rate, group = Year)) + 
+  geom_point(aes(color = Year)) + 
+  geom_smooth(method = "lm", aes(color = Year, group = Year), se = FALSE, linetype = "solid") +
+  theme_minimal() +
+  labs(title = "Greenspace and Hospitalization Rate", 
+       x = "Greenspace (Total Acres)", 
+       y = "ED Visits Rate") +
+  theme(legend.position = "top")
+
+#plot 
+hosplot
+
+#Make table of results
+knitr::kable(hospmodels, digits = 3)
 
 ```
+
+
+For both year groups, total acres of borough-level greenspace is negatively associated with borough-level hospitalization rate. Increase in greenspace is associated with decrease hospitalization rate. 
+
+
+#### Borough and Year Comparison
+
+```{r, echo=FALSE, message=FALSE}
+
+GS_ED = GS_assoc |>
+  filter(indicator == "ed_visits_rate") |> #look at ed visit rate
+  ggplot(aes(x = acres_sum, y = borough_rate, color = Borough)) + 
+  geom_point(aes(shape = Year)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Greenspace (Total Acres)", y = "ED Visit Rate", 
+       title = "NYC Greenspace and ED Visit Rate") +
+  theme_minimal()
+
+GS_ED
+```
+
+In Bronx, an increase in total acres of greenspace between the two year groups is negatively associated with ED visit rate. This is also seen for Staten Island. The association is less obvious for Brooklyn, Manhattan, and Queens. 
+
+
+```{r, echo=FALSE, message=FALSE}
+
+GS_HR = GS_assoc |>
+  filter(indicator == "hosp_rate") |> #look at hospitalization rate
+  ggplot(aes(x = acres_sum, y = borough_rate, color = Borough)) + 
+  geom_point(aes(shape = Year)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Greenspace (Total Acres)", y = "Hospitalization Rate", 
+       title = "NYC Greenspace and Hospitalization Rate") +
+  theme_minimal()
+
+GS_HR
+
+```
+
+When comparing between the two year groups, the association for borough greenspace and ED Visit Rate is similar to trend for borough greenspace and hospitalization rate.
+
 
 ### ED Hospitalizations
 
