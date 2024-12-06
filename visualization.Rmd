@@ -381,13 +381,8 @@ Column {data-width=4000}
 
 ```
 
-
 ## Greenspace 
 
 ```{r}
 
-```
-
-```{r}
-rmarkdown::render("visualization.Rmd", output_format = "flexdashboard::flex_dashboard")
 ```
