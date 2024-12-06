@@ -12,7 +12,7 @@ output:
 library(flexdashboard)
 ```
 
-Column {data-width=650}
+Column {data-width=2000}
 -----------------------------------------------------------------------
 
 ### PM2.5
@@ -188,7 +188,7 @@ heat_map_pm2.5
 ggplotly(heat_map_pm2.5)
 ```
 
-Column {data-width=350}
+Column {data-width=2000}
 -----------------------------------------------------------------------
 
 ### ED
@@ -233,7 +233,7 @@ map_data <- nyc_zip_sf %>%
 
 ```
 
-Column {data-width=350}
+Column {data-width=2000}
 -----------------------------------------------------------------------
 ### ED Admissions
 
@@ -373,7 +373,7 @@ ggplotly(hosp_plot)
 
 ```
 
-Column {data-width=350}
+Column {data-width=2000}
 -----------------------------------------------------------------------
 ### Temperature
 
@@ -381,8 +381,6 @@ Column {data-width=350}
 
 ```
 
-Column {data-width=350}
------------------------------------------------------------------------
 
 ## Greenspace 
 
@@ -390,10 +388,6 @@ Column {data-width=350}
 
 ```
 
-Column {data-width=350}
------------------------------------------------------------------------
-
 ```{r}
 rmarkdown::render("visualization.Rmd", output_format = "flexdashboard::flex_dashboard")
 ```
-
