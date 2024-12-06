@@ -12,7 +12,7 @@ output:
 library(flexdashboard)
 ```
 
-Column {data-width=2000}
+Column {data-width=4000}
 -----------------------------------------------------------------------
 
 ### PM2.5
@@ -188,7 +188,7 @@ heat_map_pm2.5
 ggplotly(heat_map_pm2.5)
 ```
 
-Column {data-width=2000}
+Column {data-width=4000}
 -----------------------------------------------------------------------
 
 ### ED
@@ -233,7 +233,7 @@ map_data <- nyc_zip_sf %>%
 
 ```
 
-Column {data-width=2000}
+Column {data-width=4000}
 -----------------------------------------------------------------------
 ### ED Admissions
 
@@ -326,7 +326,7 @@ Looking at the ED visit rates map across the two time periods (2016-2018 and 201
 
 The most striking change between the two periods is the apparent reduction in ED visits during 2019-2021, which could potentially be related to the COVID-19 pandemic's impact on healthcare utilization patterns.
 
-Column {data-width=350}
+Column {data-width=4000}
 -----------------------------------------------------------------------
 ### ED Hospitalizations
 
@@ -373,7 +373,7 @@ ggplotly(hosp_plot)
 
 ```
 
-Column {data-width=2000}
+Column {data-width=4000}
 -----------------------------------------------------------------------
 ### Temperature
 
