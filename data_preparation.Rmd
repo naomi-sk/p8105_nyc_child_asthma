@@ -33,27 +33,28 @@ The data for this project was obtained from multiple sources, including the New 
 # Load and clean data for 2016-2018
 
 ed_2016_2018 <- read_csv("data/ed_data_csv.csv", skip = 2) |>
- janitor::clean_names() |>
- filter(
-   data_years == "2016-2018",
-   indicator %in% c(
-     "Asthma emergency department visit rate per 10,000 - aged 0-17 years",
-     "Asthma hospitalization rate per 10,000 - aged 0-17 years"
-   ),
-   county %in% c("New York", "Queens", "Richmond", "Kings", "Bronx")
- ) %>%
- select(data_years, county, zip_code, indicator, zip_code_rate) |>
- mutate(
-   indicator = case_when(
-     indicator == "Asthma emergency department visit rate per 10,000 - aged 0-17 years" ~ "ed_visits_rate",
-     indicator == "Asthma hospitalization rate per 10,000 - aged 0-17 years" ~ "hosp_rate"
-   ),
-   zip_code_rate = case_when(
-     str_detect(zip_code_rate, "\\*") ~ NA_character_,
-     zip_code_rate == "s" ~ NA_character_,
-     TRUE ~ zip_code_rate
-   )
- ) %>%
+  janitor::clean_names() |>
+  filter(
+    data_years == "2016-2018",
+    indicator %in% c(
+      "Asthma emergency department visit rate per 10,000 - aged 0-17 years",
+      "Asthma hospitalization rate per 10,000 - aged 0-17 years"
+    ),
+    county %in% c("New York", "Queens", "Richmond", "Kings", "Bronx")
+  ) |>
+  dplyr::select(data_years, county, zip_code, indicator, zip_code_rate) |>
+  mutate(
+    indicator = case_when(
+      indicator == "Asthma emergency department visit rate per 10,000 - aged 0-17 years" ~ "ed_visits_rate",
+      indicator == "Asthma hospitalization rate per 10,000 - aged 0-17 years" ~ "hosp_rate"
+    ),
+    zip_code_rate = case_when(
+      str_detect(zip_code_rate, "\\*") ~ NA_character_,
+      zip_code_rate == "s" ~ NA_character_,
+      TRUE ~ zip_code_rate
+    ),
+    zip_code_rate = as.numeric(zip_code_rate)  # Ensure proper numeric conversion
+  ) |>
   rename(borough = county) |>
   mutate(
     borough = case_when(
@@ -79,8 +80,8 @@ ed_2019_2021 <- read_csv("data/ed_data_csv.csv", skip = 2) |>
      "Asthma hospitalization rate per 10,000 - aged 0-17 years"
    ),
    county %in% c("New York", "Queens", "Richmond", "Kings", "Bronx")
- ) %>%
- select(data_years, county, zip_code, indicator, zip_code_rate) |>
+ ) |>
+ dplyr::select(data_years, county, zip_code, indicator, zip_code_rate) |>
  mutate(
    indicator = case_when(
      indicator == "Asthma emergency department visit rate per 10,000 - aged 0-17 years" ~ "ed_visits_rate",
@@ -90,8 +91,9 @@ ed_2019_2021 <- read_csv("data/ed_data_csv.csv", skip = 2) |>
      str_detect(zip_code_rate, "\\*") ~ NA_character_,
      zip_code_rate == "s" ~ NA_character_,
      TRUE ~ zip_code_rate
-   )
- ) %>%
+   ),
+   zip_code_rate = as.numeric(zip_code_rate)  
+ ) |>
   rename(borough = county) |>
   mutate(
     borough = case_when(
@@ -164,7 +166,7 @@ tidy_analysis_pm =
                             "Annual Average 2018", "Annual Average 2019",
                             "Annual Average 2020", "Annual Average 2021")) |>
   filter(geo_type_name == "Borough") |>
-  select(-unique_id, -indicator_id, -start_date) |>
+  dplyr::select(-unique_id, -indicator_id, -start_date) |>
     rename(borough = geo_place_name) |>
   mutate(
     period = case_when(
@@ -237,7 +239,7 @@ tidy_pm_asthmahospitalizations =
   filter(geo_type_name == "UHF42") |>
   filter(time_period %in% c("2012-2014","2015-2017")) |>
     rename(pm2.5_mcgm3 = data_value) |>
-  select(name, measure, geo_type_name, geo_join_id, geo_place_name, time_period, pm2.5_mcgm3)
+  dplyr::select(name, measure, geo_type_name, geo_join_id, geo_place_name, time_period, pm2.5_mcgm3)
 
 ```
 
@@ -262,7 +264,7 @@ pm_for_vis =
     left_join(tidy_visualization_pm, geography, by = c("geo_join_id")) |>
     rename(neighborhood = Name) |>
     rename(borough = Borough) |>
-   select(name, neighborhood, borough, time_period, pm2.5_mcgm3)
+   dplyr::select(name, neighborhood, borough, time_period, pm2.5_mcgm3)
 
 ```
 
@@ -306,7 +308,7 @@ greenspace_clean = greenspace_df |>
     typecategory = as.factor(typecategory), 
     borough = as.factor(borough)) |>
   separate(acquisitiondate, into = c("year", "month", "day"), sep = "-") |>
-  select(year, borough, acres, typecategory) |> 
+  dplyr::select(year, borough, acres, typecategory) |> 
   filter(year < 2022 | is.na(year))
 
 ```
@@ -409,7 +411,7 @@ all_temp <- bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |>
   mutate(borough = as.factor(borough)) |> 
   mutate(date = as.Date(time, format = "%d/%m/%Y")) |>  # Corrected date format
   mutate(data_years = ifelse(year(date) %in% 2016:2018, "2016-2018", "2019-2021")) |> 
-  select(temperature_2m_max:data_years) |> 
+  dplyr::select(temperature_2m_max:data_years) |> 
   group_by(data_years, borough) |> 
   summarise(avg_temperature = mean(temperature_2m_mean, na.rm = TRUE))
 
@@ -432,7 +434,7 @@ hvi_df = read_csv("data/Heat_Vulnerability_Index_Rankings_20241205 (1).csv") |>
   janitor::clean_names() |> 
   mutate(zip_code = as.double(zip_code_tabulation_area_zcta_2020),
          hvi = as.factor(heat_vulnerability_index_hvi)) |> 
-  select(zip_code, hvi)
+  dplyr::select(zip_code, hvi)
 
 
 ```
@@ -477,10 +479,12 @@ write.csv(full_data2, "data/NYC_total.csv", row.names = FALSE)
 
 ```
 
-The data merging process involved combining multiple datasets to create a comprehensive dataset for analyzing pediatric asthma health outcomes and environmental factors across New York City. The process began by combining pediatric asthma admission datasets from two time periods (2016-2018 and 2019-2021), creating a base dataset containing emergency department visits and hospitalization rates.
+The data merging process involved combining multiple datasets to create a comprehensive dataset for analyzing pediatric asthma health outcomes, environmental factors, and heat vulnerability across New York City. The process began by combining pediatric asthma admission datasets from two time periods (2016-2018 and 2019-2021), creating a base dataset containing ED admissions and hospitalization rates.
 
-Environmental data was then systematically merged with this base dataset. Temperature data was added first, followed by PM2.5 data, and finally greenspace measurements. All merges were performed using borough and time period as matching variables. Data quality was maintained by standardizing categorical variables, formatting numeric measurements, and removing incomplete records.
+Environmental and health data were then merged with the base dataset. Temperature data was added first, followed by PM2.5 data and greenspace measurements, with all merges performed using `data_years` (time period) and `borough` as matching variables. The Heat Vulnerability Index (HVI) data was then incorporated using `zip_code` as the matching variable.
 
-From this dataset, two data subsets were created: one containing emergency department visits and another containing hospitalizations data. A third dataset was developed to include borough-level statistics, calculating average rates for each combination of health indicator, borough, and time period.
+Data quality was maintained by ensuring consistency across variable types. Several variables were converted to appropriate data types: `data_years` (time period), `borough`, and `zip_code` were converted to factors, and `zip_code_rate` (rate of visits/hospitalizations per ZIP code) was coded as numeric. Incomplete records were removed using to ensure data integrity.
 
-The final merged dataset was exported as a CSV file, providing a complete, analysis-ready file combining relevant health variables with environmental factors at both ZIP code and borough levels across the two time periods of interest.
+From this dataset, two data subsets were created: `full_data_ed` (emergency department visits data) and `full_data_hosp` (hospitalizations data). A third dataset, `full_data2`, was created to include `borough_rate` (average rates by borough), calculating average rates for each combination of indicator, borough, and time period.
+
+The final merged dataset was exported as `NYC total`, providing a complete, analysis-ready file combining relevant health variables with environmental factors and heat vulnerability measurements at both ZIP code and borough levels across the two time periods of interest.
