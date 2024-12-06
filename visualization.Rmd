@@ -233,6 +233,8 @@ map_data <- nyc_zip_sf %>%
 
 ```
 
+Column {data-width=350}
+-----------------------------------------------------------------------
 ### ED Admissions
 
 
@@ -324,6 +326,8 @@ Looking at the ED visit rates map across the two time periods (2016-2018 and 201
 
 The most striking change between the two periods is the apparent reduction in ED visits during 2019-2021, which could potentially be related to the COVID-19 pandemic's impact on healthcare utilization patterns.
 
+Column {data-width=350}
+-----------------------------------------------------------------------
 ### ED Hospitalizations
 
 
@@ -388,3 +392,8 @@ Column {data-width=350}
 
 Column {data-width=350}
 -----------------------------------------------------------------------
+
+```{r}
+rmarkdown::render("visualization.Rmd", output_format = "flexdashboard::flex_dashboard")
+```
+
