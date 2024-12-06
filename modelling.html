@@ -746,8 +746,9 @@ knitr::kable(daa)</code></pre>
 </table>
 <p>It turns out to be there are other factors that we haven’t take in to
 account because borough with the lowest hvi mean was Staten Island.</p>
-<div id="plot" class="section level3">
-<h3>plot</h3>
+</div>
+<div id="plot" class="section level2">
+<h2>plot</h2>
 <pre class="r"><code>plot1 = ggplot(full_data2_ed_1, aes(x = hvi, y = zip_code_rate)) +
   geom_point(color = &quot;blue&quot;, alpha = 0.6) +  # Data points
   geom_smooth(method = &quot;lm&quot;, color = &quot;red&quot;, se = TRUE) +  # Regression line with confidence interval
@@ -778,7 +779,6 @@ plot4 = ggplot(full_data2_hosp_2, aes(x = hvi, y = zip_code_rate)) +
 ## `geom_smooth()` using formula = &#39;y ~ x&#39;
 ## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
 <p><img src="modelling_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
-</div>
 </div>
 </div>
 

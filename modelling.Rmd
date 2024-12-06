@@ -150,7 +150,7 @@ knitr::kable(daa)
 
 It turns out to be there are other factors that we haven't take in to account because borough with the lowest hvi mean was Staten Island.
 
-### plot
+## plot
 
 ```{r}
 
