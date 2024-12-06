@@ -8,11 +8,16 @@ output:
     vertical_layout: fill
 ---
 
-# Visualizations
+```{r setup, include=FALSE}
+library(flexdashboard)
+```
 
-## PM2.5
+Column {data-width=650}
+-----------------------------------------------------------------------
 
-```{r}
+### PM2.5
+
+```{r, include=FALSE}
 library(tidyverse)
 library(rvest)
 library(readxl)
@@ -27,7 +32,7 @@ library(ggplot2)
 
 ```
 
-```{r}
+```{r, include=FALSE}
 particulate_matter = 
   read_csv("data/Air_Quality_20231208.csv")
 
@@ -64,7 +69,7 @@ tidy_analysis_pm =
 
 ```
 
-```{r}
+```{r, include=FALSE}
 tidy_analysis_pm |>
   pivot_longer(cols = -borough, names_to = "Year_Group", values_to = "PM2.5") |> 
   mutate(borough = factor(borough, levels = unique(borough[order(PM2.5)]))) |> 
@@ -79,7 +84,7 @@ tidy_analysis_pm |>
 ```
 
 
-```{r}
+```{r, include=FALSE}
 
 # Print PM2.5 Summary
 
@@ -93,7 +98,7 @@ knitr::kable(tidy_analysis_pm_diff, col.names = c("borough", "avg_pm2.5_2016-201
 
 
 
-```{r}
+```{r, include=FALSE}
 geography = 
   read_excel("data/geoid_borough_name_nyc.xlsx") |>
   rename(geo_join_id = ID) |>
@@ -101,12 +106,12 @@ geography =
            as.character(geo_join_id))
 ```
 
-```{r}
+```{r, include=FALSE}
 particulate_matter = 
   read_csv("data/Air_Quality_20231208.csv")
 ```
 
-```{r}
+```{r, include=FALSE}
 tidy_uhf42_pm = 
   particulate_matter |>
   janitor::clean_names() |>
@@ -138,7 +143,7 @@ tidy_uhf42_pm =
   ) 
 ```
 
-```{r}
+```{r, include=FALSE}
 uhf42_map <- st_read("data/UHF_42_DOHMH_2009.shp", quiet = TRUE) 
 
 tidy_uhf42_pm <- 
@@ -149,7 +154,7 @@ tidy_uhf42_pm <-
 ```
 
 
-```{r}
+```{r, include=FALSE}
 map_uhf42 <- 
   uhf42_map |>
   left_join(tidy_uhf42_pm, by = "UHFCODE") |>
@@ -159,7 +164,7 @@ map_uhf42 <-
 ```
 
  
-```{r}
+```{r, include=FALSE}
 heat_map_pm2.5 <- ggplot() +
   geom_sf(data = map_uhf42, aes(fill = avg_pm2.5)) +
   facet_wrap(~time_period, ncol = 2) +
@@ -183,8 +188,203 @@ heat_map_pm2.5
 ggplotly(heat_map_pm2.5)
 ```
 
-## ED 
+Column {data-width=350}
+-----------------------------------------------------------------------
 
-## Temp
+### ED
+
+
+```{r, include=FALSE}
+
+# Load ED data for 2016-2018
+
+ed_2016_2018 = 
+  read_csv("data/ed_2016_2018.csv")
+
+# Load ED data for 2019-2021
+
+ed_2019_2021 = 
+  read_csv("data/ed_2019_2021.csv")
+
+# Load NYC zipcode shapefile
+
+nyc_zip_sf <- st_read("shapefiles/geo_export_8df5c38c-c74c-4840-9d00-da16c0201e07.shp", quiet = TRUE)
+
+# Combine datasets
+
+all_data <- bind_rows(
+  ed_2016_2018 %>% mutate(period = "2016-2018"),
+  ed_2019_2021 %>% mutate(period = "2019-2021")
+)
+
+# Create borough averages for both indicators
+
+borough_data <- all_data %>%
+  group_by(borough, period, indicator) %>%
+  summarize(avg_rate = mean(zip_code_rate, na.rm = TRUE))
+
+# Create the map_data
+
+borough_data <- borough_data %>%
+  rename(boro_name = borough)
+
+map_data <- nyc_zip_sf %>%
+  left_join(borough_data, by = "boro_name")
+
+```
+
+### ED Admissions
+
+
+```{r, include=FALSE}
+
+# Create simple borough-level summaries
+
+borough_summary <- all_data %>%
+  group_by(borough, period, indicator) %>%
+  summarize(
+    avg_rate = round(mean(zip_code_rate, na.rm = TRUE), 1),
+    .groups = "drop"  # This explicitly drops the grouping
+  )
+
+# Create separate tables for ED visits and hospitalizations
+
+ed_summary <- borough_summary %>%
+  filter(indicator == "ed_visits_rate") %>%
+  pivot_wider(
+    names_from = period,
+    values_from = avg_rate
+  ) %>%
+  mutate(
+    percent_change = round(((`2019-2021` - `2016-2018`) / `2016-2018` * 100), 1)
+  ) %>%
+  arrange(desc(`2016-2018`))
+
+hosp_summary <- borough_summary %>%
+  filter(indicator == "hosp_rate") %>%
+  pivot_wider(
+    names_from = period,
+    values_from = avg_rate
+  ) %>%
+  mutate(
+    percent_change = round(((`2019-2021` - `2016-2018`) / `2016-2018` * 100), 1)
+  ) %>%
+  arrange(desc(`2016-2018`))
+
+# Print ED Visits Summary
+
+cat("\nAsthma ED Visit Rates by Borough\n(per 10,000 children aged 0-17)\n")
+ed_summary %>%
+  select(-indicator) %>%
+  knitr::kable(
+    col.names = c("Borough", "2016-2018", "2019-2021", "% Change")
+  )
+
+
+```
+
+For ED Admissions:
+
+* The Bronx had notably higher rates than other boroughs in both periods (347.7 and 180.7 per 10,000 children)
+* All boroughs saw substantial decreases between 2016-2018 and 2019-2021 (ranging from about 43-48%)
+* Even after decreases, the Bronx's 2019-2021 rate (180.7) remained higher than any other borough's 2016-2018 rates
+
+```{r}
+
+# Create ED Visits Map 
+
+ed_plot <- ggplot() +
+  geom_sf(data = filter(map_data, indicator == "ed_visits_rate"), 
+          aes(fill = avg_rate)) +
+  facet_wrap(~period) +
+  scale_fill_viridis_c(
+    name = "Borough Average of\nED Visit Rates\nper 10,000 Children\nAged 0-17 Years", 
+    option = "plasma"
+  ) +
+  theme_minimal() +
+  labs(title = "Asthma ED Visit Rates by NYC Borough",
+       subtitle = "Children aged 0-17 years") +
+  theme(
+    plot.title = element_text(size = 12),
+    legend.position = "right",
+    legend.key.height = unit(2, "cm")
+  )
+
+# Display plot
+
+ggplotly(ed_plot)
+
+```
+
+Looking at the ED visit rates map across the two time periods (2016-2018 and 2019-2021), we can observe several key patterns:
+
+* There appears to be a general decrease in ED visit rates from 2016-2018 to 2019-2021 across most NYC boroughs, as indicated by the darker purple colors in the later period.
+* The Bronx (the northernmost borough) shows notably higher ED visit rates than other boroughs in both time periods, with rates exceeding 300 per 10,000 children aged 0-17 years in 2016-2018.
+* Manhattan and Brooklyn by comparison appear to have moderate rates, while Staten Island (the southernmost borough) consistently shows lower ED visit rates in both periods.
+
+The most striking change between the two periods is the apparent reduction in ED visits during 2019-2021, which could potentially be related to the COVID-19 pandemic's impact on healthcare utilization patterns.
+
+### ED Hospitalizations
+
+
+```{r, include=FALSE}
+
+# Print Hospitalization Summary
+
+cat("\nAsthma Hospitalization Rates by Borough\n(per 10,000 children aged 0-17)\n")
+hosp_summary %>%
+  select(-indicator) %>%
+  knitr::kable(
+    col.names = c("Borough", "2016-2018", "2019-2021", "% Change")
+  )
+
+```
+
+For ED hospitalizations, compared to ED Admissions rates:
+
+* Similar pattern with the Bronx having the highest rates (58.5 and 36.8 per 10,000 children)
+* All boroughs showed considerable decreases between 2016-2018 and 2019-2021 (ranging from about 32-40%)
+* Queens and Staten Island had the lowest hospitalization rates in both periods
+
+```{r}
+
+# Create Hospitalizations Map 
+
+hosp_plot <- ggplot() +
+  geom_sf(data = filter(map_data, indicator == "hosp_rate"), 
+          aes(fill = avg_rate)) +
+  facet_wrap(~period) +
+  scale_fill_viridis_c(
+    name = "Borough Average of\nHospitalization Rates\nper 10,000 Children\nAged 0-17 Years", 
+    option = "plasma"
+  ) +
+  theme_minimal() +
+  labs(title = "Asthma Hospitalization Rates by NYC Borough",
+       subtitle = "Children aged 0-17 years") +
+  theme(plot.title = element_text(size = 12))
+
+# Display plot
+
+ggplotly(hosp_plot)
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+### Temperature
+
+```{r}
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
 
 ## Greenspace 
+
+```{r}
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
