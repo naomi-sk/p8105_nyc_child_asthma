@@ -793,39 +793,42 @@ This plot shows the temperature trends across New York City's five boroughs from
 
 All boroughs show a slight upward trend in temperatures from 2019 to 2020, particularly noticeable in the highest temperature lines. Despite their different locations and urban characteristics, the boroughs appear to have very similar temperature profiles throughout the study period, suggesting consistent climate patterns across New York City.
 
-#### Average temperature change by borough
-
-There has been mean temperature change between years but it is steady overall across the boroughs.
+#### Average temperature change by borough (2016-2021)
 
 ```{r}
 
-# Produce average temperature table
+# Produce average temperature table with rounded values
 
-mean_temp_table = mean_temp_year |> 
-  select(borough, years, mean_temp) |> 
+mean_temp_year |> 
+  select(years, borough, mean_temp) |> 
+  mutate(mean_temp = round(mean_temp, 3)) |>
   pivot_wider(
     names_from = borough,
     values_from = mean_temp
-  )
-knitr::kable(mean_temp_table)
+  ) |>
+  knitr::kable(col.names = c("Years", "Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"))
 
 ```
 
+The table presents annual mean temperatures across New York City's five boroughs from 2016 to 2021. There is a notable downward trend from 2016 to 2019, with temperatures decreasing by approximately 0.5-0.7°C across all boroughs. In 2020, there was a marked increase in temperatures, with all boroughs reaching their highest values since 2016, averaging around 12.8°C. 
+
+Temperatures remained elevated in 2021, though slightly lower than 2020 peaks. Throughout the period, Brooklyn and Staten Island consistently maintained slightly higher average temperatures compared to the other boroughs, while Manhattan generally recorded the lowest average temperatures.
 
 #### Average temperature by year group and borough
 
-In terms of analysis by the year group 2016-2018 and 2019-2021. There has been mean temperature increase among all boroughs. Manhattan and Bronx showed the biggest increase.
 
 ```{r}
+
+# Plot for average temperature by year group and borough
 
 ggplot(data = all_temp_borough, aes(x = data_years, y = avg_temperature, color = borough)) +
   geom_point(size = 3) +
   geom_line(aes(group = borough), size = 1) +
-  labs(title = "Average Temperature by Date Group and Borough",
-       x = "Date Group",
+  labs(title = "Average Temperature by Time Period and Borough",
+       x = "Time period",
        y = "Average Temperature") +
   theme_minimal()
 
 ```
 
-
+This graph illustrates the change in average temperatures across New York City's boroughs between two time periods: 2016-2018 and 2019-2021. All boroughs experienced an increase in average temperature between these periods, with Manhattan and Bronx showing the most pronounced increases. Brooklyn consistently maintained the highest average temperatures across both periods, starting at approximately 12.42°C and rising to 12.62°C, while Manhattan, despite its significant increase, recorded the lowest temperatures in both periods. The parallel upward trends across all boroughs suggest a consistent citywide warming pattern, with temperatures rising by roughly 0.2-0.3°C between the two time periods.

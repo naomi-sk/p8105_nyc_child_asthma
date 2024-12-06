@@ -1303,23 +1303,23 @@ their different locations and urban characteristics, the boroughs appear
 to have very similar temperature profiles throughout the study period,
 suggesting consistent climate patterns across New York City.</p>
 </div>
-<div id="average-temperature-change-by-borough" class="section level4">
-<h4>Average temperature change by borough</h4>
-<p>There has been mean temperature change between years but it is steady
-overall across the boroughs.</p>
-<pre class="r"><code># Produce average temperature table
+<div id="average-temperature-change-by-borough-2016-2021"
+class="section level4">
+<h4>Average temperature change by borough (2016-2021)</h4>
+<pre class="r"><code># Produce average temperature table with rounded values
 
-mean_temp_table = mean_temp_year |&gt; 
-  select(borough, years, mean_temp) |&gt; 
+mean_temp_year |&gt; 
+  select(years, borough, mean_temp) |&gt; 
+  mutate(mean_temp = round(mean_temp, 3)) |&gt;
   pivot_wider(
     names_from = borough,
     values_from = mean_temp
-  )
-knitr::kable(mean_temp_table)</code></pre>
+  ) |&gt;
+  knitr::kable(col.names = c(&quot;Years&quot;, &quot;Bronx&quot;, &quot;Brooklyn&quot;, &quot;Manhattan&quot;, &quot;Queens&quot;, &quot;Staten Island&quot;))</code></pre>
 <table>
 <thead>
 <tr class="header">
-<th align="right">years</th>
+<th align="right">Years</th>
 <th align="right">Bronx</th>
 <th align="right">Brooklyn</th>
 <th align="right">Manhattan</th>
@@ -1330,69 +1330,90 @@ knitr::kable(mean_temp_table)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="right">2016</td>
-<td align="right">12.49891</td>
-<td align="right">12.75929</td>
-<td align="right">12.39290</td>
-<td align="right">12.66175</td>
-<td align="right">12.70710</td>
+<td align="right">12.499</td>
+<td align="right">12.759</td>
+<td align="right">12.393</td>
+<td align="right">12.662</td>
+<td align="right">12.707</td>
 </tr>
 <tr class="even">
 <td align="right">2017</td>
-<td align="right">12.23123</td>
-<td align="right">12.40219</td>
-<td align="right">12.15260</td>
-<td align="right">12.14411</td>
-<td align="right">12.39288</td>
+<td align="right">12.231</td>
+<td align="right">12.402</td>
+<td align="right">12.153</td>
+<td align="right">12.144</td>
+<td align="right">12.393</td>
 </tr>
 <tr class="odd">
 <td align="right">2018</td>
-<td align="right">12.08466</td>
-<td align="right">12.11808</td>
-<td align="right">11.93342</td>
-<td align="right">11.94959</td>
-<td align="right">12.14192</td>
+<td align="right">12.085</td>
+<td align="right">12.118</td>
+<td align="right">11.933</td>
+<td align="right">11.950</td>
+<td align="right">12.142</td>
 </tr>
 <tr class="even">
 <td align="right">2019</td>
-<td align="right">11.98082</td>
-<td align="right">12.12384</td>
-<td align="right">11.85068</td>
-<td align="right">11.86000</td>
-<td align="right">12.09753</td>
+<td align="right">11.981</td>
+<td align="right">12.124</td>
+<td align="right">11.851</td>
+<td align="right">11.860</td>
+<td align="right">12.098</td>
 </tr>
 <tr class="odd">
 <td align="right">2020</td>
-<td align="right">12.86639</td>
-<td align="right">12.95492</td>
-<td align="right">12.68251</td>
-<td align="right">12.72459</td>
-<td align="right">12.85464</td>
+<td align="right">12.866</td>
+<td align="right">12.955</td>
+<td align="right">12.683</td>
+<td align="right">12.725</td>
+<td align="right">12.855</td>
 </tr>
 <tr class="even">
 <td align="right">2021</td>
-<td align="right">12.65096</td>
-<td align="right">12.76575</td>
-<td align="right">12.56630</td>
-<td align="right">12.54767</td>
-<td align="right">12.75479</td>
+<td align="right">12.651</td>
+<td align="right">12.766</td>
+<td align="right">12.566</td>
+<td align="right">12.548</td>
+<td align="right">12.755</td>
 </tr>
 </tbody>
 </table>
+<p>The table presents annual mean temperatures across New York City’s
+five boroughs from 2016 to 2021. There is a notable downward trend from
+2016 to 2019, with temperatures decreasing by approximately 0.5-0.7°C
+across all boroughs. In 2020, there was a marked increase in
+temperatures, with all boroughs reaching their highest values since
+2016, averaging around 12.8°C.</p>
+<p>Temperatures remained elevated in 2021, though slightly lower than
+2020 peaks. Throughout the period, Brooklyn and Staten Island
+consistently maintained slightly higher average temperatures compared to
+the other boroughs, while Manhattan generally recorded the lowest
+average temperatures.</p>
 </div>
 <div id="average-temperature-by-year-group-and-borough"
 class="section level4">
 <h4>Average temperature by year group and borough</h4>
-<p>In terms of analysis by the year group 2016-2018 and 2019-2021. There
-has been mean temperature increase among all boroughs. Manhattan and
-Bronx showed the biggest increase.</p>
-<pre class="r"><code>ggplot(data = all_temp_borough, aes(x = data_years, y = avg_temperature, color = borough)) +
+<pre class="r"><code># Plot for average temperature by year group and borough
+
+ggplot(data = all_temp_borough, aes(x = data_years, y = avg_temperature, color = borough)) +
   geom_point(size = 3) +
   geom_line(aes(group = borough), size = 1) +
-  labs(title = &quot;Average Temperature by Date Group and Borough&quot;,
-       x = &quot;Date Group&quot;,
+  labs(title = &quot;Average Temperature by Time Period and Borough&quot;,
+       x = &quot;Time period&quot;,
        y = &quot;Average Temperature&quot;) +
   theme_minimal()</code></pre>
 <p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p>This graph illustrates the change in average temperatures across New
+York City’s boroughs between two time periods: 2016-2018 and 2019-2021.
+All boroughs experienced an increase in average temperature between
+these periods, with Manhattan and Bronx showing the most pronounced
+increases. Brooklyn consistently maintained the highest average
+temperatures across both periods, starting at approximately 12.42°C and
+rising to 12.62°C, while Manhattan, despite its significant increase,
+recorded the lowest temperatures in both periods. The parallel upward
+trends across all boroughs suggest a consistent citywide warming
+pattern, with temperatures rising by roughly 0.2-0.3°C between the two
+time periods.</p>
 </div>
 </div>
 </div>
