@@ -279,7 +279,20 @@ tidy_analysis_pm |>
   ) 
 ```
 
-make knitr chart that shows with in numbers differences between years 
+
+```{r}
+
+# Print PM2.5 Summary
+
+tidy_analysis_pm_diff <- 
+  tidy_analysis_pm |>
+  mutate(pm2.5_difference = `avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`)
+
+
+knitr::kable(tidy_analysis_pm_diff, col.names = c("borough", "avg_pm2.5_2016-2018", "avg_pm2.5_2019-2021", "pm2.5_difference"))
+```
+
+
 
 Show map of PM2.5 levels per UH42 index across years. 
 
@@ -342,10 +355,38 @@ tidy_uhf42_pm <-
 ```{r}
 map_uhf42 <- 
   uhf42_map |>
-  left_join(tidy_uhf42_pm, by = "UHFCODE") 
+  left_join(tidy_uhf42_pm, by = "UHFCODE") |>
+  pivot_longer(cols = starts_with("avg_pm2.5_"), 
+               names_to = "time_period", 
+               values_to = "avg_pm2.5")
 ```
 
+Make a heat map showing differences across UHF42 neighborhoods from 2016-2018 to 2019-2021. 
+```{r}
+heat_map_pm2.5 <- ggplot() +
+  geom_sf(data = map_uhf42, aes(fill = avg_pm2.5)) +
+  facet_wrap(~time_period, ncol = 2) +
+  scale_fill_viridis_c(option = "plasma", na.value = "grey50") +
+  labs(
+    title = "PM2.5 (ug/m3) Levels by UHF42 Neighborhood",
+    fill = "PM2.5"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 12),
+    legend.position = "right",
+    legend.key.height = unit(2, "cm")
+  )
 
+heat_map_pm2.5
+
+```
+Looking at the PM2.5(ug/m3) levels across the two time periods(2016-2018 and 2019-2021), we can observe several key patterns:
+- Overall, there is a general decrease in PM2.5 levels from 2016-2018 and 2019-2021 across the majority of UHF42 neighborhoods, as the 2019-2021 map has much darkers colors indicating lower PM2.5 levels. 
+- Midtown Manhattan shows the highest PM2.5 levels across both time periods.
+- Staten Island shows the lowest PM2.5 levels across all boroughs. 
+
+We hypothesize that the COVID-19 pandemic resulted in significantly reduced traffic and industrial pollution, resulting in lower PM2.5 levels in 2019-2021 compared to 2016-2018. 
 
 ## Greenspace
 

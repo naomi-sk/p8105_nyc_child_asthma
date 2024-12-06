@@ -715,8 +715,62 @@ tidy_analysis_pm =
     fill = &quot;Year Group&quot;
   ) </code></pre>
 <p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
-<p>make knitr chart that shows with in numbers differences between
-years</p>
+<pre class="r"><code># Print PM2.5 Summary
+
+tidy_analysis_pm_diff &lt;- 
+  tidy_analysis_pm |&gt;
+  mutate(pm2.5_difference = `avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`)
+
+
+knitr::kable(tidy_analysis_pm_diff, col.names = c(&quot;borough&quot;, &quot;avg_pm2.5_2016-2018&quot;, &quot;avg_pm2.5_2019-2021&quot;, &quot;pm2.5_difference&quot;))</code></pre>
+<table>
+<colgroup>
+<col width="19%" />
+<col width="28%" />
+<col width="28%" />
+<col width="23%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">borough</th>
+<th align="right">avg_pm2.5_2016-2018</th>
+<th align="right">avg_pm2.5_2019-2021</th>
+<th align="right">pm2.5_difference</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Bronx</td>
+<td align="right">7.573333</td>
+<td align="right">6.553333</td>
+<td align="right">1.0200000</td>
+</tr>
+<tr class="even">
+<td align="left">Brooklyn</td>
+<td align="right">7.490000</td>
+<td align="right">6.470000</td>
+<td align="right">1.0200000</td>
+</tr>
+<tr class="odd">
+<td align="left">Manhattan</td>
+<td align="right">8.716667</td>
+<td align="right">7.626667</td>
+<td align="right">1.0900000</td>
+</tr>
+<tr class="even">
+<td align="left">Queens</td>
+<td align="right">7.060000</td>
+<td align="right">6.336667</td>
+<td align="right">0.7233333</td>
+</tr>
+<tr class="odd">
+<td align="left">Staten Island</td>
+<td align="right">6.683333</td>
+<td align="right">5.870000</td>
+<td align="right">0.8133333</td>
+</tr>
+</tbody>
+</table>
 <p>Show map of PM2.5 levels per UH42 index across years.</p>
 <pre class="r"><code>geography = 
   read_excel(&quot;data/geoid_borough_name_nyc.xlsx&quot;) |&gt;
@@ -763,13 +817,45 @@ tidy_uhf42_pm &lt;-
     UHFCODE = as.double(UHFCODE))</code></pre>
 <pre class="r"><code>map_uhf42 &lt;- 
   uhf42_map |&gt;
-  left_join(tidy_uhf42_pm, by = &quot;UHFCODE&quot;) </code></pre>
+  left_join(tidy_uhf42_pm, by = &quot;UHFCODE&quot;) |&gt;
+  pivot_longer(cols = starts_with(&quot;avg_pm2.5_&quot;), 
+               names_to = &quot;time_period&quot;, 
+               values_to = &quot;avg_pm2.5&quot;)</code></pre>
+<p>Make a heat map showing differences across UHF42 neighborhoods from
+2016-2018 to 2019-2021.</p>
+<pre class="r"><code>heat_map_pm2.5 &lt;- ggplot() +
+  geom_sf(data = map_uhf42, aes(fill = avg_pm2.5)) +
+  facet_wrap(~time_period, ncol = 2) +
+  scale_fill_viridis_c(option = &quot;plasma&quot;, na.value = &quot;grey50&quot;) +
+  labs(
+    title = &quot;PM2.5 (ug/m3) Levels by UHF42 Neighborhood&quot;,
+    fill = &quot;PM2.5&quot;
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 12),
+    legend.position = &quot;right&quot;,
+    legend.key.height = unit(2, &quot;cm&quot;)
+  )
+
+heat_map_pm2.5</code></pre>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-15-1.png" width="672" />
+Looking at the PM2.5(ug/m3) levels across the two time periods(2016-2018
+and 2019-2021), we can observe several key patterns: - Overall, there is
+a general decrease in PM2.5 levels from 2016-2018 and 2019-2021 across
+the majority of UHF42 neighborhoods, as the 2019-2021 map has much
+darkers colors indicating lower PM2.5 levels. - Midtown Manhattan shows
+the highest PM2.5 levels across both time periods. - Staten Island shows
+the lowest PM2.5 levels across all boroughs.</p>
+<p>We hypothesize that the COVID-19 pandemic resulted in significantly
+reduced traffic and industrial pollution, resulting in lower PM2.5
+levels in 2019-2021 compared to 2016-2018.</p>
 </div>
 <div id="greenspace" class="section level2">
 <h2>Greenspace</h2>
 <div id="borough-and-year-comparison" class="section level4">
 <h4>Borough and Year Comparison</h4>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 <p>Bronx had the least amount of greenspace, followed by Manhattan,
 Brooklyn, and Queens. Staten Island had the highest amount of
 greenspace. This trend is similar between both year groups.</p>
@@ -824,7 +910,7 @@ increase (258.720 acres) in greenspaces and Manhattan had the least
 </div>
 <div id="greenspace-types" class="section level4">
 <h4>Greenspace Types</h4>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
 <p>In terms of total acres, flagship parks make up the largest
 proportion of NYC greenspace. This trend is similar for both year
 groups.</p>
@@ -995,7 +1081,7 @@ ggplot(all_temp_month, aes(x = months, y = avg_month, color = borough)) +
     color = &quot;Borough&quot;
   ) +
   theme_minimal()</code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
 <pre class="r"><code># Max, Min, Mean temperature trend by year and borough
 
 mean_temp_year = all_temp |&gt; 
@@ -1031,7 +1117,7 @@ ggplot(long_data, aes(x = years, y = Temperature, color = Temperature_Type, grou
                &quot;mean_temp&quot; = &quot;Mean Temperature&quot;)) +
   theme_minimal() +                    
   facet_wrap(~ borough)  </code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
 <pre class="r"><code>#average temperature table
 
 mean_temp_table = mean_temp_year |&gt; 
@@ -1114,7 +1200,7 @@ class="section level3">
        x = &quot;Date Group&quot;,
        y = &quot;Average Temperature&quot;) +
   theme_minimal()</code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-28-1.png" width="672" /></p>
 </div>
 </div>
 </div>
