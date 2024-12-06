@@ -587,4 +587,135 @@ Top categories of greenspace types across the boroughs include Flagship Park, Co
 
 ## Temperature
 
+```{r}
+# Load raw temperature data for each borough
+
+manhattan = read_csv("data/manhattan.csv",skip = 3) |>
+  mutate(Borough = "Manhattan") |> 
+  janitor::clean_names()
+
+bronx = read_csv("data/bronx.csv",skip = 3) |>
+  mutate(Borough = "Bronx") |> 
+  janitor::clean_names()
+
+brooklyn = read_csv("data/brooklyn.csv",skip = 3) |>
+  mutate(Borough = "Brooklyn") |> 
+  janitor::clean_names()
+
+queens = read_csv("data/queens.csv",skip = 3) |>
+  mutate(Borough = "Queens") |> 
+  janitor::clean_names()
+
+staten_island = read_csv("data/staten_island.csv",skip = 3) |>
+  mutate(Borough = "Staten Island") |> 
+  janitor::clean_names()
+
+```
+
+```{r}
+all_temp = bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |> 
+  mutate(borough = as.factor(borough)) |> 
+  mutate(date = as.Date(time, format = "%d/%m/%Y")) |> 
+  select(time:temperature_2m_mean, borough, date) |> 
+  mutate(years = year(date)) |> 
+  mutate(months = as.Date(paste0(format(date, "%Y-%m"), "-01"), format = "%Y-%m-%d"))
+
+all_temp_borough = all_temp |> 
+  mutate(date = as.Date(time, format = "%d/%m/%Y")) |>  # Corrected date format
+  mutate(data_years = ifelse(year(date) %in% 2016:2018, "2016-2018", "2019-2021")) |> 
+  select(temperature_2m_max:data_years) |> 
+  group_by(data_years, borough) |> 
+  summarise(avg_temperature = mean(temperature_2m_mean, na.rm = TRUE))
+
+```
+
+
+```{r}
+
+# Monthly Mean temperature
+
+all_temp_month = all_temp |> 
+  group_by(months, borough) |> 
+  summarise(avg_month = mean(temperature_2m_mean, na.rm = TRUE))
+
+ggplot(all_temp_month, aes(x = months, y = avg_month, color = borough)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Monthly Mean Temperature (2016-2021) by Borough",
+    x = "Month",
+    y = "Average Temperature (°C)",
+    color = "Borough"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# Max, Min, Mean temperature trend by year and borough
+
+mean_temp_year = all_temp |> 
+  group_by(years, borough) |> 
+  summarize(
+    high_temp = mean(temperature_2m_max, na.rm = TRUE),
+    low_temp = mean(temperature_2m_min, na.rm = TRUE),
+    mean_temp = mean(temperature_2m_mean, na.rm = TRUE)
+  ) |> 
+  arrange(years, borough) 
+
+
+long_data <- mean_temp_year |> 
+  pivot_longer(
+    cols = c(high_temp, low_temp, mean_temp),
+    names_to = "Temperature_Type",            
+    values_to = "Temperature"             
+  )
+
+ggplot(long_data, aes(x = years, y = Temperature, color = Temperature_Type, group = Temperature_Type)) +
+  geom_line(size = 1) +                   
+  geom_point(size = 2) +              
+  labs(
+    title = "Mean Temperature Trends by Year and Borough",
+    x = "Year",
+    y = "Temperature (°C)",       
+    color = "Mean Temperature Type"
+  ) +
+    scale_color_manual(
+    values = c("high_temp" = "red", "low_temp" = "blue", "mean_temp" = "darkgreen"), # Color mapping
+    labels = c("high_temp" = "Highest Temperature", 
+               "low_temp" = "Lowest Temperature", 
+               "mean_temp" = "Mean Temperature")) +
+  theme_minimal() +                    
+  facet_wrap(~ borough)  
+  
+```
+
+```{r}
+
+#average temperature table
+
+mean_temp_table = mean_temp_year |> 
+  select(borough, years, mean_temp) |> 
+  pivot_wider(
+    names_from = borough,
+    values_from = mean_temp
+  )
+
+knitr::kable(mean_temp_table)
+```
+
+
+### Average temperature by date group and borough
+
+```{r}
+
+ggplot(data = all_temp_borough, aes(x = data_years, y = avg_temperature, color = borough)) +
+  geom_point(size = 3) +
+  geom_line(aes(group = borough), size = 1) +
+  labs(title = "Average Temperature by Date Group and Borough",
+       x = "Date Group",
+       y = "Average Temperature") +
+  theme_minimal()
+
+```
+
 

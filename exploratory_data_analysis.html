@@ -14,7 +14,7 @@
 
 <title>exploratory_data_analysis.knit</title>
 
-<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cerulean.min.css" rel="stylesheet" />
@@ -37,8 +37,8 @@
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -945,6 +945,177 @@ types are different for each borough.</p>
 </div>
 <div id="temperature" class="section level2">
 <h2>Temperature</h2>
+<pre class="r"><code># Load raw temperature data for each borough
+
+manhattan = read_csv(&quot;data/manhattan.csv&quot;,skip = 3) |&gt;
+  mutate(Borough = &quot;Manhattan&quot;) |&gt; 
+  janitor::clean_names()
+
+bronx = read_csv(&quot;data/bronx.csv&quot;,skip = 3) |&gt;
+  mutate(Borough = &quot;Bronx&quot;) |&gt; 
+  janitor::clean_names()
+
+brooklyn = read_csv(&quot;data/brooklyn.csv&quot;,skip = 3) |&gt;
+  mutate(Borough = &quot;Brooklyn&quot;) |&gt; 
+  janitor::clean_names()
+
+queens = read_csv(&quot;data/queens.csv&quot;,skip = 3) |&gt;
+  mutate(Borough = &quot;Queens&quot;) |&gt; 
+  janitor::clean_names()
+
+staten_island = read_csv(&quot;data/staten_island.csv&quot;,skip = 3) |&gt;
+  mutate(Borough = &quot;Staten Island&quot;) |&gt; 
+  janitor::clean_names()</code></pre>
+<pre class="r"><code>all_temp = bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |&gt; 
+  mutate(borough = as.factor(borough)) |&gt; 
+  mutate(date = as.Date(time, format = &quot;%d/%m/%Y&quot;)) |&gt; 
+  select(time:temperature_2m_mean, borough, date) |&gt; 
+  mutate(years = year(date)) |&gt; 
+  mutate(months = as.Date(paste0(format(date, &quot;%Y-%m&quot;), &quot;-01&quot;), format = &quot;%Y-%m-%d&quot;))
+
+all_temp_borough = all_temp |&gt; 
+  mutate(date = as.Date(time, format = &quot;%d/%m/%Y&quot;)) |&gt;  # Corrected date format
+  mutate(data_years = ifelse(year(date) %in% 2016:2018, &quot;2016-2018&quot;, &quot;2019-2021&quot;)) |&gt; 
+  select(temperature_2m_max:data_years) |&gt; 
+  group_by(data_years, borough) |&gt; 
+  summarise(avg_temperature = mean(temperature_2m_mean, na.rm = TRUE))</code></pre>
+<pre class="r"><code># Monthly Mean temperature
+
+all_temp_month = all_temp |&gt; 
+  group_by(months, borough) |&gt; 
+  summarise(avg_month = mean(temperature_2m_mean, na.rm = TRUE))
+
+ggplot(all_temp_month, aes(x = months, y = avg_month, color = borough)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = &quot;Monthly Mean Temperature (2016-2021) by Borough&quot;,
+    x = &quot;Month&quot;,
+    y = &quot;Average Temperature (°C)&quot;,
+    color = &quot;Borough&quot;
+  ) +
+  theme_minimal()</code></pre>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<pre class="r"><code># Max, Min, Mean temperature trend by year and borough
+
+mean_temp_year = all_temp |&gt; 
+  group_by(years, borough) |&gt; 
+  summarize(
+    high_temp = mean(temperature_2m_max, na.rm = TRUE),
+    low_temp = mean(temperature_2m_min, na.rm = TRUE),
+    mean_temp = mean(temperature_2m_mean, na.rm = TRUE)
+  ) |&gt; 
+  arrange(years, borough) 
+
+
+long_data &lt;- mean_temp_year |&gt; 
+  pivot_longer(
+    cols = c(high_temp, low_temp, mean_temp),
+    names_to = &quot;Temperature_Type&quot;,            
+    values_to = &quot;Temperature&quot;             
+  )
+
+ggplot(long_data, aes(x = years, y = Temperature, color = Temperature_Type, group = Temperature_Type)) +
+  geom_line(size = 1) +                   
+  geom_point(size = 2) +              
+  labs(
+    title = &quot;Mean Temperature Trends by Year and Borough&quot;,
+    x = &quot;Year&quot;,
+    y = &quot;Temperature (°C)&quot;,       
+    color = &quot;Mean Temperature Type&quot;
+  ) +
+    scale_color_manual(
+    values = c(&quot;high_temp&quot; = &quot;red&quot;, &quot;low_temp&quot; = &quot;blue&quot;, &quot;mean_temp&quot; = &quot;darkgreen&quot;), # Color mapping
+    labels = c(&quot;high_temp&quot; = &quot;Highest Temperature&quot;, 
+               &quot;low_temp&quot; = &quot;Lowest Temperature&quot;, 
+               &quot;mean_temp&quot; = &quot;Mean Temperature&quot;)) +
+  theme_minimal() +                    
+  facet_wrap(~ borough)  </code></pre>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<pre class="r"><code>#average temperature table
+
+mean_temp_table = mean_temp_year |&gt; 
+  select(borough, years, mean_temp) |&gt; 
+  pivot_wider(
+    names_from = borough,
+    values_from = mean_temp
+  )
+
+knitr::kable(mean_temp_table)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">years</th>
+<th align="right">Bronx</th>
+<th align="right">Brooklyn</th>
+<th align="right">Manhattan</th>
+<th align="right">Queens</th>
+<th align="right">Staten Island</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2016</td>
+<td align="right">12.49891</td>
+<td align="right">12.75929</td>
+<td align="right">12.39290</td>
+<td align="right">12.66175</td>
+<td align="right">12.70710</td>
+</tr>
+<tr class="even">
+<td align="right">2017</td>
+<td align="right">12.23123</td>
+<td align="right">12.40219</td>
+<td align="right">12.15260</td>
+<td align="right">12.14411</td>
+<td align="right">12.39288</td>
+</tr>
+<tr class="odd">
+<td align="right">2018</td>
+<td align="right">12.08466</td>
+<td align="right">12.11808</td>
+<td align="right">11.93342</td>
+<td align="right">11.94959</td>
+<td align="right">12.14192</td>
+</tr>
+<tr class="even">
+<td align="right">2019</td>
+<td align="right">11.98082</td>
+<td align="right">12.12384</td>
+<td align="right">11.85068</td>
+<td align="right">11.86000</td>
+<td align="right">12.09753</td>
+</tr>
+<tr class="odd">
+<td align="right">2020</td>
+<td align="right">12.86639</td>
+<td align="right">12.95492</td>
+<td align="right">12.68251</td>
+<td align="right">12.72459</td>
+<td align="right">12.85464</td>
+</tr>
+<tr class="even">
+<td align="right">2021</td>
+<td align="right">12.65096</td>
+<td align="right">12.76575</td>
+<td align="right">12.56630</td>
+<td align="right">12.54767</td>
+<td align="right">12.75479</td>
+</tr>
+</tbody>
+</table>
+<div id="average-temperature-by-date-group-and-borough"
+class="section level3">
+<h3>Average temperature by date group and borough</h3>
+<pre class="r"><code>ggplot(data = all_temp_borough, aes(x = data_years, y = avg_temperature, color = borough)) +
+  geom_point(size = 3) +
+  geom_line(aes(group = borough), size = 1) +
+  labs(title = &quot;Average Temperature by Date Group and Borough&quot;,
+       x = &quot;Date Group&quot;,
+       y = &quot;Average Temperature&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+</div>
 </div>
 </div>
 
