@@ -674,26 +674,28 @@ tidy_analysis_pm |&gt;
     fill = &quot;Year Group&quot;
   ) </code></pre>
 <p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p><strong>Average PM.25 levels across boroughs: 2016-2018 vs
+2019-2021</strong></p>
 <pre class="r"><code># Print PM2.5 Summary
 
 tidy_analysis_pm_diff &lt;- 
   tidy_analysis_pm |&gt;
   mutate(pm2.5_difference = `avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`)
 
-knitr::kable(tidy_analysis_pm_diff, col.names = c(&quot;borough&quot;, &quot;avg_pm2.5_2016-2018&quot;, &quot;avg_pm2.5_2019-2021&quot;, &quot;pm2.5_difference&quot;))</code></pre>
+knitr::kable(tidy_analysis_pm_diff, col.names = c(&quot;Borough&quot;, &quot;Average PM2.5 (2016-2018)&quot;, &quot;Average PM2.5 (2019-2021)&quot;, &quot;Difference in PM2.5 Levels&quot;))</code></pre>
 <table>
 <colgroup>
-<col width="19%" />
-<col width="28%" />
-<col width="28%" />
-<col width="23%" />
+<col width="15%" />
+<col width="27%" />
+<col width="27%" />
+<col width="29%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="left">borough</th>
-<th align="right">avg_pm2.5_2016-2018</th>
-<th align="right">avg_pm2.5_2019-2021</th>
-<th align="right">pm2.5_difference</th>
+<th align="left">Borough</th>
+<th align="right">Average PM2.5 (2016-2018)</th>
+<th align="right">Average PM2.5 (2019-2021)</th>
+<th align="right">Difference in PM2.5 Levels</th>
 </tr>
 </thead>
 <tbody>
@@ -846,9 +848,65 @@ period.</p>
 </div>
 <div id="greenspace" class="section level2">
 <h2>Greenspace</h2>
+<pre class="r"><code># Load greenspace data
+
+greenspace_clean = read_csv(&quot;./data/Parks_Properties_20241126.csv&quot;, na = c(&quot;NA&quot;, &quot;.&quot;, &quot;&quot;)) |&gt;
+  janitor::clean_names() |&gt; 
+  mutate(
+    borough = case_match(borough, #renamed borough according to data dictionary
+      &quot;R&quot; ~ &quot;Staten Island&quot;,
+      &quot;Q&quot; ~ &quot;Queens&quot;,
+      &quot;X&quot; ~ &quot;Bronx&quot;,
+      &quot;B&quot; ~ &quot;Brooklyn&quot;,
+      &quot;M&quot; ~ &quot;Manhattan&quot;),
+    typecategory = as.factor(typecategory), #converted char variables into factors
+    borough = as.factor(borough)) |&gt;
+  separate(acquisitiondate, into = c(&quot;year&quot;, &quot;month&quot;, &quot;day&quot;), sep = &quot;-&quot;) |&gt;
+  select(year, borough, acres, typecategory) |&gt; 
+  filter(year &lt; 2022 | is.na(year))</code></pre>
 <div id="borough-and-year-comparison" class="section level4">
 <h4>Borough and Year Comparison</h4>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<pre class="r"><code># Load 2016-2018 dataset
+
+dataset1_gs = greenspace_clean |&gt;
+  filter(year &lt; 2019 | is.na(year)) |&gt; 
+  group_by(year, borough) |&gt;
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = &quot;drop&quot;)
+
+dataset1_gs_calc = dataset1_gs |&gt; 
+  group_by(borough) |&gt; 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = &quot;drop&quot;) |&gt; 
+  mutate(year_group = &quot;2016-2018&quot;)
+
+# Load 2019-2021 dataset
+
+dataset2_gs = greenspace_clean |&gt;
+  filter(year &lt; 2022 | is.na(year)) |&gt;
+  group_by(year, borough) |&gt;
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = &quot;drop&quot;)
+
+dataset2_gs_calc = dataset2_gs |&gt; 
+  group_by(borough) |&gt; 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = &quot;drop&quot;) |&gt; 
+  mutate(year_group = &quot;2019-2021&quot;)
+
+# Combine datasets
+
+total_acres = bind_rows(dataset1_gs_calc, dataset2_gs_calc)
+  
+# Total acres dataset
+
+Greenspace_data = total_acres |&gt;
+  pivot_wider(names_from = year_group,
+              values_from = acres_sum)
+
+# Produce plot of greenspace distribution across NYC boroughs
+
+ggplot(total_acres, aes(x = reorder(borough, acres_sum), y = acres_sum, fill = year_group)) + 
+  geom_bar(stat = &quot;identity&quot;, position = &quot;dodge&quot;, alpha = 0.7) + 
+  labs(x = &quot;Borough&quot;, y = &quot;Greenspace (Total Acres)&quot;, title = &quot;Greenspaces Across Borough by Year Group&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>Analysis of greenspace distribution across NYC boroughs shows
 consistent patterns between 2016-2018 and 2019-2021, with notable
 differences in total acreage between boroughs. Staten Island maintained
@@ -866,13 +924,10 @@ interest.</p>
 </div>
 <div id="greenspace-increase" class="section level4">
 <h4>Greenspace increase</h4>
-<p>Comparing between the two year groups, Staten Island had the largest
-increase (258.720 acres) in greenspaces and Manhattan had the least
-(0.345 acres).</p>
 <table>
 <thead>
 <tr class="header">
-<th align="left">borough</th>
+<th align="left">Borough</th>
 <th align="right">2016-2018</th>
 <th align="right">2019-2021</th>
 <th align="right">Difference</th>
@@ -911,13 +966,84 @@ increase (258.720 acres) in greenspaces and Manhattan had the least
 </tr>
 </tbody>
 </table>
+<p>Examining the changes in greenspace between 2016-2018 and 2019-2021,
+the data reveals variations in greenspace across boroughs and time
+periods. Staten Island exhibited the most significant increase, adding
+258.720 acres of greenspace, followed by the Bronx with an addition of
+119.625 acres. Queens showed a modest increase of 11.494 acres, while
+Brooklyn and Manhattan experienced minimal changes with increases of
+only 0.956 and 0.345 acres respectively. These differences may reflect
+differences in greenspace development priorities across the city’s
+boroughs during this period.</p>
 </div>
 <div id="greenspace-types" class="section level4">
 <h4>Greenspace Types</h4>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
-<p>In terms of total acres, flagship parks make up the largest
-proportion of NYC greenspace. This trend is similar for both year
-groups.</p>
+<pre class="r"><code># Calculate mean acres for each type category across all years
+
+types_nyc = greenspace_clean |&gt;
+  select(-borough) |&gt;
+  group_by(typecategory) |&gt;
+  summarise(acres_tp = mean(acres, na.rm = TRUE), .groups = &quot;drop&quot;)
+
+# Process data for 2016-2018 period
+
+type1A = greenspace_clean |&gt;
+  filter(year &lt; 2019 | is.na(year)) |&gt; 
+  group_by(year, borough, typecategory) |&gt;
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = &quot;drop&quot;)
+
+# Calculate total acres by borough and type for 2016-2018
+
+type1B = type1A |&gt; 
+  group_by(borough, typecategory) |&gt; 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = &quot;drop&quot;) |&gt; 
+  mutate(year_group = &quot;year1&quot;) #2016-2018
+
+# Process data for 2019-2021 period
+
+type2A = greenspace_clean |&gt;
+  filter(year &lt; 2022 | is.na(year)) |&gt;
+  group_by(year, borough, typecategory) |&gt;
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = &quot;drop&quot;)
+
+# Calculate total acres by borough and type for 2019-2021
+
+type2B = type2A |&gt; 
+  group_by(borough, typecategory) |&gt; 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = &quot;drop&quot;) |&gt; 
+  mutate(year_group = &quot;year2&quot;) #2019-2021
+
+# Combine both time periods and calculate total acres by type
+
+binded = bind_rows(type1B, type2B) |&gt;
+  group_by(typecategory, year_group) |&gt;
+  summarise(acres_total = sum(acres_sum, na.rm = TRUE))
+
+# Create bar plot comparing greenspace types between periods
+
+binded |&gt; 
+   mutate(year_group = case_match(year_group,
+      &quot;year1&quot; ~ &quot;2016-2018&quot;,
+      &quot;year2&quot; ~ &quot;2019-2021&quot;)) |&gt;
+  ggplot(aes(x = reorder(typecategory, acres_total), y = acres_total, fill = year_group)) + 
+  geom_bar(stat = &quot;identity&quot;, position = &quot;dodge&quot;, width = 0.6) +
+  labs(x = &quot;Greenspace Types&quot;, y = &quot;Total Acres&quot;, title = &quot;Total Acres of NYC Greenspace by Type and Year Group&quot;) +
+    theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))</code></pre>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p>Analysis of greenspace types across NYC reveals flagship parks as the
+dominant category, representing the largest total acreage in both
+2016-2018 and 2019-2021 periods. Community parks and nature areas
+represent the second and third largest greenspace types respectively in
+both time periods. The distribution of greenspace types remained largely
+consistent between the two time periods, with minimal changes in most
+categories.</p>
+<p>Smaller greenspace types such as gardens, plazas, and historic house
+parks account for relatively minimal acreage in comparison to the larger
+park categories. Most categories showed slight increases or remained
+stable across the two time periods, which suggests efforts towards the
+preservation and/or expansion of various greenspace types throughout the
+city.</p>
 <table>
 <thead>
 <tr class="header">
@@ -930,51 +1056,58 @@ groups.</p>
 <tbody>
 <tr class="odd">
 <td align="left">Neighborhood Park</td>
-<td align="right">910.00857</td>
-<td align="right">1169.62510</td>
-<td align="right">259.617</td>
+<td align="right">910.009</td>
+<td align="right">1169.625</td>
+<td align="right">259.616</td>
 </tr>
 <tr class="even">
 <td align="left">Managed Sites</td>
-<td align="right">483.30350</td>
-<td align="right">602.39850</td>
-<td align="right">119.095</td>
+<td align="right">483.304</td>
+<td align="right">602.398</td>
+<td align="right">119.094</td>
 </tr>
 <tr class="odd">
 <td align="left">Nature Area</td>
-<td align="right">3084.62632</td>
-<td align="right">3117.48632</td>
+<td align="right">3084.626</td>
+<td align="right">3117.486</td>
 <td align="right">32.860</td>
 </tr>
 <tr class="even">
 <td align="left">Undeveloped</td>
-<td align="right">190.17075</td>
-<td align="right">191.35675</td>
+<td align="right">190.171</td>
+<td align="right">191.357</td>
 <td align="right">1.186</td>
 </tr>
 <tr class="odd">
 <td align="left">Waterfront Facility</td>
-<td align="right">2277.16100</td>
-<td align="right">2277.69100</td>
+<td align="right">2277.161</td>
+<td align="right">2277.691</td>
 <td align="right">0.530</td>
 </tr>
 <tr class="even">
 <td align="left">Garden</td>
-<td align="right">17.20095</td>
-<td align="right">17.59995</td>
+<td align="right">17.201</td>
+<td align="right">17.600</td>
 <td align="right">0.399</td>
 </tr>
 <tr class="odd">
 <td align="left">Playground</td>
-<td align="right">137.85455</td>
-<td align="right">138.15355</td>
+<td align="right">137.855</td>
+<td align="right">138.154</td>
 <td align="right">0.299</td>
 </tr>
 </tbody>
 </table>
-<p>7 of the 21 greenspace types had an increase in total acres between
-the two year groups. No change was seen in the remaining greenspace
-types.</p>
+<p>Between 2016-2018 and 2019-2021, neighborhood parks showed the
+largest expansion with an increase of 259.617 acres, followed by managed
+sites which grew by 119.095 acres. Nature areas experienced a notable
+increase of 32.860 acres, while undeveloped spaces, waterfront
+facilities, gardens, and playgrounds showed minimal changes, with
+increases ranging from 0.299 to 1.186 acres. The remaining 14 greenspace
+types maintained their original acreage with no changes observed during
+this period. This pattern indicates that recent greenspace development
+has primarily focused on expanding neighborhood parks and managed sites
+while preserving existing spaces in other categories.</p>
 <p><strong>Top 3 Greenspace Types (Total Acres) Across
 Boroughs</strong></p>
 <table>
@@ -1025,12 +1158,20 @@ Boroughs</strong></p>
 </tr>
 </tbody>
 </table>
-<p>The total acres of each greenspace type for each borough is the same
-for both year group.</p>
-<p>Top categories of greenspace types across the boroughs include
-Flagship Park, Community Park, Nature Area, Parkway, Waterfront
-Facility, and Neighborhood Park. We also see that the top 3 greenspace
-types are different for each borough.</p>
+<p>The table shows the top three greenspace types by total acreage
+across New York City’s five boroughs, revealing distinct patterns in how
+each borough maintains its green spaces. Staten Island has the largest
+single greenspace with a Nature Area of 1690.97 acres, showing a focus
+on preserving natural environments. Manhattan maintains relatively
+smaller spaces, with its largest being a Community Park at 1098.39
+acres. The outer boroughs feature major destination parks called
+Flagship Parks - which NYC Parks targets for long-term planning and
+community input.</p>
+<p>The Bronx and Brooklyn both incorporate significant Parkway acreage
+as part of New York State’s historic system of landscaped roads. Queens
+stands out with the largest Flagship Park (1631.46 acres), while
+Brooklyn shows diversity in its green spaces with both large Community
+Parks and Parkways.</p>
 </div>
 </div>
 <div id="temperature" class="section level2">
@@ -1089,7 +1230,7 @@ ggplot(all_temp_month, aes(x = months, y = avg_month, color = borough)) +
     color = &quot;Borough&quot;
   ) +
   theme_minimal()</code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
 </div>
 <div id="max-min-mean-temperature-trend-by-year-and-borough"
 class="section level4">
@@ -1131,7 +1272,7 @@ ggplot(long_data, aes(x = years, y = Temperature, color = Temperature_Type, grou
                &quot;mean_temp&quot; = &quot;Mean Temperature&quot;)) +
   theme_minimal() +                    
   facet_wrap(~ borough)  </code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
 </div>
 <div id="average-temperature-change-by-borough" class="section level4">
 <h4>Average temperature change by borough</h4>
@@ -1223,7 +1364,7 @@ Bronx showed the biggest increase.</p>
        x = &quot;Date Group&quot;,
        y = &quot;Average Temperature&quot;) +
   theme_minimal()</code></pre>
-<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
 </div>
 </div>
 </div>

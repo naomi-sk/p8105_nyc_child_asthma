@@ -287,6 +287,8 @@ tidy_analysis_pm |>
 
 ```
 
+**Average PM.25 levels across boroughs: 2016-2018 vs 2019-2021**
+
 ```{r}
 
 # Print PM2.5 Summary
@@ -295,7 +297,7 @@ tidy_analysis_pm_diff <-
   tidy_analysis_pm |>
   mutate(pm2.5_difference = `avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`)
 
-knitr::kable(tidy_analysis_pm_diff, col.names = c("borough", "avg_pm2.5_2016-2018", "avg_pm2.5_2019-2021", "pm2.5_difference"))
+knitr::kable(tidy_analysis_pm_diff, col.names = c("Borough", "Average PM2.5 (2016-2018)", "Average PM2.5 (2019-2021)", "Difference in PM2.5 Levels"))
 
 ```
 
@@ -397,7 +399,7 @@ The marked improvement in air quality from 2016-2018 to 2019-2021 likely reflect
 
 ## Greenspace
 
-```{r greenspace clean, include=FALSE}
+```{r}
 
 # Load greenspace data
 
@@ -420,7 +422,7 @@ greenspace_clean = read_csv("./data/Parks_Properties_20241126.csv", na = c("NA",
 
 #### Borough and Year Comparison
 
-```{r, include=FALSE}
+```{r}
 
 # Load 2016-2018 dataset
 
@@ -434,10 +436,6 @@ dataset1_gs_calc = dataset1_gs |>
   summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
   mutate(year_group = "2016-2018")
 
-```
-
-```{r, include=FALSE}
-
 # Load 2019-2021 dataset
 
 dataset2_gs = greenspace_clean |>
@@ -450,9 +448,7 @@ dataset2_gs_calc = dataset2_gs |>
   summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
   mutate(year_group = "2019-2021")
 
-```
-
-```{r, echo=FALSE}
+# Combine datasets
 
 total_acres = bind_rows(dataset1_gs_calc, dataset2_gs_calc)
   
@@ -462,9 +458,7 @@ Greenspace_data = total_acres |>
   pivot_wider(names_from = year_group,
               values_from = acres_sum)
 
-```
-
-```{r, echo=FALSE}
+# Produce plot of greenspace distribution across NYC boroughs
 
 ggplot(total_acres, aes(x = reorder(borough, acres_sum), y = acres_sum, fill = year_group)) + 
   geom_bar(stat = "identity", position = "dodge", alpha = 0.7) + 
@@ -479,59 +473,67 @@ The Bronx consistently had the lowest greenspace coverage, though it showed a sl
 
 #### Greenspace increase
 
-Comparing between the two year groups, Staten Island had the largest increase (258.720 acres) in greenspaces and Manhattan had the least (0.345 acres).
 
-```{r Total acres table, echo=FALSE}
+```{r, echo=FALSE}
+
+# Table of changes in greenspace
 
 Greenspace_data |>
   mutate(
     Difference = round(`2019-2021` - `2016-2018`, 3)) |>
   arrange(desc(Difference)) |>
-  knitr::kable()
+  knitr::kable(col.names = c("Borough", "2016-2018", "2019-2021", "Difference"))
+
 ```
+
+Examining the changes in greenspace between 2016-2018 and 2019-2021, the data reveals variations in greenspace across boroughs and time periods. Staten Island exhibited the most significant increase, adding 258.720 acres of greenspace, followed by the Bronx with an addition of 119.625 acres. Queens showed a modest increase of 11.494 acres, while Brooklyn and Manhattan experienced minimal changes with increases of only 0.956 and 0.345 acres respectively. These differences may reflect differences in greenspace development priorities across the city's boroughs during this period.
 
 #### Greenspace Types
 
-```{r, include=FALSE}
+```{r}
+
+# Calculate mean acres for each type category across all years
+
 types_nyc = greenspace_clean |>
   select(-borough) |>
   group_by(typecategory) |>
   summarise(acres_tp = mean(acres, na.rm = TRUE), .groups = "drop")
-```
 
-```{r, include=FALSE}
+# Process data for 2016-2018 period
+
 type1A = greenspace_clean |>
   filter(year < 2019 | is.na(year)) |> 
   group_by(year, borough, typecategory) |>
   summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = "drop")
 
+# Calculate total acres by borough and type for 2016-2018
+
 type1B = type1A |> 
   group_by(borough, typecategory) |> 
   summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
   mutate(year_group = "year1") #2016-2018
-```
 
-```{r, include=FALSE}
+# Process data for 2019-2021 period
+
 type2A = greenspace_clean |>
   filter(year < 2022 | is.na(year)) |>
   group_by(year, borough, typecategory) |>
   summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = "drop")
 
+# Calculate total acres by borough and type for 2019-2021
+
 type2B = type2A |> 
   group_by(borough, typecategory) |> 
   summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
   mutate(year_group = "year2") #2019-2021
-```
 
-```{r binded, include=FALSE}
+# Combine both time periods and calculate total acres by type
 
 binded = bind_rows(type1B, type2B) |>
   group_by(typecategory, year_group) |>
   summarise(acres_total = sum(acres_sum, na.rm = TRUE))
-```
 
-
-```{r, echo=FALSE}
+# Create bar plot comparing greenspace types between periods
 
 binded |> 
    mutate(year_group = case_match(year_group,
@@ -542,36 +544,56 @@ binded |>
   labs(x = "Greenspace Types", y = "Total Acres", title = "Total Acres of NYC Greenspace by Type and Year Group") +
     theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
 ```
 
-In terms of total acres, flagship parks make up the largest proportion of NYC greenspace. This trend is similar for both year groups.
+Analysis of greenspace types across NYC reveals flagship parks as the dominant category, representing the largest total acreage in both 2016-2018 and 2019-2021 periods. Community parks and nature areas represent the second and third largest greenspace types respectively in both time periods.
+The distribution of greenspace types remained largely consistent between the two time periods, with minimal changes in most categories. 
+
+Smaller greenspace types such as gardens, plazas, and historic house parks account for relatively minimal acreage in comparison to the larger park categories. Most categories showed slight increases or remained stable across the two time periods, which suggests efforts towards the preservation and/or expansion of various greenspace types throughout the city.
 
 ```{r, echo=FALSE}
 
-#increase in acres by type
+# Create table showing change in acres between time periods
 
 Total_acres_table_test = binded |>
-  pivot_wider(names_from = year_group,
-              values_from = acres_total) |>
-  mutate(diff = round(year2 - year1, 3))
+ pivot_wider(names_from = year_group,
+             values_from = acres_total) |>
+ mutate(across(where(is.numeric), ~round(., 3)),
+        diff = round(year2 - year1, 3))
+
+# Filter for only positive changes and sort by largest increase 
 
 table_type = Total_acres_table_test |>
-  filter(diff > 0) |>
-  arrange(desc(diff))
+ filter(diff > 0) |>
+ arrange(desc(diff))
+
+# Produce table with greenspace types between years
 
 knitr::kable(table_type, col.names = c("Greenspace Type", "2016-2018", "2019-2021", "Difference"))
 
+
 ```
 
-7 of the 21 greenspace types had an increase in total acres between the two year groups. No change was seen in the remaining greenspace types. 
+Between 2016-2018 and 2019-2021, neighborhood parks showed the largest expansion with an increase of 259.617 acres, followed by managed sites which grew by 119.095 acres. Nature areas experienced a notable increase of 32.860 acres, while undeveloped spaces, waterfront facilities, gardens, and playgrounds showed minimal changes, with increases ranging from 0.299 to 1.186 acres. The remaining 14 greenspace types maintained their original acreage with no changes observed during this period. This pattern indicates that recent greenspace development has primarily focused on expanding neighborhood parks and managed sites while preserving existing spaces in other categories.
 
 **Top 3 Greenspace Types (Total Acres) Across Boroughs**
 
 ```{r, echo=FALSE, message = FALSE}
 
+# Create initial dataset of acres by type, borough, and year group
+
 perBor = bind_rows(type1B, type2B) |>
   group_by(typecategory, year_group, borough) |>
   summarise(acres_total = sum(acres_sum, na.rm = TRUE)) 
+
+# Process data for each borough separately
+# For each:
+# 1. Filter for specific borough
+# 2. Round acreage to 2 decimal places
+# 3. Reshape data to wide format with years as columns
+# 4. Sort by year1 values in descending order
+# 5. Filter to keep only the largest spaces (threshold varies by borough)
 
 Bronx_perBor = perBor |> 
   filter(borough == "Bronx") |>
@@ -580,7 +602,7 @@ Bronx_perBor = perBor |>
     names_from = year_group,
     values_from = acres_total) |>
   arrange(desc(year1)) |>
-  filter(year1 > 200) #keep top 3
+  filter(year1 > 200) 
 
 Brook_perBor = perBor |> 
   filter(borough == "Brooklyn") |>
@@ -589,7 +611,7 @@ Brook_perBor = perBor |>
     names_from = year_group,
     values_from = acres_total) |>
   arrange(desc(year1)) |>
-  filter(year1 > 500) #keep top 3
+  filter(year1 > 500) 
 
 Man_perBor = perBor |> 
   filter(borough == "Manhattan") |>
@@ -598,7 +620,7 @@ Man_perBor = perBor |>
     names_from = year_group,
     values_from = acres_total) |>
   arrange(desc(year1)) |>
-  filter(year1 > 200) #keep top 3
+  filter(year1 > 200) 
 
 Q_perBor = perBor |> 
   filter(borough == "Queens") |>
@@ -607,7 +629,7 @@ Q_perBor = perBor |>
     names_from = year_group,
     values_from = acres_total) |>
   arrange(desc(year1)) |>
-  filter(year1 > 900) #keep top 3
+  filter(year1 > 900) 
 
 SI_perBor = perBor |> 
   filter(borough == "Staten Island") |>
@@ -616,12 +638,12 @@ SI_perBor = perBor |>
     names_from = year_group,
     values_from = acres_total) |>
   arrange(desc(year1)) |>
-  filter(year1 > 760) #keep top 3
+  filter(year1 > 760)
 
-#bind them together
+# Combine all borough data and format for final table
+
 top3_bor_gstype = bind_rows(Bronx_perBor, Brook_perBor, Q_perBor, Man_perBor, SI_perBor) |>
   select(borough, typecategory, year1, year2) |>
-#Since total acres didn't change for the top 3 categories for each borough between the years, update year variable.
   rename(acres = year1) |>
   select(-year2) |>
   group_by(borough) |>
@@ -638,14 +660,15 @@ top3_bor_gstype = bind_rows(Bronx_perBor, Brook_perBor, Q_perBor, Man_perBor, SI
     names_from = rank,
     values_from = typecategory) 
 
+# Create formatted table with clear column names
+
 knitr::kable(top3_bor_gstype, col.names = c("Borough", "Highest", "Second Highest", "Third Highest"))
  
 ```
 
-The total acres of each greenspace type for each borough is the same for both year group. 
+The table shows the top three greenspace types by total acreage across New York City's five boroughs, revealing distinct patterns in how each borough maintains its green spaces. Staten Island has the largest single greenspace with a Nature Area of 1690.97 acres, showing a focus on preserving natural environments. Manhattan maintains relatively smaller spaces, with its largest being a Community Park at 1098.39 acres. The outer boroughs feature major destination parks called Flagship Parks - which NYC Parks targets for long-term planning and community input. 
 
-Top categories of greenspace types across the boroughs include Flagship Park, Community Park, Nature Area, Parkway, Waterfront Facility, and Neighborhood Park. We also see that the top 3 greenspace types are different for each borough.
-
+The Bronx and Brooklyn both incorporate significant Parkway acreage as part of New York State's historic system of landscaped roads. Queens stands out with the largest Flagship Park (1631.46 acres), while Brooklyn shows diversity in its green spaces with both large Community Parks and Parkways.
 
 ## Temperature
 
