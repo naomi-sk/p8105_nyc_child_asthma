@@ -833,3 +833,119 @@ ggplot(data = all_temp_borough, aes(x = data_years, y = avg_temperature, color =
 ```
 
 This graph illustrates the change in average temperatures across New York City's boroughs between two time periods: 2016-2018 and 2019-2021. All boroughs experienced an increase in average temperature between these periods, with Manhattan and Bronx showing the most pronounced increases. Brooklyn consistently maintained the highest average temperatures across both periods, starting at approximately 12.42°C and rising to 12.62°C, while Manhattan, despite its significant increase, recorded the lowest temperatures in both periods. The parallel upward trends across all boroughs suggest a consistent citywide warming pattern, with temperatures rising by roughly 0.2-0.3°C between the two time periods.
+
+## Heat Vulnerability Index (HVI)
+
+```{r}
+#import merged file from data preparation page
+full_data2 = read_csv("data/NYC_total.csv", na = c("NA", ".", "")) |>
+  janitor::clean_names() |>
+    mutate(
+    data_years = as.factor(data_years),
+    borough = as.factor(borough),
+    indicator = as.factor(indicator),
+    zip_code = as.factor(zip_code))
+
+#convert categorical variables into factors
+
+# Calculate average HVI scores for each borough
+# This helps understand overall heat vulnerability patterns across boroughs
+
+daa = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |>
+  group_by(borough) |> 
+  summarise(hvi_mean = mean(hvi))
+
+# Produce table
+knitr::kable(daa, digits = 3)
+```
+
+
+```{r dataset, include = FALSE}
+
+# Data ED Visits (2016-2018)
+
+full_data2_ed_1 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "ed_visits_rate") |> 
+  filter(data_years == "2016-2018")
+
+## Datasets for Graphing (datasets 1 & 2):
+## Changing HVI to numeric
+
+# Data ED Visits (2019-2021)
+
+full_data2_ed_2 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "ed_visits_rate") |> 
+  filter(data_years == "2019-2021")
+
+# Data Hospitalizations (2016-2018)
+
+full_data2_hosp_1 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "hosp_rate") |>  
+  filter(data_years == "2016-2018")
+
+# Data Hospitalizations (2019-2021)
+
+full_data2_hosp_2 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "hosp_rate") |>  
+  filter(data_years == "2019-2021")
+
+## Datasets for Statistical Analysis (datasets 3 & 4):
+## Keeping HVI as a factor variable
+
+
+# Data ED Visits (2016-2018)
+
+full_data2_ed_3 = full_data2 |> 
+  filter(indicator == "ed_visits_rate") |>  # filtering only ed_visits
+  filter(data_years == "2016-2018")
+
+# Data ED Visits (2019-2021)
+
+full_data2_ed_4 = full_data2 |> 
+  filter(indicator == "ed_visits_rate") |>  # filtering only ed_visits
+  filter(data_years == "2019-2021")
+
+# Data Hospitalizations (2016-2018)
+
+full_data2_hosp_3 = full_data2 |> 
+  filter(indicator == "hosp_rate") |>  #filtering only hospitlization rate
+  filter(data_years == "2016-2018")
+
+# Data Hospitalizations (2019-2021)
+
+full_data2_hosp_4 = full_data2 |> 
+  filter(indicator == "hosp_rate") |>  #filtering only hospitlization rate
+  filter(data_years == "2019-2021")
+
+```
+
+The mean Heat Vulnerability Index varies considerably across NYC boroughs, with the Bronx showing the highest average (4.07), followed by Brooklyn (3.65), Queens (3.27), Manhattan (2.42), and Staten Island (2.07). This suggests that heat vulnerability is not evenly distributed across the city, with some boroughs experiencing systematically higher heat vulnerability than others. The notable variation in HVI means across boroughs indicates that geographic and demographic factors play an important role in heat vulnerability distribution in NYC.
+
+```{r}
+
+# Plot for mean HVI scores by borough
+
+borough_plot = ggplot(daa, aes(x = reorder(borough, -hvi_mean), y = hvi_mean)) +
+  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) +
+  geom_text(aes(label = round(hvi_mean, 2)), 
+            vjust = -0.5, 
+            size = 3.5) +
+  labs(title = "Mean Heat Vulnerability Index (HVI) by Borough",
+       x = "Borough",
+       y = "Mean HVI Score") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
+  ylim(0, max(daa$hvi_mean) * 1.1)  # Add some space above bars for labels
+
+# Display the plot
+
+borough_plot
+
+```
+
+The above plot provides a visual representation of these HVI disparities, with a noticeable difference between the Bronx and Staten Island - a gap of 2 points on the HVI scale.

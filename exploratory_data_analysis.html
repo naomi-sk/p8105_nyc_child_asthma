@@ -1411,6 +1411,89 @@ pattern, with temperatures rising by roughly 0.2-0.3°C between the two
 time periods.</p>
 </div>
 </div>
+<div id="heat-vulnerability-index-hvi" class="section level2">
+<h2>Heat Vulnerability Index (HVI)</h2>
+<pre class="r"><code>#import merged file from data preparation page
+full_data2 = read_csv(&quot;data/NYC_total.csv&quot;, na = c(&quot;NA&quot;, &quot;.&quot;, &quot;&quot;)) |&gt;
+  janitor::clean_names() |&gt;
+    mutate(
+    data_years = as.factor(data_years),
+    borough = as.factor(borough),
+    indicator = as.factor(indicator),
+    zip_code = as.factor(zip_code))
+
+#convert categorical variables into factors
+
+# Calculate average HVI scores for each borough
+# This helps understand overall heat vulnerability patterns across boroughs
+
+daa = full_data2 |&gt; 
+  mutate(hvi = as.numeric(hvi)) |&gt;
+  group_by(borough) |&gt; 
+  summarise(hvi_mean = mean(hvi))
+
+# Produce table
+knitr::kable(daa, digits = 3)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">borough</th>
+<th align="right">hvi_mean</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Bronx</td>
+<td align="right">4.071</td>
+</tr>
+<tr class="even">
+<td align="left">Brooklyn</td>
+<td align="right">3.653</td>
+</tr>
+<tr class="odd">
+<td align="left">Manhattan</td>
+<td align="right">2.419</td>
+</tr>
+<tr class="even">
+<td align="left">Queens</td>
+<td align="right">3.274</td>
+</tr>
+<tr class="odd">
+<td align="left">Staten Island</td>
+<td align="right">2.068</td>
+</tr>
+</tbody>
+</table>
+<p>The mean Heat Vulnerability Index varies considerably across NYC
+boroughs, with the Bronx showing the highest average (4.07), followed by
+Brooklyn (3.65), Queens (3.27), Manhattan (2.42), and Staten Island
+(2.07). This suggests that heat vulnerability is not evenly distributed
+across the city, with some boroughs experiencing systematically higher
+heat vulnerability than others. The notable variation in HVI means
+across boroughs indicates that geographic and demographic factors play
+an important role in heat vulnerability distribution in NYC.</p>
+<pre class="r"><code># Plot for mean HVI scores by borough
+
+borough_plot = ggplot(daa, aes(x = reorder(borough, -hvi_mean), y = hvi_mean)) +
+  geom_bar(stat = &quot;identity&quot;, fill = &quot;steelblue&quot;, alpha = 0.8) +
+  geom_text(aes(label = round(hvi_mean, 2)), 
+            vjust = -0.5, 
+            size = 3.5) +
+  labs(title = &quot;Mean Heat Vulnerability Index (HVI) by Borough&quot;,
+       x = &quot;Borough&quot;,
+       y = &quot;Mean HVI Score&quot;) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
+  ylim(0, max(daa$hvi_mean) * 1.1)  # Add some space above bars for labels
+
+# Display the plot
+
+borough_plot</code></pre>
+<p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<p>The above plot provides a visual representation of these HVI
+disparities, with a noticeable difference between the Bronx and Staten
+Island - a gap of 2 points on the HVI scale.</p>
+</div>
 </div>
 
 

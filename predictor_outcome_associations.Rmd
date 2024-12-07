@@ -14,6 +14,7 @@ output:
 ```{r libraries, include=FALSE}
 library(tidyverse)
 library(ggplot2)
+library(patchwork)
 ```
 
 ```{r merged file, include=FALSE}
@@ -282,17 +283,6 @@ GS_HR
 
 When comparing between the two year groups, the association for borough greenspace and ED Visit Rate is similar to trend for borough greenspace and hospitalization rate.
 
-
-### ED Hospitalizations
-
-* Odds Ratios for ED hospitalizations, by time period
-
-```{r}
-
-
-
-```
-
 ## Temperature
 
 ```{r echo=FALSE, message=FALSE}
@@ -301,7 +291,7 @@ temp_association = full_data2 |>
   distinct(data_years, avg_temperature, indicator, borough, borough_rate)
 ```
 
-### Scattor plot of average temperature vs rate by borough
+#### Scattor plot of average temperature vs rate by borough
 
 ```{r echo=FALSE, message=FALSE}
 ggplot(temp_association, aes(x = avg_temperature, y = borough_rate, color = borough)) +
@@ -317,3 +307,114 @@ ggplot(temp_association, aes(x = avg_temperature, y = borough_rate, color = boro
 ```
 
 The plot shows that the higher temperature is associated with lower rate of ED visit and hospitalization.
+
+
+## Heat Vulnerability Index (HVI)
+
+```{r dataset, include = FALSE}
+
+# Data ED Visits (2016-2018)
+
+full_data2_ed_1 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "ed_visits_rate") |> 
+  filter(data_years == "2016-2018")
+
+## Datasets for Graphing (datasets 1 & 2):
+## Changing HVI to numeric
+
+# Data ED Visits (2019-2021)
+
+full_data2_ed_2 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "ed_visits_rate") |> 
+  filter(data_years == "2019-2021")
+
+# Data Hospitalizations (2016-2018)
+
+full_data2_hosp_1 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "hosp_rate") |>  
+  filter(data_years == "2016-2018")
+
+# Data Hospitalizations (2019-2021)
+
+full_data2_hosp_2 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "hosp_rate") |>  
+  filter(data_years == "2019-2021")
+
+## Datasets for Statistical Analysis (datasets 3 & 4):
+## Keeping HVI as a factor variable
+
+
+# Data ED Visits (2016-2018)
+
+full_data2_ed_3 = full_data2 |> 
+  filter(indicator == "ed_visits_rate") |>  # filtering only ed_visits
+  filter(data_years == "2016-2018")
+
+# Data ED Visits (2019-2021)
+
+full_data2_ed_4 = full_data2 |> 
+  filter(indicator == "ed_visits_rate") |>  # filtering only ed_visits
+  filter(data_years == "2019-2021")
+
+# Data Hospitalizations (2016-2018)
+
+full_data2_hosp_3 = full_data2 |> 
+  filter(indicator == "hosp_rate") |>  #filtering only hospitlization rate
+  filter(data_years == "2016-2018")
+
+# Data Hospitalizations (2019-2021)
+
+full_data2_hosp_4 = full_data2 |> 
+  filter(indicator == "hosp_rate") |>  #filtering only hospitlization rate
+  filter(data_years == "2019-2021")
+
+```
+
+```{r, fig.height=10, fig.width=12, echo=FALSE, message=FALSE}
+
+# Create visualization plots showing relationship between HVI scores and health outcomes
+# Four plots examine ED visits and hospitalizations across both time periods
+
+# Create plots
+
+plot1 = ggplot(full_data2_ed_1, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = "blue", alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "ED Visit rate per HVI score (2016-2018)", 
+       x = "HVI", y = "ED Visit Rate") +
+  theme_minimal()
+
+plot2 = ggplot(full_data2_ed_2, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = "blue", alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "ED Visit rate per HVI score (2019-2021)", 
+       x = "HVI", y = "ED Visit Rate") +
+  theme_minimal()
+
+plot3 = ggplot(full_data2_hosp_1, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = "blue", alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "Hospitalization rate per HVI score (2016-2018)", 
+       x = "HVI", y = "Hospitalization Rate") +
+  theme_minimal()
+
+plot4 = ggplot(full_data2_hosp_2, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = "blue", alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "Hospitalization rate per HVI score (2019-2021)", 
+       x = "HVI", y = "Hospitalization Rate") +
+  theme_minimal()
+
+# Combine plots with adjusted height and width
+(plot1 + plot2) / (plot3 + plot4) +
+  patchwork::plot_layout(heights = c(3, 3), widths = c(3, 3))
+
+```
+
+The scatter plots show consistent positive relationships between Heat Vulnerability Index and both pediatric asthma health outcomes across time periods. ED visit rates show a stronger association with HVI than hospitalization rates, as observed in steeper trend lines. The relationship appears more pronounced in the 2016-2018 period, with ED visits ranging from 0 to approximately 700 per 10,000 across HVI scores, compared to 0-350 in 2019-2021. 
+
+While the overall patterns persist in 2019-2021, the rates are lower, particularly for ED visits. The considerable vertical spread in the data points at each HVI level suggests that other factors beyond heat vulnerability influence pediatric asthma health outcomes.
