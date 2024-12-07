@@ -1,0 +1,179 @@
+/* Import Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600&display=swap');
+
+/* Base Font Size - Reduced to 80% of original */
+html {
+    font-size: 12.8px; /* 16px * 0.8 = 12.8px */
+    -webkit-text-size-adjust: 100%;
+}
+
+/* Modern, Clean Design */
+body {
+    font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+    color: #52382e;
+    background-color: #ffffff;
+    font-size: 1rem;
+}
+
+/* Navigation */
+.navbar {
+    background-color: #6ab32b !important;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 0.8rem 1rem;
+}
+
+.navbar-inverse .navbar-brand,
+.navbar-inverse .navbar-nav > li > a {
+    color: #ffffff !important;
+    font-weight: 400;
+    font-family: "Playfair Display", serif;
+    letter-spacing: 0.03125rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    font-size: 1rem;
+}
+
+
+/* Headers */
+h1, h2, h3 {
+    font-family: "Playfair Display", Georgia, serif;
+    color: #52382e;
+    margin-top: 1.6rem;
+    margin-bottom: 0.8rem;
+    letter-spacing: 0.03125rem;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+h1 {
+    font-size: 2.4rem;
+    border-bottom: none;
+    margin-top: 0.8rem;
+}
+
+h2 {
+    font-size: 1.76rem;
+}
+
+h3 {
+    font-size: 1.44rem;
+}
+
+/* Content Layout */
+.main-container {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 1.6rem;
+}
+
+/* Links */
+a {
+    color: #3d752b;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: #752b35;
+    text-decoration: none;
+}
+
+/* Custom Classes */
+.section {
+    margin-bottom: 2.4rem;
+}
+
+/* Code Blocks */
+pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.25rem;
+    font-family: "Source Code Pro", monospace;
+    font-size: 1rem;
+    padding: 0.8rem;
+}
+
+/* Paragraphs */
+p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin-bottom: 1.2rem;
+}
+
+/* List Styling */
+ul, ol {
+    padding-left: 1.2rem;
+    margin-bottom: 1.2rem;
+    font-size: 1.1rem;
+}
+
+li {
+    margin-bottom: 0.4rem;
+}
+
+/* Block Quotes */
+blockquote {
+    border-left: 0.15rem solid #52382e;
+    padding-left: 0.8rem;
+    margin: 1.2rem 0;
+    font-style: italic;
+    color: #34495e;
+    font-size: 1.1rem;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    margin-bottom: 1.6rem;
+    border-collapse: collapse;
+    font-size: 1rem;
+}
+
+th, td {
+    padding: 0.6rem;
+    border-bottom: 0.0625rem solid #ecf0f1;
+}
+
+th {
+    font-family: "Playfair Display", serif;
+    font-weight: 400;
+    letter-spacing: 0.03125rem;
+}
+
+/* Ensure consistent font sizing across all elements */
+.navbar-brand {
+    font-size: 1rem;
+}
+
+.navbar-nav > li > a {
+    font-size: 1rem;
+}
+
+.navbar-nav > li.active > a {
+    background-color: #8a5a44 !important; /* Complementary brown */
+    color: #ffffff !important; /* White text for contrast */
+}
+
+.navbar-nav > li > a:hover {
+    background-color: #8a5a44 !important; /* Complementary brown */
+    color: #ffffff !important; 
+}
+
+/* Try 1 */
+.navbar .navbar-brand:hover {
+    color: #ff0066 !important;
+}
+
+/* Try 2 */
+nav .navbar-brand:hover {
+    color: #ff0066 !important;
+}
+
+/* Try 3 */
+.navbar-default .navbar-brand:hover {
+    color: #ff0066 !important;
+}
+
+

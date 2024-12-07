@@ -6,7 +6,6 @@ output:
   html_document:
     toc: false
     toc_float: true
-    theme: cerulean
 ---
 
 <style>

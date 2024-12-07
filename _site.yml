@@ -22,4 +22,5 @@ navbar:
       href: https://github.com/naomi-sk/p8105_nyc_child_asthma
 output:
   html_document:
-    theme: cerulean
+    theme: flatly
+    css: styles.css
