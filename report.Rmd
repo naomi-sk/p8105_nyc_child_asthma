@@ -8,9 +8,6 @@ output:
     toc_float: true
     theme: cerulean
     code_folding: hide
-knitr::opts_chunk$set:
-  message: FALSE
-  warning: FALSE
 ---
 
 # Motivation

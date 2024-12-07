@@ -376,32 +376,15 @@ div.tocify {
 <h2>Data Preparation</h2>
 <pre class="r"><code># Load libraries
 
-library(tidyverse)</code></pre>
-<pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-## ✔ dplyr     1.1.4     ✔ readr     2.1.5
-## ✔ forcats   1.0.0     ✔ stringr   1.5.1
-## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
-## ✔ lubridate 1.9.3     ✔ tidyr     1.3.1
-## ✔ purrr     1.0.2     
-## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-## ✖ dplyr::filter() masks stats::filter()
-## ✖ dplyr::lag()    masks stats::lag()
-## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
-<pre class="r"><code>library(broom)
+library(tidyverse)
+library(broom)
 library(patchwork)
 
 # Read full data
 
-full_data2 = read_csv(&quot;data/NYC_total.csv&quot;)</code></pre>
-<pre><code>## Rows: 634 Columns: 10
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (3): data_years, borough, indicator
-## dbl (7): zip_code, zip_code_rate, avg_temperature, pm2.5_level, acres_sum, h...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code># Data ED Visits (2016-2018)
+full_data2 = read_csv(&quot;data/NYC_total.csv&quot;)
+
+# Data ED Visits (2016-2018)
 
 full_data2_ed_1 = full_data2 |&gt; 
   mutate(hvi = as.numeric(hvi)) |&gt; 
@@ -613,10 +596,6 @@ plot4 = ggplot(full_data2_hosp_2, aes(x = hvi, y = zip_code_rate)) +
   theme_minimal()
 
 (plot1 + plot2) / (plot3 + plot4)</code></pre>
-<pre><code>## `geom_smooth()` using formula = &#39;y ~ x&#39;
-## `geom_smooth()` using formula = &#39;y ~ x&#39;
-## `geom_smooth()` using formula = &#39;y ~ x&#39;
-## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
 <p><img src="modelling_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 </div>
 </div>
