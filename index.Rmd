@@ -34,9 +34,10 @@ Using linear modeling and other statistical methods, we analyze data across two 
 
 ## Main Research Questions
 
-* What is the relationship between environmental factors (PM2.5, temperature, greenspace) and pediatric asthma ED rates?
-* Which environmental factors show the strongest associations with pediatric asthma rates?
-* How do these environmental health burdens differ across different areas of New York City?
+* What is the relationship between environmental factors (PM2.5, temperature, greenspace, Heat Vulnerability (HVI)) and pediatric asthma emergencies?
+* Which environmental factors show the strongest associations with pediatric asthma emergencies?
+* How are these environmental health burdens geographically distributed across New York City?
+* Is HVI a good model predictor for pediatric asthma emergencies? 
 
 We believe that understanding these relationships is crucial for informing equitable, climate-resilient urban planning policies and public health initiatives aimed at protecting and improving children's health in New York City, especially in communities most vulnerable to environmental stressors.
 
