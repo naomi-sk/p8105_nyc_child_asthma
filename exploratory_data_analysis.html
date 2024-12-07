@@ -14,7 +14,7 @@
 
 <title>exploratory_data_analysis.knit</title>
 
-<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
@@ -37,8 +37,8 @@
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -900,7 +900,7 @@ Greenspace_data = total_acres |&gt;
 
 ggplot(total_acres, aes(x = reorder(borough, acres_sum), y = acres_sum, fill = year_group)) + 
   geom_bar(stat = &quot;identity&quot;, position = &quot;dodge&quot;, alpha = 0.7) + 
-  labs(x = &quot;Borough&quot;, y = &quot;Greenspace (Total Acres)&quot;, title = &quot;Greenspaces Across Borough by Time Period&quot;) +
+  labs(x = &quot;Borough&quot;, y = &quot;Greenspace (Total Acres)&quot;, title = &quot;Greenspaces Across Borough by Time Period&quot;, fill = &quot;Time Period&quot;) +
   theme_minimal()</code></pre>
 <p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>Analysis of greenspace distribution across NYC boroughs shows
@@ -1023,7 +1023,7 @@ binded |&gt;
       &quot;year2&quot; ~ &quot;2019-2021&quot;)) |&gt;
   ggplot(aes(x = reorder(typecategory, acres_total), y = acres_total, fill = year_group)) + 
   geom_bar(stat = &quot;identity&quot;, position = &quot;dodge&quot;, width = 0.6) +
-  labs(x = &quot;Greenspace Types&quot;, y = &quot;Total Acres&quot;, title = &quot;Total Acres of NYC Greenspace by Type and Time Period&quot;) +
+  labs(x = &quot;Greenspace Types&quot;, y = &quot;Total Acres&quot;, title = &quot;Total Acres of NYC Greenspace by Type and Time Period&quot;, fill = &quot;Time Period&quot;) +
     theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))</code></pre>
 <p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
@@ -1391,9 +1391,11 @@ class="section level4">
 <h4>Average temperature by time period and borough</h4>
 <pre class="r"><code># Plot for average temperature by year group and borough
 
-ggplot(data = all_temp_borough, aes(x = data_years, y = avg_temperature, color = borough)) +
+all_temp_borough |&gt;
+  rename(Borough = borough) |&gt;
+ggplot(aes(x = data_years, y = avg_temperature, color = Borough)) +
   geom_point(size = 3) +
-  geom_line(aes(group = borough), size = 1) +
+  geom_line(aes(group = Borough), size = 1) +
   labs(title = &quot;Average Temperature by Time Period and Borough&quot;,
        x = &quot;Time period&quot;,
        y = &quot;Average Temperature&quot;) +
@@ -1434,12 +1436,12 @@ daa = full_data2 |&gt;
   summarise(hvi_mean = mean(hvi))
 
 # Produce table
-knitr::kable(daa, digits = 3)</code></pre>
+knitr::kable(daa, digits = 3, col.names = c(&quot;Borough&quot;, &quot;Mean HVI&quot;))</code></pre>
 <table>
 <thead>
 <tr class="header">
-<th align="left">borough</th>
-<th align="right">hvi_mean</th>
+<th align="left">Borough</th>
+<th align="right">Mean HVI</th>
 </tr>
 </thead>
 <tbody>

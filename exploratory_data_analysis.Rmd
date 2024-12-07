@@ -462,7 +462,7 @@ Greenspace_data = total_acres |>
 
 ggplot(total_acres, aes(x = reorder(borough, acres_sum), y = acres_sum, fill = year_group)) + 
   geom_bar(stat = "identity", position = "dodge", alpha = 0.7) + 
-  labs(x = "Borough", y = "Greenspace (Total Acres)", title = "Greenspaces Across Borough by Time Period") +
+  labs(x = "Borough", y = "Greenspace (Total Acres)", title = "Greenspaces Across Borough by Time Period", fill = "Time Period") +
   theme_minimal()
 
 ```
@@ -541,7 +541,7 @@ binded |>
       "year2" ~ "2019-2021")) |>
   ggplot(aes(x = reorder(typecategory, acres_total), y = acres_total, fill = year_group)) + 
   geom_bar(stat = "identity", position = "dodge", width = 0.6) +
-  labs(x = "Greenspace Types", y = "Total Acres", title = "Total Acres of NYC Greenspace by Type and Time Period") +
+  labs(x = "Greenspace Types", y = "Total Acres", title = "Total Acres of NYC Greenspace by Type and Time Period", fill = "Time Period") +
     theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
@@ -821,9 +821,11 @@ Temperatures remained elevated in 2021, though slightly lower than 2020 peaks. T
 
 # Plot for average temperature by year group and borough
 
-ggplot(data = all_temp_borough, aes(x = data_years, y = avg_temperature, color = borough)) +
+all_temp_borough |>
+  rename(Borough = borough) |>
+ggplot(aes(x = data_years, y = avg_temperature, color = Borough)) +
   geom_point(size = 3) +
-  geom_line(aes(group = borough), size = 1) +
+  geom_line(aes(group = Borough), size = 1) +
   labs(title = "Average Temperature by Time Period and Borough",
        x = "Time period",
        y = "Average Temperature") +
@@ -856,7 +858,7 @@ daa = full_data2 |>
   summarise(hvi_mean = mean(hvi))
 
 # Produce table
-knitr::kable(daa, digits = 3)
+knitr::kable(daa, digits = 3, col.names = c("Borough", "Mean HVI"))
 ```
 
 
