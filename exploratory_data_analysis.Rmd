@@ -89,7 +89,7 @@ borough_summary <- all_data %>%
   group_by(borough, period, indicator) %>%
   summarize(
     avg_rate = round(mean(zip_code_rate, na.rm = TRUE), 1),
-    .groups = "drop"  # This explicitly drops the grouping
+    .groups = "drop"  
   )
 
 # Table for ED visits 
@@ -154,7 +154,6 @@ Looking at the ED visit rates map across the two time periods (2016-2018 and 201
 * The Bronx (the northernmost borough) shows notably higher ED visit rates than other boroughs in both time periods, with rates exceeding 300 per 10,000 children aged 0-17 years in 2016-2018.
 * Manhattan and Brooklyn by comparison appear to have moderate rates, while Staten Island (the southernmost borough) consistently shows lower ED visit rates in both periods.
 
-The most striking change between the two periods is the apparent reduction in ED visits during 2019-2021, which could potentially be related to the COVID-19 pandemic's impact on healthcare utilization patterns.
 
 #### Asthma hospitalization rate per 10,000 children (aged 0-17 years)
 
@@ -221,8 +220,6 @@ Considering hospitalization rates across the two time periods (2016-2018 and 201
 * Geographic disparities persist in both periods, with Staten Island consistently showing lower hospitalization rates.
 * When compared to the ED visit rates, the hospitalization rates are notably lower (scale of 0-50 versus 0-300), suggesting that while many children visit the ED for asthma, a smaller proportion require hospitalization.
 
-Overall, the consistent geographic disparities in ED visits and hospitalizations, particularly the higher rates in the Bronx, confirm the unequal distribution of child asthma burden across New York City. This suggests underlying socioeconomic and/or environmental factors affecting childhood asthma rates across different parts of the city.
-
 ## Fine Particulate Matter (PM2.5) 
 
 ```{r}
@@ -282,7 +279,7 @@ tidy_analysis_pm |>
     title = "Average PM2.5 Levels by Borough (2016-2018 vs 2019-2021)",
     x = "Borough",
     y = "PM2.5 Values",
-    fill = "Year Group"
+    fill = "Time Period"
   ) 
 
 ```
@@ -462,7 +459,7 @@ Greenspace_data = total_acres |>
 
 ggplot(total_acres, aes(x = reorder(borough, acres_sum), y = acres_sum, fill = year_group)) + 
   geom_bar(stat = "identity", position = "dodge", alpha = 0.7) + 
-  labs(x = "Borough", y = "Greenspace (Total Acres)", title = "Greenspaces Across Borough by Year Group") +
+  labs(x = "Borough", y = "Greenspace (Total Acres)", title = "Greenspaces Across Borough by Time Period") +
   theme_minimal()
 
 ```
@@ -541,7 +538,7 @@ binded |>
       "year2" ~ "2019-2021")) |>
   ggplot(aes(x = reorder(typecategory, acres_total), y = acres_total, fill = year_group)) + 
   geom_bar(stat = "identity", position = "dodge", width = 0.6) +
-  labs(x = "Greenspace Types", y = "Total Acres", title = "Total Acres of NYC Greenspace by Type and Year Group") +
+  labs(x = "Greenspace Types", y = "Total Acres", title = "Total Acres of NYC Greenspace by Type and Time Period") +
     theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
@@ -814,7 +811,7 @@ The table presents annual mean temperatures across New York City's five boroughs
 
 Temperatures remained elevated in 2021, though slightly lower than 2020 peaks. Throughout the period, Brooklyn and Staten Island consistently maintained slightly higher average temperatures compared to the other boroughs, while Manhattan generally recorded the lowest average temperatures.
 
-#### Average temperature by year group and borough
+#### Average temperature by time period and borough
 
 
 ```{r}

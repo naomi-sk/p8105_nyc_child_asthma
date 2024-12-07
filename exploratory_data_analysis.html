@@ -14,7 +14,7 @@
 
 <title>exploratory_data_analysis.knit</title>
 
-<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cerulean.min.css" rel="stylesheet" />
@@ -37,8 +37,8 @@
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -514,10 +514,6 @@ per 10,000 children aged 0-17 years in 2016-2018.</li>
 while Staten Island (the southernmost borough) consistently shows lower
 ED visit rates in both periods.</li>
 </ul>
-<p>The most striking change between the two periods is the apparent
-reduction in ED visits during 2019-2021, which could potentially be
-related to the COVID-19 pandemic’s impact on healthcare utilization
-patterns.</p>
 </div>
 <div id="asthma-hospitalization-rate-per-10000-children-aged-0-17-years"
 class="section level4">
@@ -612,11 +608,6 @@ notably lower (scale of 0-50 versus 0-300), suggesting that while many
 children visit the ED for asthma, a smaller proportion require
 hospitalization.</li>
 </ul>
-<p>Overall, the consistent geographic disparities in ED visits and
-hospitalizations, particularly the higher rates in the Bronx, confirm
-the unequal distribution of child asthma burden across New York City.
-This suggests underlying socioeconomic and/or environmental factors
-affecting childhood asthma rates across different parts of the city.</p>
 </div>
 <div id="fine-particulate-matter-pm2.5" class="section level2">
 <h2>Fine Particulate Matter (PM2.5)</h2>
@@ -671,7 +662,7 @@ tidy_analysis_pm |&gt;
     title = &quot;Average PM2.5 Levels by Borough (2016-2018 vs 2019-2021)&quot;,
     x = &quot;Borough&quot;,
     y = &quot;PM2.5 Values&quot;,
-    fill = &quot;Year Group&quot;
+    fill = &quot;Time Period&quot;
   ) </code></pre>
 <p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p><strong>Average PM.25 levels across boroughs: 2016-2018 vs
@@ -904,7 +895,7 @@ Greenspace_data = total_acres |&gt;
 
 ggplot(total_acres, aes(x = reorder(borough, acres_sum), y = acres_sum, fill = year_group)) + 
   geom_bar(stat = &quot;identity&quot;, position = &quot;dodge&quot;, alpha = 0.7) + 
-  labs(x = &quot;Borough&quot;, y = &quot;Greenspace (Total Acres)&quot;, title = &quot;Greenspaces Across Borough by Year Group&quot;) +
+  labs(x = &quot;Borough&quot;, y = &quot;Greenspace (Total Acres)&quot;, title = &quot;Greenspaces Across Borough by Time Period&quot;) +
   theme_minimal()</code></pre>
 <p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>Analysis of greenspace distribution across NYC boroughs shows
@@ -1027,7 +1018,7 @@ binded |&gt;
       &quot;year2&quot; ~ &quot;2019-2021&quot;)) |&gt;
   ggplot(aes(x = reorder(typecategory, acres_total), y = acres_total, fill = year_group)) + 
   geom_bar(stat = &quot;identity&quot;, position = &quot;dodge&quot;, width = 0.6) +
-  labs(x = &quot;Greenspace Types&quot;, y = &quot;Total Acres&quot;, title = &quot;Total Acres of NYC Greenspace by Type and Year Group&quot;) +
+  labs(x = &quot;Greenspace Types&quot;, y = &quot;Total Acres&quot;, title = &quot;Total Acres of NYC Greenspace by Type and Time Period&quot;) +
     theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))</code></pre>
 <p><img src="exploratory_data_analysis_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
@@ -1390,9 +1381,9 @@ consistently maintained slightly higher average temperatures compared to
 the other boroughs, while Manhattan generally recorded the lowest
 average temperatures.</p>
 </div>
-<div id="average-temperature-by-year-group-and-borough"
+<div id="average-temperature-by-time-period-and-borough"
 class="section level4">
-<h4>Average temperature by year group and borough</h4>
+<h4>Average temperature by time period and borough</h4>
 <pre class="r"><code># Plot for average temperature by year group and borough
 
 ggplot(data = all_temp_borough, aes(x = data_years, y = avg_temperature, color = borough)) +

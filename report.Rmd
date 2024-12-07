@@ -7,6 +7,10 @@ output:
     toc: true
     toc_float: true
     theme: cerulean
+    code_folding: hide
+knitr::opts_chunk$set:
+  message: FALSE
+  warning: FALSE
 ---
 
 # Motivation
@@ -32,7 +36,647 @@ Through this project, we aim to investigate how these interconnected environment
 
 # Data
 
+```{r setup, include=FALSE}
+
+# Set global knit options
+
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE
+)
+
+```
+
+```{r}
+
+# Load libraries 
+
+library(tidyverse)
+library(sf)
+library(ggplot2)
+library(readxl)
+
+```
+
 # Exploratory Analysis
+
+Our exploratory analysis examined relevant environmental and health variables for pediatric asthma across New York City's five boroughs between 2016-2018 and 2019-2021. We explored two health indicators: pediatric asthma emergency department (ED) visits and pediatric asthma hospitalizations. We further examined three environmental factors of interest to our research aims, specifically distributions of fine particulate matter (PM2.5), greenspace, and temperature patterns across New York City.
+
+## Asthma-Related Healthcare Utilization
+### Emergency Department (ED) Visits
+
+```{r}
+
+# Load ED data for 2016-2018
+
+ed_2016_2018 = 
+  read_csv("data/ed_2016_2018.csv")
+
+# Load ED data for 2019-2021
+
+ed_2019_2021 = 
+  read_csv("data/ed_2019_2021.csv")
+
+# Combine datasets
+
+all_data <- bind_rows(
+  ed_2016_2018 %>% mutate(period = "2016-2018"),
+  ed_2019_2021 %>% mutate(period = "2019-2021")
+)
+
+# Create borough averages for both indicators
+
+borough_data <- all_data %>%
+  group_by(borough, period, indicator) %>%
+  summarize(avg_rate = mean(zip_code_rate, na.rm = TRUE))
+
+# Create simple borough-level summaries
+
+borough_summary <- all_data %>%
+  group_by(borough, period, indicator) %>%
+  summarize(
+    avg_rate = round(mean(zip_code_rate, na.rm = TRUE), 1),
+    .groups = "drop"  
+  )
+
+# Table for ED visits 
+
+ed_summary <- borough_summary %>%
+  filter(indicator == "ed_visits_rate") %>%
+  pivot_wider(
+    names_from = period,
+    values_from = avg_rate
+  ) %>%
+  mutate(
+    percent_change = round(((`2019-2021` - `2016-2018`) / `2016-2018` * 100), 1)
+  ) %>%
+  arrange(desc(`2016-2018`))
+
+# Print ED Visits Summary
+
+ed_summary %>%
+  select(-indicator) %>%
+  knitr::kable(
+    col.names = c("Borough", "2016-2018", "2019-2021", "% Change")
+  )
+
+```
+
+**Table 1. Borough Average Asthma ED Visit Rates per 10,000 Children (aged 0-17 Years)**
+
+```{r}
+
+# Load NYC zipcode shapefile
+
+nyc_zip_sf <- st_read("shapefiles/geo_export_8df5c38c-c74c-4840-9d00-da16c0201e07.shp", quiet = TRUE)
+
+# Create the map_data
+
+borough_data <- borough_data %>%
+  rename(boro_name = borough)
+
+map_data <- nyc_zip_sf %>%
+  left_join(borough_data, by = "boro_name")
+
+# Create ED Visits Map 
+
+ed_plot <- ggplot() +
+  geom_sf(data = filter(map_data, indicator == "ed_visits_rate"), 
+          aes(fill = avg_rate)) +
+  facet_wrap(~period) +
+  scale_fill_viridis_c(
+    option = "plasma"
+  ) +
+  theme_minimal() +
+  labs(title = "Pediatric Asthma ED Visit Rates by NYC Borough") +
+  theme(
+    plot.title = element_text(size = 12),
+    legend.position = "right",
+    legend.key.height = unit(2, "cm"),
+    axis.text = element_blank(),      
+    axis.ticks = element_blank(),     
+    panel.grid = element_blank()      
+  )
+
+# Display plot
+
+ed_plot
+
+```
+
+**Figure 1. Borough Average ED Visit Rates per 10,000 Children (aged 0-17 Years)**
+
+Analysis of ED visit rates showed significant disparities dependent on borough and time period. The Bronx, the northernmost borough of NYC, consistently showed the highest rates across both periods, with 347.7 and 180.7 visits per 10,000 children respectively. All boroughs experienced substantial decreases between 2016-2018 and 2019-2021, with reductions ranging from 43% to 48%. 
+
+Despite this overall decline, the Bronx's 2019-2021 rate remained higher than any other borough's 2016-2018 rates. Geographic visualization highlighted persistent health disparities between boroughs, with the Bronx showing consistently higher visit rates compared to other areas of the city, including Manhattan to its south, Queens to the east, and the more distant southern boroughs of Brooklyn and Staten Island.
+
+The most striking change between the two periods is the apparent reduction in ED visits during 2019-2021, which could potentially be related to the COVID-19 pandemic's impact on healthcare utilization patterns.
+
+### Hospitalizations
+
+```{r, echo=FALSE}
+
+# Table for asthma hospitalizations
+
+hosp_summary <- borough_summary %>%
+  filter(indicator == "hosp_rate") %>%
+  pivot_wider(
+    names_from = period,
+    values_from = avg_rate
+  ) %>%
+  mutate(
+    percent_change = round(((`2019-2021` - `2016-2018`) / `2016-2018` * 100), 1)
+  ) %>%
+  arrange(desc(`2016-2018`))
+
+# Print Hospitalization Summary
+
+hosp_summary %>%
+  select(-indicator) %>%
+  knitr::kable(
+    col.names = c("Borough", "2016-2018", "2019-2021", "% Change")
+  )
+
+```
+
+**Table 2. Borough Average Asthma Hospitalizations per 10,000 Children (aged 0-17 Years)**
+
+Hospitalization patterns largely reflected ED visit trends. The Bronx again led with the highest rates at 58.5 and 36.8 per 10,000 children across the two periods. All boroughs showed considerable decreases between periods, ranging from 32% to 40%. Queens and Staten Island had the lowest hospitalization rates throughout both time periods. 
+
+Notably, the ratio between ED visits and hospitalizations (approximately 6:1) suggests that while many children visit the ED for asthma, a smaller proportion require hospitalization.
+
+
+```{r}
+
+# Create Hospitalizations Map 
+
+hosp_plot <- ggplot() +
+  geom_sf(data = filter(map_data, indicator == "hosp_rate"), 
+          aes(fill = avg_rate)) +
+  facet_wrap(~period) +
+  scale_fill_viridis_c(
+    option = "plasma"
+  ) +
+  theme_minimal() +
+  labs(title = "Pediatric Asthma Hospitalization Rates by NYC Borough") +
+  theme(
+    plot.title = element_text(size = 12),
+    panel.grid = element_blank(),         
+    axis.text = element_blank(),           
+    axis.ticks = element_blank(),         
+    axis.title = element_blank()         
+  )
+
+# Display plot
+
+hosp_plot
+
+```
+
+**Figure 2. Borough Average Asthma Hospitalization Rates per 10,000 Children (aged 0-17 Years)**
+
+Figures 1 and 2 reveal persistent borough-level disparities in both ED visits and hospitalizations, with higher rates of healthcare utilization in the Bronx reflecting an unequal distribution of child asthma burden in New York City. These patterns suggest underlying socioeconomic and environmental factors affecting child asthma rates across different boroughs, with communities from lower-resourced parts of New York City bearing a disproportionate share of the health burden.
+
+
+## Environmental Determinants
+### Air Quality Patterns (PM2.5)
+
+
+```{r}
+
+# Load PM data
+
+particulate_matter = 
+  read_csv("data/Air_Quality_20231208.csv")
+
+# Produce tidied PM dataset for analysis
+
+tidy_analysis_pm = 
+  particulate_matter |>
+  janitor::clean_names() |>
+    mutate(
+    unique_id = as.character(unique_id),
+    indicator_id = as.character(indicator_id),
+    geo_join_id = as.character(geo_join_id)) |>
+  filter(name == "Fine particles (PM 2.5)") |>
+  filter(time_period %in% c("Annual Average 2016", "Annual Average 2017",
+                            "Annual Average 2018", "Annual Average 2019",
+                            "Annual Average 2020", "Annual Average 2021")) |>
+  filter(geo_type_name == "Borough") |>
+  select(-unique_id, -indicator_id, -start_date) |>
+    rename(borough = geo_place_name) |>
+  mutate(
+    period = case_when(
+      time_period %in% c("Annual Average 2016", "Annual Average 2017", "Annual Average 2018") ~ "2016-2018",
+      time_period %in% c("Annual Average 2019", "Annual Average 2020", "Annual Average 2021") ~ "2019-2021"
+    )
+  ) |>
+  group_by(borough, period) |>
+  summarize(
+    average_pm2.5 = mean(data_value, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  pivot_wider(
+    names_from = period,
+    values_from = average_pm2.5,
+    names_prefix = "avg_pm2.5_"
+  )
+
+```
+
+```{r}
+
+# Plot of average PM2.5 levels by borough between 2016-2018 and 2019-2021
+
+tidy_analysis_pm |>
+  pivot_longer(cols = -borough, names_to = "Year_Group", values_to = "PM2.5") |> 
+  mutate(borough = factor(borough, levels = unique(borough[order(PM2.5)]))) |> 
+  ggplot(aes(x = borough, y = PM2.5, fill = Year_Group)) +
+  geom_bar(position = "dodge", stat = "identity") +
+   labs(
+    title = "Average PM2.5 Levels by Borough (2016-2018 vs 2019-2021)",
+    x = "Borough",
+    y = "PM2.5 Values",
+    fill = "Year Group"
+  ) 
+
+```
+
+**Figure 3. Average PM.25 levels across boroughs: 2016-2018 vs 2019-2021**
+
+```{r}
+
+# Print PM2.5 Summary
+
+tidy_analysis_pm_diff <- 
+  tidy_analysis_pm |>
+  mutate(pm2.5_difference = `avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`)
+
+knitr::kable(tidy_analysis_pm_diff, col.names = c("Borough", "Average PM2.5 (2016-2018)", "Average PM2.5 (2019-2021)", "Difference in PM2.5 Levels"))
+
+```
+
+**Table 3. Borough Average ED Visit Rates per 10,000 Children (aged 0-17 Years)**
+
+Fine particulate matter (PM2.5) concentrations show distinct spatial patterns that partially align with asthma outcomes. Manhattan, despite not having the highest asthma rates, consistently recorded the highest PM2.5 concentrations (8.72 μg/m³ in 2016-2018, decreasing to 7.63 μg/m³ in 2019-2021). This interesting divergence from reported asthma ED visit and hospitalization rates suggests that while air quality is a significant factor, other environmental and social determinants influence pediatric asthma outcomes in New York City.
+
+
+```{r}
+
+# Load NYC geospatial data
+
+geography = 
+  read_excel("data/geoid_borough_name_nyc.xlsx") |>
+  rename(geo_join_id = ID) |>
+  mutate(geo_join_id = 
+           as.character(geo_join_id))
+
+# Tidy dataset for geospatial PM analysis
+
+tidy_uhf42_pm = 
+  particulate_matter |>
+  janitor::clean_names() |>
+    mutate(
+    unique_id = as.character(unique_id),
+    indicator_id = as.character(indicator_id),
+    geo_join_id = as.character(geo_join_id)) |>
+  filter(name == "Fine particles (PM 2.5)") |>
+  filter(time_period %in% c("Annual Average 2016", "Annual Average 2017",
+                            "Annual Average 2018", "Annual Average 2019",
+                            "Annual Average 2020", "Annual Average 2021")) |>
+  filter(geo_type_name == "UHF42") |>
+  select(-unique_id, -indicator_id, -start_date) |>
+  mutate(
+    period = case_when(
+      time_period %in% c("Annual Average 2016", "Annual Average 2017", "Annual Average 2018") ~ "2016_2018",
+      time_period %in% c("Annual Average 2019", "Annual Average 2020", "Annual Average 2021") ~ "2019_2021"
+    )
+  ) |>
+  group_by(geo_place_name, geo_join_id, period) |>
+  summarize(
+    average_pm2.5 = mean(data_value, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  pivot_wider(
+    names_from = period,
+    values_from = average_pm2.5,
+    names_prefix = "avg_pm2.5_"
+  ) 
+
+# Load shapefiles map for UHF data
+
+uhf42_map <- st_read("data/UHF_42_DOHMH_2009.shp", quiet = TRUE) 
+
+tidy_uhf42_pm <- 
+  tidy_uhf42_pm |>
+  rename(UHFCODE = geo_join_id) |>
+  mutate(
+    UHFCODE = as.double(UHFCODE))
+
+# Combine geospatial data and PM data
+
+map_uhf42 <- 
+  uhf42_map |>
+  left_join(tidy_uhf42_pm, by = "UHFCODE") |>
+  pivot_longer(cols = starts_with("avg_pm2.5_"), 
+               names_to = "time_period", 
+               values_to = "avg_pm2.5")
+
+# Produce heat map 
+
+heat_map_pm2.5 <- ggplot() +
+  geom_sf(data = map_uhf42, aes(fill = avg_pm2.5)) +
+  facet_wrap(~time_period, ncol = 2) +
+  scale_fill_viridis_c(option = "plasma", na.value = "grey50") +
+  labs(
+    title = "PM2.5 (ug/m3) Levels by UHF42 Neighborhood",
+    fill = "PM2.5"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 12),
+    legend.position = "right",
+    legend.key.height = unit(2, "cm"),
+    panel.grid = element_blank(),          
+    axis.text = element_blank(),           
+    axis.ticks = element_blank(),         
+    axis.title = element_blank()          
+  )
+
+# Show heat map for PM2.5 
+
+heat_map_pm2.5
+
+```
+
+**Figure 4. PM2.5 levels by United Hospital Fund (UHF) Neighborhoods**
+
+The uniform reduction in PM2.5 levels across boroughs between the two periods (particularly the identical 1.02 μg/m³ reduction in both the Bronx and Brooklyn) suggests city-wide factors, possibly including urban policy interventions or COVID-19-related activity reductions, affected air quality improvements. Based on UHF42 neighborhood-level analysis, Midtown Manhattan has consistently high PM2.5 levels across both time periods. The PM2.5 hotspots in Midtown Manhattan suggest urban factors, such as traffic patterns, industrial activities and building density, likely play a key role in determining local air quality.
+
+### Greenspace
+
+```{r}
+
+# Load greenspace data
+
+greenspace_clean = read_csv("./data/Parks_Properties_20241126.csv", na = c("NA", ".", "")) |>
+  janitor::clean_names() |> 
+  mutate(
+    borough = case_match(borough, #renamed borough according to data dictionary
+      "R" ~ "Staten Island",
+      "Q" ~ "Queens",
+      "X" ~ "Bronx",
+      "B" ~ "Brooklyn",
+      "M" ~ "Manhattan"),
+    typecategory = as.factor(typecategory), #converted char variables into factors
+    borough = as.factor(borough)) |>
+  separate(acquisitiondate, into = c("year", "month", "day"), sep = "-") |>
+  select(year, borough, acres, typecategory) |> 
+  filter(year < 2022 | is.na(year))
+
+```
+
+
+```{r}
+
+# Load 2016-2018 dataset
+
+dataset1_gs = greenspace_clean |>
+  filter(year < 2019 | is.na(year)) |> 
+  group_by(year, borough) |>
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = "drop")
+
+dataset1_gs_calc = dataset1_gs |> 
+  group_by(borough) |> 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
+  mutate(year_group = "2016-2018")
+
+# Load 2019-2021 dataset
+
+dataset2_gs = greenspace_clean |>
+  filter(year < 2022 | is.na(year)) |>
+  group_by(year, borough) |>
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = "drop")
+
+dataset2_gs_calc = dataset2_gs |> 
+  group_by(borough) |> 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
+  mutate(year_group = "2019-2021")
+
+# Combine datasets
+
+total_acres = bind_rows(dataset1_gs_calc, dataset2_gs_calc)
+  
+# Total acres dataset
+
+Greenspace_data = total_acres |>
+  pivot_wider(names_from = year_group,
+              values_from = acres_sum)
+
+# Produce plot of greenspace distribution across NYC boroughs
+
+ggplot(total_acres, aes(x = reorder(borough, acres_sum), y = acres_sum, fill = year_group)) + 
+  geom_bar(stat = "identity", position = "dodge", alpha = 0.7) + 
+  labs(x = "Borough", y = "Greenspace (Total Acres)", title = "Greenspaces Across Borough by Year Group") +
+  theme_minimal()
+
+```
+
+**Figure 5. Greenspace distribution across boroughs: 2016-2018 vs 2019-2021**
+
+```{r, echo=FALSE}
+
+# Table of changes in greenspace
+
+Greenspace_data |>
+  mutate(
+    Difference = round(`2019-2021` - `2016-2018`, 3)) |>
+  arrange(desc(Difference)) |>
+  knitr::kable(col.names = c("Borough", "2016-2018", "2019-2021", "Difference"))
+
+```
+
+**Table 4. Difference in Greenspace distribution across boroughs**
+
+Our analysis highlights substantial inequities in greenspace access across New York City. Staten Island's dominance in both total coverage (approximately 3,000 acres) and increased greenspace (258.72 acres) stands in contrast to the Bronx, which showed the lowest coverage despite a modest increase of 119.625 acres. This apparent inverse relationship between greenspace availability and asthma rates - with the Bronx having the highest asthma ED visit and hospitalization rates and lowest greenspace coverage - suggests a potential environmental health relationship warranting further investigation.
+
+
+```{r}
+
+# Calculate mean acres for each type category across all years
+
+types_nyc = greenspace_clean |>
+  select(-borough) |>
+  group_by(typecategory) |>
+  summarise(acres_tp = mean(acres, na.rm = TRUE), .groups = "drop")
+
+# Process data for 2016-2018 period
+
+type1A = greenspace_clean |>
+  filter(year < 2019 | is.na(year)) |> 
+  group_by(year, borough, typecategory) |>
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = "drop")
+
+# Calculate total acres by borough and type for 2016-2018
+
+type1B = type1A |> 
+  group_by(borough, typecategory) |> 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
+  mutate(year_group = "year1") #2016-2018
+
+# Process data for 2019-2021 period
+
+type2A = greenspace_clean |>
+  filter(year < 2022 | is.na(year)) |>
+  group_by(year, borough, typecategory) |>
+  summarise(avg_acres_per_yr_bor = mean(acres, na.rm = TRUE), .groups = "drop")
+
+# Calculate total acres by borough and type for 2019-2021
+
+type2B = type2A |> 
+  group_by(borough, typecategory) |> 
+  summarise(acres_sum = sum(avg_acres_per_yr_bor, na.rm = TRUE), .groups = "drop") |> 
+  mutate(year_group = "year2") #2019-2021
+
+# Combine both time periods and calculate total acres by type
+
+binded = bind_rows(type1B, type2B) |>
+  group_by(typecategory, year_group) |>
+  summarise(acres_total = sum(acres_sum, na.rm = TRUE))
+
+# Create bar plot comparing greenspace types between periods
+
+binded |> 
+   mutate(year_group = case_match(year_group,
+      "year1" ~ "2016-2018",
+      "year2" ~ "2019-2021")) |>
+  ggplot(aes(x = reorder(typecategory, acres_total), y = acres_total, fill = year_group)) + 
+  geom_bar(stat = "identity", position = "dodge", width = 0.6) +
+  labs(x = "Greenspace Types", y = "Total Acres", title = "Total Acres of NYC Greenspace by Type and Year Group") +
+    theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+```
+
+**Figure 6. Greenspace types across boroughs: 2016-2018 vs 2019-2021**
+
+```{r, echo=FALSE}
+
+# Create table showing change in acres between time periods
+
+Total_acres_table_test = binded |>
+ pivot_wider(names_from = year_group,
+             values_from = acres_total) |>
+ mutate(across(where(is.numeric), ~round(., 3)),
+        diff = round(year2 - year1, 3))
+
+# Filter for only positive changes and sort by largest increase 
+
+table_type = Total_acres_table_test |>
+ filter(diff > 0) |>
+ arrange(desc(diff))
+
+# Produce table with greenspace types between years
+
+knitr::kable(table_type, col.names = c("Greenspace Type", "2016-2018", "2019-2021", "Difference"))
+
+```
+
+The analysis of greenspace types suggests varying priorities in green developments across New York City. The substantial expansion of neighborhood parks (259.617 acres) and managed sites (119.095 acres) indicates focused efforts to increase accessible green spaces. However, the minimal changes in smaller categories like gardens and plazas suggests that large-scale greenspace development may not adequately address neighborhood-level access needs, which could be more meaningful for boroughs like the Bronx.
+
+**Table 5. Top 3 Greenspace Types (Total Acres) Across Boroughs**
+
+```{r, echo=FALSE, message = FALSE}
+
+# Create initial dataset of acres by type, borough, and year group
+
+perBor = bind_rows(type1B, type2B) |>
+  group_by(typecategory, year_group, borough) |>
+  summarise(acres_total = sum(acres_sum, na.rm = TRUE)) 
+
+# Process data for each borough separately
+# For each:
+# 1. Filter for specific borough
+# 2. Round acreage to 2 decimal places
+# 3. Reshape data to wide format with years as columns
+# 4. Sort by year1 values in descending order
+# 5. Filter to keep only the largest spaces (threshold varies by borough)
+
+Bronx_perBor = perBor |> 
+  filter(borough == "Bronx") |>
+  mutate(acres_total = round(acres_total, 2)) |>
+  pivot_wider(
+    names_from = year_group,
+    values_from = acres_total) |>
+  arrange(desc(year1)) |>
+  filter(year1 > 200) 
+
+Brook_perBor = perBor |> 
+  filter(borough == "Brooklyn") |>
+  mutate(acres_total = round(acres_total, 2)) |>
+  pivot_wider(
+    names_from = year_group,
+    values_from = acres_total) |>
+  arrange(desc(year1)) |>
+  filter(year1 > 500) 
+
+Man_perBor = perBor |> 
+  filter(borough == "Manhattan") |>
+  mutate(acres_total = round(acres_total, 2)) |>
+  pivot_wider(
+    names_from = year_group,
+    values_from = acres_total) |>
+  arrange(desc(year1)) |>
+  filter(year1 > 200) 
+
+Q_perBor = perBor |> 
+  filter(borough == "Queens") |>
+  mutate(acres_total = round(acres_total, 2)) |>
+  pivot_wider(
+    names_from = year_group,
+    values_from = acres_total) |>
+  arrange(desc(year1)) |>
+  filter(year1 > 900) 
+
+SI_perBor = perBor |> 
+  filter(borough == "Staten Island") |>
+  mutate(acres_total = round(acres_total, 2)) |>
+  pivot_wider(
+    names_from = year_group,
+    values_from = acres_total) |>
+  arrange(desc(year1)) |>
+  filter(year1 > 760)
+
+# Combine all borough data and format for final table
+
+top3_bor_gstype = bind_rows(Bronx_perBor, Brook_perBor, Q_perBor, Man_perBor, SI_perBor) |>
+  select(borough, typecategory, year1, year2) |>
+  rename(acres = year1) |>
+  select(-year2) |>
+  group_by(borough) |>
+  mutate(rank = rank(-acres)) |>
+  ungroup() |>
+  mutate(
+    rank = case_match(rank,
+      1 ~ "First",
+      2 ~ "Second",
+      3 ~ "Third"),
+    typecategory = paste(typecategory, " (", acres, ")", sep = "")) |>
+    select(-acres) |>
+  pivot_wider(
+    names_from = rank,
+    values_from = typecategory) 
+
+# Create formatted table with clear column names
+
+knitr::kable(top3_bor_gstype, col.names = c("Borough", "Highest", "Second Highest", "Third Highest"))
+ 
+```
+
+While the Bronx contains major Flagship Parks and Parkways among its largest green spaces, these types of spaces may not provide the same respiratory health benefits as smaller, more accessible neighborhood parks distributed throughout residential areas where children live and play. Despite the expansion of neighborhood parks (259.617 acres) and managed sites (119.095 acres) across the city, the concentration of greenspace in large, potentially less accessible formats like Flagship Parks may limit their protective effects against childhood asthma. Staten Island's lower asthma rates and large Nature Area (1690.97 acres) present an interesting contrast, though this association may reflect broader factors such as lower population density or better air quality rather than the specific type of greenspace.
+
+
+# Correlations
 
 # Regression Analysis
 
