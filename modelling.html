@@ -370,101 +370,12 @@ div.tocify {
 </div>
 
 
-<div id="linear-modelling" class="section level1">
-<h1>Linear Modelling</h1>
-<div id="data-preparation" class="section level2">
-<h2>Data Preparation</h2>
-<pre class="r"><code># Load libraries
-
-library(tidyverse)
-library(broom)
-library(patchwork)
-library(lmtest)
-library(car)
-
-# Read full data
-
-full_data2 = read_csv(&quot;data/NYC_total.csv&quot;)
-
-# Data ED Visits (2016-2018)
-
-full_data2_ed_1 = full_data2 |&gt; 
-  mutate(hvi = as.numeric(hvi)) |&gt; 
-  filter(indicator == &quot;ed_visits_rate&quot;) |&gt; 
-  filter(data_years == &quot;2016-2018&quot;)
-
-## Datasets for Graphing (datasets 1 &amp; 2):
-## Changing HVI to numeric
-
-# Data ED Visits (2019-2021)
-
-full_data2_ed_2 = full_data2 |&gt; 
-  mutate(hvi = as.numeric(hvi)) |&gt; 
-  filter(indicator == &quot;ed_visits_rate&quot;) |&gt; 
-  filter(data_years == &quot;2019-2021&quot;)
-
-# Data Hospitalizations (2016-2018)
-
-full_data2_hosp_1 = full_data2 |&gt; 
-  mutate(hvi = as.numeric(hvi)) |&gt; 
-  filter(indicator == &quot;hosp_rate&quot;) |&gt;  
-  filter(data_years == &quot;2016-2018&quot;)
-
-# Data Hospitalizations (2019-2021)
-
-full_data2_hosp_2 = full_data2 |&gt; 
-  mutate(hvi = as.numeric(hvi)) |&gt; 
-  filter(indicator == &quot;hosp_rate&quot;) |&gt;  
-  filter(data_years == &quot;2019-2021&quot;)
-
-## Datasets for Statistical Analysis (datasets 3 &amp; 4):
-## Keeping HVI as a factor variable
-
-
-# Data ED Visits (2016-2018)
-
-full_data2_ed_3 = full_data2 |&gt; 
-  filter(indicator == &quot;ed_visits_rate&quot;) |&gt;  # filtering only ed_visits
-  filter(data_years == &quot;2016-2018&quot;)
-
-# Data ED Visits (2019-2021)
-
-full_data2_ed_4 = full_data2 |&gt; 
-  filter(indicator == &quot;ed_visits_rate&quot;) |&gt;  # filtering only ed_visits
-  filter(data_years == &quot;2019-2021&quot;)
-
-# Data Hospitalizations (2016-2018)
-
-full_data2_hosp_3 = full_data2 |&gt; 
-  filter(indicator == &quot;hosp_rate&quot;) |&gt;  #filtering only hospitlization rate
-  filter(data_years == &quot;2016-2018&quot;)
-
-# Data Hospitalizations (2019-2021)
-
-full_data2_hosp_4 = full_data2 |&gt; 
-  filter(indicator == &quot;hosp_rate&quot;) |&gt;  #filtering only hospitlization rate
-  filter(data_years == &quot;2019-2021&quot;)</code></pre>
-</div>
 <div id="linear-regression-models" class="section level2">
 <h2>Linear Regression Models</h2>
 <div id="emergency-department-visits" class="section level3">
 <h3>Emergency Department Visits</h3>
 <div id="period" class="section level4">
 <h4>2016-2018 period</h4>
-<pre class="r"><code># Fit linear regression model for ED visits (2016-2018)
-# Examining relationship between visit rates and borough/HVI
-
-fit = lm(zip_code_rate ~ borough + hvi, data = full_data2_ed_3)
-
-# Format results table
-
-results_table = tidy(fit) |&gt;
-  select(-statistic) |&gt;
-  knitr::kable(digit = 3)
-
-# Display table
-
-results_table</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -531,20 +442,6 @@ boroughs.</p>
 </div>
 <div id="period-1" class="section level4">
 <h4>2019-2021 period</h4>
-<pre class="r"><code># Fit linear regression model for ED visits (2019-2021)
-# Examining relationship between visit rates and borough/HVI
-
-fit2 = lm(zip_code_rate ~ borough + hvi, data = full_data2_ed_4)
-
-# Format results table
-
-results_table2 = tidy(fit2) |&gt;
-  select(-statistic) |&gt;
-  knitr::kable(digit = 3)
-
-# Display table
-
-results_table2</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -608,19 +505,6 @@ half the effect seen in 2016-2018.</p>
 <h3>Hospitalizations</h3>
 <div id="period-2" class="section level4">
 <h4>2016-2018 period</h4>
-<pre class="r"><code># Fit linear regression model for hospitalizations (2016-2018)
-
-fit3 = lm(zip_code_rate ~ borough + hvi, data = full_data2_hosp_3)
-
-# Format results table
-
-results_table3 = tidy(fit3) |&gt;
-  select(-statistic) |&gt;
-  knitr::kable(digit = 3)
-
-# Display table
-
-results_table3</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -682,22 +566,6 @@ each one-unit increase in HVI score is associated with an increase of
 </div>
 <div id="period-3" class="section level4">
 <h4>2019-2021 period</h4>
-<pre class="r"><code># Fit linear regression model for hospitalizations (2019-2021)
-
-fit4 = lm(zip_code_rate ~ borough + hvi, data = full_data2_hosp_4)
-results_table4 = tidy(fit4) |&gt;
-  select(-statistic) |&gt;
-  knitr::kable(digit = 3)
-
-# Format results table
-
-results_table4 = tidy(fit4) |&gt;
-  select(-statistic) |&gt;
-  knitr::kable(digit = 3)
-
-# Display table
-
-results_table4</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -766,36 +634,6 @@ and hospitalizations.</p>
 </div>
 <div id="model-diagnostics" class="section level3">
 <h3>Model Diagnostics</h3>
-<pre class="r"><code># Basic diagnostic tests for each model
-# Function for basic diagnostics
-basic_diagnostics = function(model, model_name) {
-  # Shapiro-Wilk test for normality
-  sw_test = shapiro.test(residuals(model))
-  
-  # Breusch-Pagan test for heteroscedasticity
-  bp_test = bptest(model)
-  
-  # Create results
-  results = data.frame(
-    Model = model_name,
-    Test = c(&quot;Shapiro-Wilk (Normality)&quot;, &quot;Breusch-Pagan (Heteroscedasticity)&quot;),
-    Statistic = c(sw_test$statistic, bp_test$statistic),
-    P_Value = c(sw_test$p.value, bp_test$p.value)
-  )
-  
-  return(results)
-}
-
-# Run diagnostics for all models
-all_diagnostics = rbind(
-  basic_diagnostics(fit, &quot;ED Visits 2016-2018&quot;),
-  basic_diagnostics(fit2, &quot;ED Visits 2019-2021&quot;),
-  basic_diagnostics(fit3, &quot;Hospitalizations 2016-2018&quot;),
-  basic_diagnostics(fit4, &quot;Hospitalizations 2019-2021&quot;)
-)
-
-# Display results
-knitr::kable(all_diagnostics, digits = 4)</code></pre>
 <table>
 <colgroup>
 <col width="4%" />
@@ -885,20 +723,7 @@ heteroscedasticity, but this primarily affects efficiency rather than
 consistency of our estimates. Therefore, while not perfect, our models
 provide reliable insights into the relationships between borough
 characteristics, heat vulnerability, and health outcomes.</p>
-<pre class="r"><code># Basic diagnostic plots for all models
-
-par(mfrow=c(2,2))
-plot(fit, main=&quot;ED Visits 2016-2018&quot;)</code></pre>
-<p><img src="modelling_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
-<pre class="r"><code>par(mfrow=c(2,2))
-plot(fit2, main=&quot;ED Visits 2019-2021&quot;)</code></pre>
-<p><img src="modelling_files/figure-html/unnamed-chunk-7-2.png" width="672" /></p>
-<pre class="r"><code>par(mfrow=c(2,2))
-plot(fit3, main=&quot;Hospitalizations 2016-2018&quot;)</code></pre>
-<p><img src="modelling_files/figure-html/unnamed-chunk-7-3.png" width="672" /></p>
-<pre class="r"><code>par(mfrow=c(2,2))
-plot(fit4, main=&quot;Hospitalizations 2019-2021&quot;)</code></pre>
-<p><img src="modelling_files/figure-html/unnamed-chunk-7-4.png" width="672" /></p>
+<p><img src="modelling_files/figure-html/unnamed-chunk-7-1.png" width="672" /><img src="modelling_files/figure-html/unnamed-chunk-7-2.png" width="672" /><img src="modelling_files/figure-html/unnamed-chunk-7-3.png" width="672" /><img src="modelling_files/figure-html/unnamed-chunk-7-4.png" width="672" /></p>
 <p>The diagnostic plots show important patterns across our models:</p>
 <ul>
 <li><p>QQ Plots show moderate deviations from normality, particularly in
@@ -926,7 +751,6 @@ greatly impact our model estimates.</p></li>
 model assumptions, the violations are not severe enough to invalidate
 our main findings, particularly given our moderately large sample
 sizes.</p>
-</div>
 </div>
 </div>
 

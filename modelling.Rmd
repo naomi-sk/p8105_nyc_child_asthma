@@ -9,10 +9,6 @@ output:
     theme: cerulean
 ---
 
-# Linear Modelling
-
-## Data Preparation
-
 ```{r setup, include=FALSE}
 
 # Set global knit options
@@ -24,7 +20,7 @@ knitr::opts_chunk$set(
 
 ```
 
-```{r}
+```{r echo = FALSE}
 
 # Load libraries
 
@@ -105,7 +101,7 @@ full_data2_hosp_4 = full_data2 |>
 
 #### 2016-2018 period
 
-```{r}
+```{r echo = FALSE}
 
 # Fit linear regression model for ED visits (2016-2018)
 # Examining relationship between visit rates and borough/HVI
@@ -133,7 +129,7 @@ This model indicates that both geographic location and heat vulnerability are si
 
 #### 2019-2021 period
 
-```{r}
+```{r echo = FALSE}
 
 # Fit linear regression model for ED visits (2019-2021)
 # Examining relationship between visit rates and borough/HVI
@@ -161,7 +157,7 @@ The HVI effect remains significant but notably smaller than the previous period:
 
 #### 2016-2018 period
 
-```{r}
+```{r echo = FALSE}
 
 # Fit linear regression model for hospitalizations (2016-2018)
 
@@ -188,7 +184,7 @@ The HVI effect is significant but smaller when compared to ED visits: each one-u
 
 #### 2019-2021 period
 
-```{r}
+```{r echo = FALSE}
 
 # Fit linear regression model for hospitalizations (2019-2021)
 
@@ -219,7 +215,7 @@ Examining all four models reveals a consistent pattern: Queens shows the lowest 
 
 ### Model Diagnostics
 
-```{r}
+```{r echo = FALSE}
 
 # Basic diagnostic tests for each model
 # Function for basic diagnostics
@@ -256,7 +252,7 @@ knitr::kable(all_diagnostics, digits = 4)
 
 Our diagnostic testing examined two key model assumptions using Shapiro-Wilk tests for normality and Breusch-Pagan tests for homoscedasticity. Results indicate statistical significance (p < 0.05) for violations of both assumptions. However, with moderate to large sample sizes (ED visits: n=171 for 2016-2018, n=168 for 2019-2021; Hospitalizations: n=155 for 2016-2018, n=140 for 2019-2021), our models maintain reasonable robustness to these violations. The Shapiro-Wilk statistics (all W > 0.90) suggest only mild deviations from normality. The Breusch-Pagan tests indicate the presence of heteroscedasticity, but this primarily affects efficiency rather than consistency of our estimates. Therefore, while not perfect, our models provide reliable insights into the relationships between borough characteristics, heat vulnerability, and health outcomes.
 
-```{r}
+```{r echo = FALSE}
 
 # Basic diagnostic plots for all models
 
