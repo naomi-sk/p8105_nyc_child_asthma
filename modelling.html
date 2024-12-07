@@ -980,8 +980,28 @@ Brooklyn (3.65), Queens (3.27), Manhattan (2.42), and Staten Island
 across the city, with some boroughs experiencing systematically higher
 heat vulnerability than others. The notable variation in HVI means
 across boroughs indicates that geographic and demographic factors play
-an important role in heat vulnerability distribution throughout New York
-City.</p>
+an important role in heat vulnerability distribution in NYC.</p>
+<pre class="r"><code># Plot for mean HVI scores by borough
+
+borough_plot = ggplot(daa, aes(x = reorder(borough, -hvi_mean), y = hvi_mean)) +
+  geom_bar(stat = &quot;identity&quot;, fill = &quot;steelblue&quot;, alpha = 0.8) +
+  geom_text(aes(label = round(hvi_mean, 2)), 
+            vjust = -0.5, 
+            size = 3.5) +
+  labs(title = &quot;Mean Heat Vulnerability Index (HVI) by Borough&quot;,
+       x = &quot;Borough&quot;,
+       y = &quot;Mean HVI Score&quot;) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
+  ylim(0, max(daa$hvi_mean) * 1.1)  # Add some space above bars for labels
+
+# Display the plot
+
+borough_plot</code></pre>
+<p><img src="modelling_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>The above plot provides a visual representation of these HVI
+disparities, with a noticeable difference between the Bronx and Staten
+Island - a gap of 2 points on the HVI scale.</p>
 <div id="visualization-of-relationships" class="section level2">
 <h2>Visualization of Relationships</h2>
 <pre class="r"><code># Create visualization plots showing relationship between HVI scores and health outcomes
@@ -1020,7 +1040,7 @@ plot4 = ggplot(full_data2_hosp_2, aes(x = hvi, y = zip_code_rate)) +
 # Combine plots with adjusted height and width
 (plot1 + plot2) / (plot3 + plot4) +
   patchwork::plot_layout(heights = c(3, 3), widths = c(3, 3))</code></pre>
-<p><img src="modelling_files/figure-html/unnamed-chunk-9-1.png" width="1152" /></p>
+<p><img src="modelling_files/figure-html/unnamed-chunk-10-1.png" width="1152" /></p>
 <p>The scatter plots show consistent positive relationships between Heat
 Vulnerability Index and both pediatric asthma health outcomes across
 time periods. ED visit rates show a stronger association with HVI than
