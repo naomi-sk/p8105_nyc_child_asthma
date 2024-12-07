@@ -58,6 +58,47 @@ library(readxl)
 
 ```
 
+The research project integrated multiple datasets to examine the relationship between pediatric asthma outcomes and environmental factors across New York City. Data was sourced from various public health and environmental databases, with each dataset requiring specific cleaning and standardization procedures before merging.
+
+#### Data Sources
+
+The analysis incorporated five primary datasets from different sources. The pediatric ED admissions and hospitalizations data from 2016-2021 was obtained from the New York State Asthma Dashboard, providing emergency department visit rates and hospitalization rates for children aged 0-17 years at both ZIP code and borough levels. Air quality data, specifically PM2.5 measurements, came from a NYC Kaggle dataset and was available at both borough and Community District levels. Greenspace data through 2021 was sourced from the NYC Open Data portal, providing park properties and greenspace measurements at the borough level. Temperature data for 2016-2021 was extracted from the Open-Meteo historical weather API, offering daily temperature measurements for each borough. The Heat Vulnerability Index data came from NYC Heat Vulnerability Index Rankings, providing vulnerability classifications at the ZIP code level.
+
+#### Data Cleaning Procedures
+
+**Pediatric Asthma Data**
+
+The pediatric asthma data cleaning process began with standardizing variable names using the janitor package. The data was filtered to focus on two key health indicators: emergency department visit rates and hospitalization rates. Missing values required special handling, with suppressed data (marked as "s") and unstable estimates (marked with "*") converted to NA. Borough names were standardized for consistency across datasets, including converting "Kings" to "Brooklyn". Separate datasets were created for the 2016-2018 and 2019-2021 time periods.
+
+**PM2.5 Data**
+
+The PM2.5 data cleaning resulted in several datasets for different analytical purposes. The first dataset calculated borough-level averages for the two time periods of interest. A second dataset maintained community district-level data for visualization purposes. A third dataset preserved UHF42-level data specifically for to analyze asthma outcomes. Throughout the cleaning process, geographic identifiers were standardized, and period averages were calculated for 2016-2018 and 2019-2021.
+
+**Greenspace Data**
+
+For the greenspace data, borough abbreviations were first recoded to full names for consistency and variables were converted to appropriate types. The acquisition dates were separated into component parts for temporal analysis. The data was then aggregated to calculate total greenspace acreage by borough for each time period. The final dataset included only properties acquired before 2022 to be consistent with the time periods of interest.
+
+**Temperature Data**
+
+Temperature data processing began with separate extractions for each borough. Date formats were standardized across all borough datasets. Average temperatures were calculated by borough and time period to match the temporal structure of other datasets. The individual borough datasets were then combined into a unified temperature dataset that maintained consistency with the project's overall geographic and temporal framework.
+
+**Heat Vulnerability Index**
+
+The Heat Vulnerability Index data required minimal cleaning, focusing on standardizing ZIP code formats and converting the vulnerability index to a factor variable. The final cleaned dataset retained only the essential variables needed for analysis: ZIP code and heat vulnerability classification.
+
+#### Data Merging Strategy
+
+The creation of the final merged dataset followed a careful sequential process to maintain data integrity. The foundation was built by combining the 2016-2018 and 2019-2021 pediatric admissions data. Temperature data was then merged using borough and time period as keys, followed by PM2.5 data using the same keys. Greenspace measurements were incorporated next, again matching on borough and time period. The Heat Vulnerability Index was the final addition, merged using ZIP code as the key.
+
+Variable types were subsequently standardized, with categorical variables converted to factors and rates maintained as numeric values. Incomplete and missing records were removed to ensure data quality. Separate datasets were created for emergency department visits and hospitalizations for focused analysis on different pediatric asthma outcomes. Borough-level average rates were calculated to enable analysis at multiple geographic scales.
+
+#### Final Dataset Structure
+
+The resulting merged dataset, saved as "NYC_total.csv", represents a comprehensive integration of health outcomes, environmental measures, and heat vulnerability. It includes emergency department visits and hospitalization rates, PM2.5 levels, temperature measurements, heat vulnerability, and greenspace acreage. Geographic identifiers at both ZIP code and borough levels enable spatial analysis, while time period indicators allow for temporal comparisons. Borough-level averages provide geographic information relevant to the planned analysis.
+
+This final dataset is sufficient for addressing our research aims specific to analyzing pediatric asthma outcomes in relation to environmental factors and heat vulnerability across New York City's boroughs and ZIP codes for the periods 2016-2018 and 2019-2021.
+
+
 # Exploratory Analysis
 
 Our exploratory analysis examined relevant environmental and health variables for pediatric asthma across New York City's five boroughs between 2016-2018 and 2019-2021. We explored two health indicators: pediatric asthma emergency department (ED) visits and pediatric asthma hospitalizations. We further examined three environmental factors of interest to our research aims, specifically distributions of fine particulate matter (PM2.5), greenspace, and temperature patterns across New York City.
