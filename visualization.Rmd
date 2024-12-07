@@ -1,114 +1,31 @@
 ---
-title: "Visualization"
-author: ""
-date: ""
+title: "NYC Environmental Health Dashboard"
 output: 
   flexdashboard::flex_dashboard:
-    orientation: columns
+    orientation: rows
     vertical_layout: fill
 ---
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
 library(tidyverse)
-library(rvest)
-library(readxl)
-library(plotly)
-library(flexdashboard)
 library(sf)
-library(shiny)
-library(leaflet)
-library(scales)
-library(patchwork)
-library(ggplot2)
+library(plotly)
+library(viridis)
 ```
 
-Column {data-width=4000}
+Row {data-height=600}
 -----------------------------------------------------------------------
 
-### PM2.5
+### PM2.5 Levels
 
-```{r, include=FALSE}
-particulate_matter = 
-  read_csv("data/Air_Quality_20231208.csv")
+```{r}
+particulate_matter = read_csv("data/Air_Quality_20231208.csv")
 
-tidy_analysis_pm = 
-  particulate_matter |>
-  janitor::clean_names() |>
-    mutate(
-    unique_id = as.character(unique_id),
-    indicator_id = as.character(indicator_id),
-    geo_join_id = as.character(geo_join_id)) |>
-  filter(name == "Fine particles (PM 2.5)") |>
-  filter(time_period %in% c("Annual Average 2016", "Annual Average 2017",
-                            "Annual Average 2018", "Annual Average 2019",
-                            "Annual Average 2020", "Annual Average 2021")) |>
-  filter(geo_type_name == "Borough") |>
-  select(-unique_id, -indicator_id, -start_date) |>
-    rename(borough = geo_place_name) |>
-  mutate(
-    period = case_when(
-      time_period %in% c("Annual Average 2016", "Annual Average 2017", "Annual Average 2018") ~ "2016-2018",
-      time_period %in% c("Annual Average 2019", "Annual Average 2020", "Annual Average 2021") ~ "2019-2021"
-    )
-  ) |>
-  group_by(borough, period) |>
-  summarize(
-    average_pm2.5 = mean(data_value, na.rm = TRUE),
-    .groups = "drop"
-  ) |>
-  pivot_wider(
-    names_from = period,
-    values_from = average_pm2.5,
-    names_prefix = "avg_pm2.5_"
-  )
-
-```
-
-```{r, include=FALSE}
-tidy_analysis_pm |>
-  pivot_longer(cols = -borough, names_to = "Year_Group", values_to = "PM2.5") |> 
-  mutate(borough = factor(borough, levels = unique(borough[order(PM2.5)]))) |> 
-  ggplot(aes(x = borough, y = PM2.5, fill = Year_Group)) +
-  geom_bar(position = "dodge", stat = "identity") +
-   labs(
-    title = "Average PM2.5 Levels by Borough (2016-2018 vs 2019-2021)",
-    x = "Borough",
-    y = "PM2.5 Values",
-    fill = "Year Group"
-  ) 
-```
-
-```{r, include=FALSE}
-
-# Print PM2.5 Summary
-
-tidy_analysis_pm_diff <- 
-  tidy_analysis_pm |>
-  mutate(pm2.5_difference = `avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`)
-
-
-knitr::kable(tidy_analysis_pm_diff, col.names = c("borough", "avg_pm2.5_2016-2018", "avg_pm2.5_2019-2021", "pm2.5_difference"))
-```
-
-```{r, include=FALSE}
-geography = 
-  read_excel("data/geoid_borough_name_nyc.xlsx") |>
-  rename(geo_join_id = ID) |>
-  mutate(geo_join_id = 
-           as.character(geo_join_id))
-```
-
-```{r, include=FALSE}
-particulate_matter = 
-  read_csv("data/Air_Quality_20231208.csv")
-```
-
-```{r, include=FALSE}
 tidy_uhf42_pm = 
   particulate_matter |>
   janitor::clean_names() |>
-    mutate(
+  mutate(
     unique_id = as.character(unique_id),
     indicator_id = as.character(indicator_id),
     geo_join_id = as.character(geo_join_id)) |>
@@ -120,8 +37,8 @@ tidy_uhf42_pm =
   select(-unique_id, -indicator_id, -start_date) |>
   mutate(
     period = case_when(
-      time_period %in% c("Annual Average 2016", "Annual Average 2017", "Annual Average 2018") ~ "2016_2018",
-      time_period %in% c("Annual Average 2019", "Annual Average 2020", "Annual Average 2021") ~ "2019_2021"
+      time_period %in% c("Annual Average 2016", "Annual Average 2017", "Annual Average 2018") ~ "2016-2018",
+      time_period %in% c("Annual Average 2019", "Annual Average 2020", "Annual Average 2021") ~ "2019-2021"
     )
   ) |>
   group_by(geo_place_name, geo_join_id, period) |>
@@ -134,9 +51,7 @@ tidy_uhf42_pm =
     values_from = average_pm2.5,
     names_prefix = "avg_pm2.5_"
   ) 
-```
 
-```{r, include=FALSE}
 uhf42_map <- st_read("data/UHF_42_DOHMH_2009.shp", quiet = TRUE) 
 
 tidy_uhf42_pm <- 
@@ -144,216 +59,152 @@ tidy_uhf42_pm <-
   rename(UHFCODE = geo_join_id) |>
   mutate(
     UHFCODE = as.double(UHFCODE))
-```
 
-
-```{r, include=FALSE}
 map_uhf42 <- 
   uhf42_map |>
   left_join(tidy_uhf42_pm, by = "UHFCODE") |>
   pivot_longer(cols = starts_with("avg_pm2.5_"), 
                names_to = "time_period", 
                values_to = "avg_pm2.5")
-```
 
- 
-```{r, include=FALSE}
-heat_map_pm2.5 <- ggplot() +
+p1 <- ggplot() +
   geom_sf(data = map_uhf42, aes(fill = avg_pm2.5)) +
   facet_wrap(~time_period, ncol = 2) +
-  scale_fill_viridis_c(option = "plasma", na.value = "grey50") +
-  labs(
-    title = "PM2.5 (ug/m3) Levels by UHF42 Neighborhood",
-    fill = "PM2.5"
-  ) +
-  theme_minimal() +
+  scale_fill_viridis_c(option = "plasma") +
+  coord_sf(datum = NA) +
+  theme_void() +
   theme(
-    plot.title = element_text(size = 12),
-    legend.position = "right",
-    legend.key.height = unit(2, "cm")
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
   )
 
-heat_map_pm2.5
-
+ggplotly(p1) %>%
+  layout(
+    autosize = TRUE,
+    margin = list(l = 0, r = 0, t = 0, b = 0),
+    xaxis = list(
+      visible = FALSE,
+      showgrid = FALSE,
+      zeroline = FALSE,
+      showticklabels = FALSE
+    ),
+    yaxis = list(
+      visible = FALSE,
+      showgrid = FALSE,
+      zeroline = FALSE,
+      showticklabels = FALSE
+    )
+  ) %>%
+  config(
+    responsive = TRUE,
+    displayModeBar = FALSE
+  )
 ```
 
-```{r}
-ggplotly(heat_map_pm2.5)
-```
-
-Column {data-width=4000}
+Row {data-height=600}
 -----------------------------------------------------------------------
 
-### ED
+### ED Visits
 
-
-```{r, include=FALSE}
-
-# Load ED data for 2016-2018
-
-ed_2016_2018 = 
-  read_csv("data/ed_2016_2018.csv")
-
-# Load ED data for 2019-2021
-
-ed_2019_2021 = 
-  read_csv("data/ed_2019_2021.csv")
-
-# Load NYC zipcode shapefile
-
+```{r}
+ed_2016_2018 = read_csv("data/ed_2016_2018.csv")
+ed_2019_2021 = read_csv("data/ed_2019_2021.csv")
 nyc_zip_sf <- st_read("shapefiles/geo_export_8df5c38c-c74c-4840-9d00-da16c0201e07.shp", quiet = TRUE)
-
-# Combine datasets
 
 all_data <- bind_rows(
   ed_2016_2018 %>% mutate(period = "2016-2018"),
   ed_2019_2021 %>% mutate(period = "2019-2021")
 )
 
-# Create borough averages for both indicators
-
 borough_data <- all_data %>%
   group_by(borough, period, indicator) %>%
-  summarize(avg_rate = mean(zip_code_rate, na.rm = TRUE))
-
-# Create the map_data
-
-borough_data <- borough_data %>%
+  summarize(avg_rate = mean(zip_code_rate, na.rm = TRUE)) %>%
   rename(boro_name = borough)
 
 map_data <- nyc_zip_sf %>%
   left_join(borough_data, by = "boro_name")
 
-```
-
-Column {data-width=4000}
------------------------------------------------------------------------
-### ED Admissions
-
-
-```{r, include=FALSE}
-
-# Create simple borough-level summaries
-
-borough_summary <- all_data %>%
-  group_by(borough, period, indicator) %>%
-  summarize(
-    avg_rate = round(mean(zip_code_rate, na.rm = TRUE), 1),
-    .groups = "drop"  # This explicitly drops the grouping
-  )
-
-# Create separate tables for ED visits and hospitalizations
-
-ed_summary <- borough_summary %>%
-  filter(indicator == "ed_visits_rate") %>%
-  pivot_wider(
-    names_from = period,
-    values_from = avg_rate
-  ) %>%
-  mutate(
-    percent_change = round(((`2019-2021` - `2016-2018`) / `2016-2018` * 100), 1)
-  ) %>%
-  arrange(desc(`2016-2018`))
-
-hosp_summary <- borough_summary %>%
-  filter(indicator == "hosp_rate") %>%
-  pivot_wider(
-    names_from = period,
-    values_from = avg_rate
-  ) %>%
-  mutate(
-    percent_change = round(((`2019-2021` - `2016-2018`) / `2016-2018` * 100), 1)
-  ) %>%
-  arrange(desc(`2016-2018`))
-
-# Print ED Visits Summary
-
-cat("\nAsthma ED Visit Rates by Borough\n(per 10,000 children aged 0-17)\n")
-ed_summary %>%
-  select(-indicator) %>%
-  knitr::kable(
-    col.names = c("Borough", "2016-2018", "2019-2021", "% Change")
-  )
-
-
-```
-
-
-```{r}
-
-# Create ED Visits Map 
-
-ed_plot <- ggplot() +
+p2 <- ggplot() +
   geom_sf(data = filter(map_data, indicator == "ed_visits_rate"), 
           aes(fill = avg_rate)) +
-  facet_wrap(~period) +
-  scale_fill_viridis_c(
-    name = "Borough Average of\nED Visit Rates\nper 10,000 Children\nAged 0-17 Years", 
-    option = "plasma"
-  ) +
-  theme_minimal() +
-  labs(title = "Asthma ED Visit Rates by NYC Borough",
-       subtitle = "Children aged 0-17 years") +
+  facet_wrap(~period, ncol = 2) +
+  scale_fill_viridis_c(option = "plasma") +
+  coord_sf(datum = NA) +
+  theme_void() +
   theme(
-    plot.title = element_text(size = 12),
-    legend.position = "right",
-    legend.key.height = unit(2, "cm")
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
   )
 
-# Display plot
-
-ggplotly(ed_plot)
-
+ggplotly(p2) %>%
+  layout(
+    autosize = TRUE,
+    margin = list(l = 0, r = 0, t = 0, b = 0),
+    xaxis = list(
+      visible = FALSE,
+      showgrid = FALSE,
+      zeroline = FALSE,
+      showticklabels = FALSE
+    ),
+    yaxis = list(
+      visible = FALSE,
+      showgrid = FALSE,
+      zeroline = FALSE,
+      showticklabels = FALSE
+    )
+  ) %>%
+  config(
+    responsive = TRUE,
+    displayModeBar = FALSE
+  )
 ```
 
-Column {data-width=4000}
+Row {data-height=600}
 -----------------------------------------------------------------------
-### ED Hospitalizations
 
-
-```{r, include=FALSE}
-
-# Print Hospitalization Summary
-
-cat("\nAsthma Hospitalization Rates by Borough\n(per 10,000 children aged 0-17)\n")
-hosp_summary %>%
-  select(-indicator) %>%
-  knitr::kable(
-    col.names = c("Borough", "2016-2018", "2019-2021", "% Change")
-  )
-
-```
-
+### Hospitalizations
 
 ```{r}
-
-# Create Hospitalizations Map 
-
-hosp_plot <- ggplot() +
+p3 <- ggplot() +
   geom_sf(data = filter(map_data, indicator == "hosp_rate"), 
           aes(fill = avg_rate)) +
-  facet_wrap(~period) +
-  scale_fill_viridis_c(
-    name = "Borough Average of\nHospitalization Rates\nper 10,000 Children\nAged 0-17 Years", 
-    option = "plasma"
-  ) +
-  theme_minimal() +
-  labs(title = "Asthma Hospitalization Rates by NYC Borough",
-       subtitle = "Children aged 0-17 years") +
-  theme(plot.title = element_text(size = 12))
+  facet_wrap(~period, ncol = 2) +
+  scale_fill_viridis_c(option = "plasma") +
+  coord_sf(datum = NA) +
+  theme_void() +
+  theme(
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
 
-# Display plot
-
-ggplotly(hosp_plot)
-
+ggplotly(p3) %>%
+  layout(
+    autosize = TRUE,
+    margin = list(l = 0, r = 0, t = 0, b = 0),
+    xaxis = list(
+      visible = FALSE,
+      showgrid = FALSE,
+      zeroline = FALSE,
+      showticklabels = FALSE
+    ),
+    yaxis = list(
+      visible = FALSE,
+      showgrid = FALSE,
+      zeroline = FALSE,
+      showticklabels = FALSE
+    )
+  ) %>%
+  config(
+    responsive = TRUE,
+    displayModeBar = FALSE
+  )
 ```
-
-Column {data-width=4000}
------------------------------------------------------------------------
-
-```{r}
-rmarkdown::render("visualization.Rmd", output_format = "flexdashboard::flex_dashboard")
-```
-
-```
-
