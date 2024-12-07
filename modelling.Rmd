@@ -9,7 +9,7 @@ output:
     theme: cerulean
 ---
 
-# Modeling using Linear Model
+# Linear Modelling
 
 ## Data Preparation
 
@@ -31,6 +31,8 @@ knitr::opts_chunk$set(
 library(tidyverse)
 library(broom)
 library(patchwork)
+library(lmtest)
+library(car)
 
 # Read full data
 
@@ -94,6 +96,7 @@ full_data2_hosp_3 = full_data2 |>
 full_data2_hosp_4 = full_data2 |> 
   filter(indicator == "hosp_rate") |>  #filtering only hospitlization rate
   filter(data_years == "2019-2021")
+
 ```
 
 ## Linear Regression Models
@@ -117,9 +120,18 @@ results_table = tidy(fit) |>
   select(-statistic) |>
   knitr::kable(digit = 3)
 
+# Display table
+
+results_table
+
 ```
 
-During 2016-2018, Queens was the borough that had lowest ED visit rate and zipcode with hvi score 1 had the lowest risk of ED visit. In contrast, Bronx was the borough had the highest ED visit rate and zipcode with hvi score 5 had the highest rate of ED visit.
+The linear regression model examines how pediatric asthma ED visit rates (per 10,000 children) are associated with borough and heat vulnerability index (HVI), using the Bronx as the reference borough.
+
+Compared to the Bronx, Queens shows the largest reduction in ED visits (-169.36 visits, p < 0.001), followed by Brooklyn (-158.44 visits, p < 0.001) and Staten Island (-113.01 visits, p = 0.001). Manhattan's lower rate (-37.83 visits) was not statistically significant (p = 0.122).
+Heat vulnerability shows a strong positive association with ED visits: for each one-unit increase in HVI score, ED visit rates increase by approximately 69.15 visits per 10,000 children (p < 0.001). 
+
+This model indicates that both geographic location and heat vulnerability are significant predictors of pediatric asthma ED visits, with the Bronx experiencing substantially higher rates than most other boroughs.
 
 #### 2019-2021 period
 
@@ -136,9 +148,16 @@ results_table2 = tidy(fit2) |>
   select(-statistic) |>
   knitr::kable(digit = 3)
 
+# Display table
+
+results_table2
+
 ```
 
-During 2019-2021, Queens was the borough that had lowest ED visit rate and zipcode with hvi score 1 had the lowest ED visit rate. In contrast, Bronx was the borough had the highest ED visit rate and zipcode with hvi score 5 had the highest rate of ED visit.
+
+For the 2019-2021 time period, Queens shows the largest reduction in ED visits compared to the Bronx (-88.61 visits, p < 0.001), closely followed by Brooklyn (-81.90 visits, p < 0.001). Staten Island shows fewer visits (-55.99, p = 0.001), while Manhattan's lower rate (-18.59 visits) remains not statistically significant (p = 0.140).
+
+The HVI effect remains significant but notably smaller than the previous period: each one-unit increase in HVI score is associated with an increase of 35.18 visits per 10,000 children (p < 0.001), roughly half the effect seen in 2016-2018.
 
 ### Hospitalizations
 
@@ -156,9 +175,18 @@ results_table3 = tidy(fit3) |>
   select(-statistic) |>
   knitr::kable(digit = 3)
 
+# Display table
+
+results_table3
+
 ```
 
-During 2016-2018, Queens was the borough that had lowest hospitalization rate and zipcode with hvi score 1 had the lowest hospitalization rate. In contrast, Bronx was the borough had the highest hospitalization rate and zipcode with hvi score 5 had the highest rate of hospitalization.
+The linear regression model examines pediatric asthma hospitalization rates per 10,000 children, with the Bronx as the reference borough.
+
+For the 2016-2018 time period, Queens shows the largest reduction in hospitalizations compared to the Bronx (-30.62 visits, p < 0.001), followed by Brooklyn (-27.04 visits, p < 0.001) and Staten Island (-17.28, p = 0.004). Manhattan's lower rate (-8.17 visits) is not statistically significant (p = 0.069).
+
+The HVI effect is significant but smaller when compared to ED visits: each one-unit increase in HVI score is associated with an increase of 10.14 hospitalizations per 10,000 children (p < 0.001).
+
 
 #### 2019-2021 period
 
@@ -171,11 +199,91 @@ results_table4 = tidy(fit4) |>
   select(-statistic) |>
   knitr::kable(digit = 3)
 
+# Format results table
+
+results_table4 = tidy(fit4) |>
+  select(-statistic) |>
+  knitr::kable(digit = 3)
+
+# Display table
+
+results_table4
+
 ```
 
-During 2019-2021, Queens was the borough that had lowest hospitalization rate and zipcode with hvi score 1 had the lowest hospitalization rate. In contrast, Bronx was the borough had the highest hospitalization rate and zipcode with hvi score 5 had the highest rate of hospitalization.
+For the 2019-2021 time period, Queens shows the largest reduction in hospitalizations compared to the Bronx (-19.44 visits, p < 0.001), followed by Brooklyn (-17.65 visits, p < 0.001) and Staten Island (-13.55, p < 0.001). Unlike previous models, Manhattan's lower rate (-5.56 visits) is now statistically significant (p = 0.035).
 
-Overall, all models shows the borough had the lowest ED and hospitalization rate is Queens and zipcodes having lower HVI score. We can infer that area with lower zip codes tend to have lower rates of ED and Hospitalization for children with respiratory problems.
+The HVI effect remains significant but shows the smallest magnitude across all models: each one-unit increase in HVI score is associated with an increase of 5.23 hospitalizations per 10,000 children (p < 0.001).
+
+#### Summary of models
+
+Examining all four models reveals a consistent pattern: Queens shows the lowest rates while the Bronx shows the highest, and higher HVI scores are consistently associated with higher rates of both ED visits and hospitalizations. 
+
+### Model Diagnostics
+
+```{r}
+
+# Basic diagnostic tests for each model
+# Function for basic diagnostics
+basic_diagnostics = function(model, model_name) {
+  # Shapiro-Wilk test for normality
+  sw_test = shapiro.test(residuals(model))
+  
+  # Breusch-Pagan test for heteroscedasticity
+  bp_test = bptest(model)
+  
+  # Create results
+  results = data.frame(
+    Model = model_name,
+    Test = c("Shapiro-Wilk (Normality)", "Breusch-Pagan (Heteroscedasticity)"),
+    Statistic = c(sw_test$statistic, bp_test$statistic),
+    P_Value = c(sw_test$p.value, bp_test$p.value)
+  )
+  
+  return(results)
+}
+
+# Run diagnostics for all models
+all_diagnostics = rbind(
+  basic_diagnostics(fit, "ED Visits 2016-2018"),
+  basic_diagnostics(fit2, "ED Visits 2019-2021"),
+  basic_diagnostics(fit3, "Hospitalizations 2016-2018"),
+  basic_diagnostics(fit4, "Hospitalizations 2019-2021")
+)
+
+# Display results
+knitr::kable(all_diagnostics, digits = 4)
+
+```
+
+Our diagnostic testing examined two key model assumptions using Shapiro-Wilk tests for normality and Breusch-Pagan tests for homoscedasticity. Results indicate statistical significance (p < 0.05) for violations of both assumptions. However, with moderate to large sample sizes (ED visits: n=171 for 2016-2018, n=168 for 2019-2021; Hospitalizations: n=155 for 2016-2018, n=140 for 2019-2021), our models maintain reasonable robustness to these violations. The Shapiro-Wilk statistics (all W > 0.90) suggest only mild deviations from normality. The Breusch-Pagan tests indicate the presence of heteroscedasticity, but this primarily affects efficiency rather than consistency of our estimates. Therefore, while not perfect, our models provide reliable insights into the relationships between borough characteristics, heat vulnerability, and health outcomes.
+
+```{r}
+
+# Basic diagnostic plots for all models
+
+par(mfrow=c(2,2))
+plot(fit, main="ED Visits 2016-2018")
+par(mfrow=c(2,2))
+plot(fit2, main="ED Visits 2019-2021")
+par(mfrow=c(2,2))
+plot(fit3, main="Hospitalizations 2016-2018")
+par(mfrow=c(2,2))
+plot(fit4, main="Hospitalizations 2019-2021")
+
+```
+
+The diagnostic plots show important patterns across our models:
+
+* QQ Plots show moderate deviations from normality, particularly in the tails. This is most observable in the hospitalizations 2016-2018 model, where observations 68 and 71 deviate notably from the expected normal line. However, the overall pattern seems to suggest only mild violations of normality, for both ED visits and hospitalizations models.
+
+* Residuals vs Fitted plots indicate relatively consistent spread around zero, though with some heteroscedasticity at higher fitted values, especially in the ED visits models. The hospitalization models show a more consistent pattern, which would indicate a better fit for these outcomes.
+
+* Scale-Location plots confirm the presence of mild heteroscedasticity, with slightly increasing spread in the standardized residuals as fitted values increase. This pattern is more evident in the ED visits models than in the hospitalization models.
+
+* Residuals vs Leverage plots show a few potentially influential observations (e.g., observations 75 and 76 in ED visits 2016-2018; 68 and 71 in hospitalizations 2016-2018), but none appear to exceed Cook's distance thresholds (dotted lines). This indicates these points do not greatly impact our model estimates.
+
+While these diagnostics do appear to suggest some deviation from model assumptions, the violations are not severe enough to invalidate our main findings, particularly given our moderately large sample sizes.
 
 ### Borough-Level HVI Analysis
 
@@ -195,39 +303,51 @@ knitr::kable(daa)
 
 ```
 
-It turns out to be there are other factors that we haven't take in to account because borough with the lowest hvi mean was Staten Island.
+The mean Heat Vulnerability Index varies considerably across NYC boroughs, with the Bronx showing the highest average (4.07), followed by Brooklyn (3.65), Queens (3.27), Manhattan (2.42), and Staten Island (2.07). This suggests that heat vulnerability is not evenly distributed across the city, with some boroughs experiencing systematically higher heat vulnerability than others. The notable variation in HVI means across boroughs indicates that geographic and demographic factors play an important role in heat vulnerability distribution throughout New York City.
 
-#### Visualization of Relationships
+### Visualization of Relationships
 
-```{r}
+```{r, fig.height=10, fig.width=12}
 
 # Create visualization plots showing relationship between HVI scores and health outcomes
 # Four plots examine ED visits and hospitalizations across both time periods
 
+# Create plots
+
 plot1 = ggplot(full_data2_ed_1, aes(x = hvi, y = zip_code_rate)) +
-  geom_point(color = "blue", alpha = 0.6) +  # Data points
-  geom_smooth(method = "lm", color = "red", se = TRUE) +  # Regression line with confidence interval
-  labs(title = "ED Visit rate per HVI score (2016-2018)", x = "HVI", y = "ED Visit Rate") +
+  geom_point(color = "blue", alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "ED Visit rate per HVI score (2016-2018)", 
+       x = "HVI", y = "ED Visit Rate") +
   theme_minimal()
 
 plot2 = ggplot(full_data2_ed_2, aes(x = hvi, y = zip_code_rate)) +
-  geom_point(color = "blue", alpha = 0.6) +  # Data points
-  geom_smooth(method = "lm", color = "red", se = TRUE) +  # Regression line with confidence interval
-  labs(title = "ED Visit rate per HVI score (2019-2021)", x = "HVI", y = "ED Visit Rate") +
+  geom_point(color = "blue", alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "ED Visit rate per HVI score (2019-2021)", 
+       x = "HVI", y = "ED Visit Rate") +
   theme_minimal()
 
 plot3 = ggplot(full_data2_hosp_1, aes(x = hvi, y = zip_code_rate)) +
-  geom_point(color = "blue", alpha = 0.6) +  # Data points
-  geom_smooth(method = "lm", color = "red", se = TRUE) +  # Regression line with confidence interval
-  labs(title = "Hospitalization rate per HVI score (2016-2018)", x = "HVI", y = "Hospitalization Rate") +
+  geom_point(color = "blue", alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "Hospitalization rate per HVI score (2016-2018)", 
+       x = "HVI", y = "Hospitalization Rate") +
   theme_minimal()
 
 plot4 = ggplot(full_data2_hosp_2, aes(x = hvi, y = zip_code_rate)) +
-  geom_point(color = "blue", alpha = 0.6) +  # Data points
-  geom_smooth(method = "lm", color = "red", se = TRUE) +  # Regression line with confidence interval
-  labs(title = "Hospitalization rate per HVI score (2019-2021)", x = "HVI", y = "Hospitalization Rate") +
+  geom_point(color = "blue", alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "Hospitalization rate per HVI score (2019-2021)", 
+       x = "HVI", y = "Hospitalization Rate") +
   theme_minimal()
 
-(plot1 + plot2) / (plot3 + plot4)
+# Combine plots with adjusted height and width
+(plot1 + plot2) / (plot3 + plot4) +
+  patchwork::plot_layout(heights = c(3, 3), widths = c(3, 3))
 
 ```
+
+The scatter plots show consistent positive relationships between Heat Vulnerability Index and both pediatric asthma health outcomes across time periods. ED visit rates show a stronger association with HVI than hospitalization rates, as observed in steeper trend lines. 
+
+The relationship appears more pronounced in the 2016-2018 period, with ED visits ranging from approximately 50 to 300 per 10,000 across HVI scores. While the overall patterns persist in 2019-2021, the rates are lower, particularly for ED visits. The considerable vertical spread in the data points at each HVI level would likely suggest that other factors outside of heat vulnerability have an effect on pediatric asthma health outcomes.
