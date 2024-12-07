@@ -348,6 +348,6 @@ plot4 = ggplot(full_data2_hosp_2, aes(x = hvi, y = zip_code_rate)) +
 
 ```
 
-The scatter plots show consistent positive relationships between Heat Vulnerability Index and both pediatric asthma health outcomes across time periods. ED visit rates show a stronger association with HVI than hospitalization rates, as observed in steeper trend lines. 
+The scatter plots show consistent positive relationships between Heat Vulnerability Index and both pediatric asthma health outcomes across time periods. ED visit rates show a stronger association with HVI than hospitalization rates, as observed in steeper trend lines. The relationship appears more pronounced in the 2016-2018 period, with ED visits ranging from 0 to approximately 700 per 10,000 across HVI scores, compared to 0-350 in 2019-2021. 
 
-The relationship appears more pronounced in the 2016-2018 period, with ED visits ranging from approximately 50 to 300 per 10,000 across HVI scores. While the overall patterns persist in 2019-2021, the rates are lower, particularly for ED visits. The considerable vertical spread in the data points at each HVI level would likely suggest that other factors outside of heat vulnerability have an effect on pediatric asthma health outcomes.
+While the overall patterns persist in 2019-2021, the rates are lower, particularly for ED visits. The considerable vertical spread in the data points at each HVI level suggests that other factors beyond heat vulnerability influence pediatric asthma health outcomes.
