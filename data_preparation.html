@@ -836,17 +836,18 @@ Celsius for each borough and time period</li>
   mutate(zip_code = as.double(zip_code_tabulation_area_zcta_2020),
          hvi = as.factor(heat_vulnerability_index_hvi)) |&gt; 
   dplyr::select(zip_code, hvi)</code></pre>
-<p>The Heat Vulnerability Index (HVI) shows neighborhoods whose
-residents are more at risk for dying during and immediately following
-extreme heat. It uses a statistical model to summarize the most
-important social and environmental factors that contribute to
-neighborhood heat risk. The factors included in the HVI are surface
-temperature, green space, access to home air conditioning, and the
-percentage of residents who are low-income or non-Latinx Black.
-Differences in these risk factors across neighborhoods are rooted in
-past and present racism. Neighborhoods are scored from 1 (lowest risk)
-to 5 (highest risk) by summing the following factors and assigning them
-into 5 groups.</p>
+<p>The <a
+href="https://data.cityofnewyork.us/Health/Heat-Vulnerability-Index-Rankings/4mhf-duep/about_data">Heat
+Vulnerability Index (HVI) data</a> shows neighborhoods whose residents
+are more at risk for dying during and immediately following extreme
+heat. It uses a statistical model to summarize the most important social
+and environmental factors that contribute to neighborhood heat risk. The
+factors included in the HVI are surface temperature, green space, access
+to home air conditioning, and the percentage of residents who are
+low-income or non-Latinx Black. Differences in these risk factors across
+neighborhoods are rooted in past and present racism. Neighborhoods are
+scored from 1 (lowest risk) to 5 (highest risk) by summing the following
+factors and assigning them into 5 groups.</p>
 <ul>
 <li><code>zip_code</code>: Zip Code information</li>
 <li><code>hvi</code>: HVI score for Zip Code</li>
