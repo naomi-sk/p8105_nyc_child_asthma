@@ -14,7 +14,7 @@
 
 <title>modelling.knit</title>
 
-<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cerulean.min.css" rel="stylesheet" />
@@ -36,8 +36,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -447,7 +447,6 @@ full_data2_hosp_4 = full_data2 |&gt;
 </div>
 <div id="linear-regression-models" class="section level2">
 <h2>Linear Regression Models</h2>
-<p>rate = how many people visited per 10,000</p>
 <div id="emergency-department-visits" class="section level3">
 <h3>Emergency Department Visits</h3>
 <div id="period" class="section level4">
@@ -517,10 +516,10 @@ results_table</code></pre>
 <p>The linear regression model examines how pediatric asthma ED visit
 rates (per 10,000 children) are associated with borough and heat
 vulnerability index (HVI), using the Bronx as the reference borough.</p>
-<p>Compared to the Bronx, Queens shows the largest reduction in ED
-visits (-169.36 visits, p &lt; 0.001), followed by Brooklyn (-158.44
-visits, p &lt; 0.001) and Staten Island (-113.01 visits, p = 0.001).
-Manhattan’s lower rate (-37.83 visits) was not statistically significant
+<p>Compared to the Bronx, Queens shows the lowest rate in ED visits
+(-169.36 visits, p &lt; 0.001), followed by Brooklyn (-158.44 visits, p
+&lt; 0.001) and Staten Island (-113.01 visits, p = 0.001). Manhattan’s
+rate (-37.83 visits) compared to Bronx was not statistically significant
 (p = 0.122). Heat vulnerability shows a strong positive association with
 ED visits: for each one-unit increase in HVI score, ED visit rates
 increase by approximately 69.15 visits per 10,000 children (p &lt;
@@ -594,8 +593,8 @@ results_table2</code></pre>
 </tr>
 </tbody>
 </table>
-<p>For the 2019-2021 time period, Queens shows the largest reduction in
-ED visits compared to the Bronx (-88.61 visits, p &lt; 0.001), closely
+<p>For the 2019-2021 time period, Queens shows the lowest rate in ED
+visits compared to the Bronx (-88.61 visits, p &lt; 0.001), closely
 followed by Brooklyn (-81.90 visits, p &lt; 0.001). Staten Island shows
 fewer visits (-55.99, p = 0.001), while Manhattan’s lower rate (-18.59
 visits) remains not statistically significant (p = 0.140).</p>
@@ -672,11 +671,11 @@ results_table3</code></pre>
 </table>
 <p>The linear regression model examines pediatric asthma hospitalization
 rates per 10,000 children, with the Bronx as the reference borough.</p>
-<p>For the 2016-2018 time period, Queens shows the largest reduction in
+<p>For the 2016-2018 time period, Queens shows the lowest rate in
 hospitalizations compared to the Bronx (-30.62 visits, p &lt; 0.001),
 followed by Brooklyn (-27.04 visits, p &lt; 0.001) and Staten Island
-(-17.28, p = 0.004). Manhattan’s lower rate (-8.17 visits) is not
-statistically significant (p = 0.069).</p>
+(-17.28, p = 0.004). Manhattan’s rate (-8.17 visits) compared to Bronx
+is not statistically significant (p = 0.069).</p>
 <p>The HVI effect is significant but smaller when compared to ED visits:
 each one-unit increase in HVI score is associated with an increase of
 10.14 hospitalizations per 10,000 children (p &lt; 0.001).</p>
@@ -747,7 +746,7 @@ results_table4</code></pre>
 </tr>
 </tbody>
 </table>
-<p>For the 2019-2021 time period, Queens shows the largest reduction in
+<p>For the 2019-2021 time period, Queens shows the lowest rate in
 hospitalizations compared to the Bronx (-19.44 visits, p &lt; 0.001),
 followed by Brooklyn (-17.65 visits, p &lt; 0.001) and Staten Island
 (-13.55, p &lt; 0.001). Unlike previous models, Manhattan’s lower rate
