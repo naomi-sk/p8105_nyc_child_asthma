@@ -78,7 +78,7 @@ knitr::kable(EDmodels_pm2_5, digits = 3)
 
 Comparing between the two year groups, there are lower ED visist rates and lower PM2.5 levels in the 2019-2021 year group. 
 
-The correlation coefficient for both year groups are similar. Data from 2016 to 2018 indicates a positive association between PM2.5 levels and ED visit rate (R = 0.377). Data from 2019 to 2021 also shows a positive association between these two variables (R = 0.323). Thus, **decreased PM2.5 levels is weakly associated with decreased hospitalization rate for both year groups.** 
+The correlation coefficient for both year groups are similar. Data from 2016 to 2018 indicates a positive association between PM2.5 levels and ED visit rate (R = 0.377). Data from 2019 to 2021 also shows a positive association between these two variables (R = 0.323). Thus, decreased PM2.5 levels is weakly associated with decreased hospitalization rate for both year groups.
 
 ```{r pm2.5 hosp, echo=FALSE, message=FALSE}
 #clean data for Borough level hospitalization rates and pm2.5
@@ -118,7 +118,7 @@ knitr::kable(hospmodels_pm2_5, digits = 3)
 
 Similar to the trend comparing PM2.5 levels and ED visit rates, hospitalization rates and PM2.5 levels are also lower in the 2019-2021 year group.
 
-The correlation coefficient (r) for both year groups is 0.414, which indicates a moderate relationship between the two variables for the year groups. **Decreased PM2.5 levels is thus moderately associated with decreased hospitalization rate for both year groups.** 
+The correlation coefficient (r) for both year groups is 0.414, which indicates a moderate relationship between the two variables for the year groups. Decreased PM2.5 levels is thus moderately associated with decreased hospitalization rate for both year groups.
 
 #### Borough and Year Comparison
 
@@ -136,7 +136,7 @@ GS_ED_pm2_5 = assoc_pm2_5 |>
 GS_ED_pm2_5
 ```
 
-For all boroughs, **PM2.5 levels and ED visit rates are higher in 2016 to 2018 than in 2019 to 2021.** Compared to the other boroughs, decrease in ED visit rate per PM2.5 level is most dramatic in the Bronx.
+For all boroughs, PM2.5 levels and ED visit rates are higher in 2016 to 2018 than in 2019 to 2021. Compared to the other boroughs, decrease in ED visit rate per PM2.5 level is most dramatic in the Bronx.
 
 ```{r pm2.5 HR, echo=FALSE, message=FALSE}
 
@@ -153,7 +153,7 @@ GS_HR_pm2_5
 
 ```
 
-Similar to the trend seen between PM2.5 levels and ED visit rates, **PM2.5 levels and hospitalization rates are higher in 2016 to 2018 than in 2019 to 2021.** Bronx also experienced the most dramatic decrease in hospitalization rate per PM2.5 level. 
+Similar to the trend seen between PM2.5 levels and ED visit rates, PM2.5 levels and hospitalization rates are higher in 2016 to 2018 than in 2019 to 2021. Bronx also experienced the most dramatic decrease in hospitalization rate per PM2.5 level. 
 
 ## Greenspace
 
@@ -202,7 +202,7 @@ EDplot
 knitr::kable(EDmodels, digits = 3)
 ```
 
-**The correlation coefficient for both year groups are similar.** Data from 2016 to 2018 indicates a negative association between greenspace and ED visit rate (r = -0.905). Data from 2019 to 2021 also shows a negative association between these two variables (r = -0.830). Thus, **increased greenspace is strongly associated with decreased ED visit rate for both year groups.** 
+The correlation coefficient for both year groups are similar. Data from 2016 to 2018 indicates a negative association between greenspace and ED visit rate (r = -0.905). Data from 2019 to 2021 also shows a negative association between these two variables (r = -0.830). Thus, increased greenspace is strongly associated with decreased ED visit rate for both year groups.
 
 ```{r hosp, echo=FALSE, message=FALSE}
 
@@ -241,7 +241,7 @@ knitr::kable(hospmodels, digits = 3)
 
 ```
 
-Similar to the trend comparing greenspace and ED visit rates, **the correlation coefficient for both year groups are similar.** Data from 2016 to 2018 indicates a negative association between greenspace and hospitalization rate (r = -0.861). Data from 2019 to 2021 also shows a negative association between these two variables (r = -0.793). Thus, **increased greenspace is strongly associated with decreased hospitalization rate for both year groups.** 
+Similar to the trend comparing greenspace and ED visit rates, the correlation coefficient for both year groups are similar. Data from 2016 to 2018 indicates a negative association between greenspace and hospitalization rate (r = -0.861). Data from 2019 to 2021 also shows a negative association between these two variables (r = -0.793). Thus, **increased greenspace is strongly associated with decreased hospitalization rate for both year groups.
 
 #### Borough and Year Comparison
 
@@ -259,7 +259,7 @@ GS_ED = GS_assoc |>
 GS_ED
 ```
 
-In Bronx, an increase in total acres of greenspace between the two year groups is negatively associated with ED visit rate. This is also seen for Staten Island. The association is less obvious for Brooklyn, Manhattan, and Queens. 
+In Bronx, there is a dramatic decrease in ED visit rate with an increase in total acres of greenspace between the two year groups. This decrease is also seen for Staten Island. The association is less obvious for Brooklyn, Manhattan, and Queens. 
 
 
 ```{r, echo=FALSE, message=FALSE}
@@ -284,20 +284,21 @@ When comparing between the two year groups, the association for borough-level gr
 ```{r echo = FALSE, message = FALSE}
 temp_association = full_data2 |> 
   select(data_years, avg_temperature, indicator, borough, borough_rate) |> 
-  distinct(data_years, avg_temperature, indicator, borough, borough_rate)
+  distinct(data_years, avg_temperature, indicator, borough, borough_rate) |>
+  rename(Year = data_years, Borough = borough)
 
 temp_association_ed = temp_association |> 
-  filter(indicator == "ed_visits_rate")
+  filter(indicator == "ed_visits_rate") 
 
 temp_association_hosp = temp_association |> 
   filter(indicator == "hosp_rate")
 ```
 
-#### Temperature vs ED visits by year group
+#### Year Group Comparison
 
 ```{r echo = FALSE, message = FALSE}
 tempmodel = temp_association_ed |>
-  group_by(data_years) |>
+  group_by(Year) |>
   do(model = lm(borough_rate ~ avg_temperature, data = .)) |> #linear model
   mutate( 
     slope = coef(model)[2], #calc slope, intercept, R², and correlation coefficient (R)
@@ -307,9 +308,9 @@ tempmodel = temp_association_ed |>
    select(-model, -intercept)
 
 # Plot the data and regression lines
-tempplot = ggplot(temp_association_ed, aes(x = avg_temperature, y = borough_rate, group = data_years)) + 
-  geom_point(aes(color = data_years)) + 
-  geom_smooth(method = "lm", aes(color = data_years, group = data_years), se = FALSE, linetype = "solid") +
+tempplot = ggplot(temp_association_ed, aes(x = avg_temperature, y = borough_rate, group = Year)) + 
+  geom_point(aes(color = Year)) + 
+  geom_smooth(method = "lm", aes(color = Year, group = Year), se = FALSE, linetype = "solid") +
   theme_minimal() +
   labs(title = "Temperature and ED Visits Rate", 
        x = "Average Temperature (°C)", 
@@ -320,13 +321,13 @@ tempplot
 knitr::kable(tempmodel, digits = 3)
 ```
 
-For both year groups, there is nearly no correlation between temperature and ED visit rate. We can infer that temperature is not a significant factor for ED visits.
+The correlation coefficient for the year groups are different. Data from 2016 to 2018 indicates a weak negative association between temperature and ED visit rate (r = -0.323). The correlation coefficient for 2019 to 2021 (r = -0.039) indicates no association between these two variables. 
 
-#### Temperature vs Hospitalization by year group
+We can infer that temperature is not a significant factor for ED visits.
 
 ```{r echo = FALSE, message = FALSE}
 tempmodel2 = temp_association_hosp |>
-  group_by(data_years) |>
+  group_by(Year) |>
   do(model = lm(borough_rate ~ avg_temperature, data = .)) |> #linear model
   mutate( 
     slope = coef(model)[2], #calc slope, intercept, R², and correlation coefficient (R)
@@ -336,9 +337,9 @@ tempmodel2 = temp_association_hosp |>
    select(-model, -intercept)
 
 # Plot the data and regression lines
-tempplot2 = ggplot(temp_association_hosp, aes(x = avg_temperature, y = borough_rate, group = data_years)) + 
-  geom_point(aes(color = data_years)) + 
-  geom_smooth(method = "lm", aes(color = data_years, group = data_years), se = FALSE, linetype = "solid") +
+tempplot2 = ggplot(temp_association_hosp, aes(x = avg_temperature, y = borough_rate, group = Year)) + 
+  geom_point(aes(color = Year)) + 
+  geom_smooth(method = "lm", aes(color = Year, group = Year), se = FALSE, linetype = "solid") +
   theme_minimal() +
   labs(title = "Temperature and Hospitalization Rate", 
        x = "Average Temperature (°C)", 
@@ -349,12 +350,14 @@ tempplot2
 knitr::kable(tempmodel2, digits = 3)
 ```
 
-For both year groups, there is nearly no correlation between temperature and Hospitalization rate. We can infer that temperature is not a significant factor for Hospitalization.
+Data from 2016 to 2018 indicates a weak negative association between temperature and hospitalization rate (r = -0.348). The correlation coefficient for 2019 to 2021 (r = -0.120) indicates a very week negative association between these two variables. 
 
-#### Plot of average temperature vs rate by borough
+We can infer that temperature is not a significant factor for Hospitalization.
+
+#### Borough and Year Comparison
 
 ```{r echo=FALSE, message=FALSE}
-ggplot(temp_association, aes(x = avg_temperature, y = borough_rate, color = borough)) +
+ggplot(temp_association, aes(x = avg_temperature, y = borough_rate, color = Borough)) +
   geom_point(size = 3) +
   facet_wrap(~indicator) +
   geom_smooth(method = "lm", se = FALSE) +
@@ -366,7 +369,7 @@ ggplot(temp_association, aes(x = avg_temperature, y = borough_rate, color = boro
   theme_minimal()
 ```
 
-The plot shows that the **higher temperature is associated with lower rate of ED visit and hospitalization.**
+The plot shows that the higher temperature is associated with lower rate of ED visit and hospitalization.
 
 ## Heat Vulnerability Index (HVI)
 
