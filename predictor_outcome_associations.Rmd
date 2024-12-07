@@ -14,7 +14,6 @@ The plots below show the associations between each predictor and the outcome of 
 
 ```{r libraries, include=FALSE}
 library(tidyverse)
-library(ggplot2)
 library(patchwork)
 ```
 
@@ -282,13 +281,77 @@ When comparing between the two year groups, the association for borough-level gr
 
 ## Temperature
 
-```{r echo=FALSE, message=FALSE}
+```{r echo = FALSE, message = FALSE}
 temp_association = full_data2 |> 
   select(data_years, avg_temperature, indicator, borough, borough_rate) |> 
   distinct(data_years, avg_temperature, indicator, borough, borough_rate)
+
+temp_association_ed = temp_association |> 
+  filter(indicator == "ed_visits_rate")
+
+temp_association_hosp = temp_association |> 
+  filter(indicator == "hosp_rate")
 ```
 
-#### Scattor plot of average temperature vs rate by borough
+#### Temperature vs ED visits by year group
+
+```{r echo = FALSE, message = FALSE}
+tempmodel = temp_association_ed |>
+  group_by(data_years) |>
+  do(model = lm(borough_rate ~ avg_temperature, data = .)) |> #linear model
+  mutate( 
+    slope = coef(model)[2], #calc slope, intercept, R², and correlation coefficient (R)
+    intercept = coef(model)[1],
+    r_squared = summary(model)$r.squared,
+    r = -sqrt(r_squared)) |> #negative correlation
+   select(-model, -intercept)
+
+# Plot the data and regression lines
+tempplot = ggplot(temp_association_ed, aes(x = avg_temperature, y = borough_rate, group = data_years)) + 
+  geom_point(aes(color = data_years)) + 
+  geom_smooth(method = "lm", aes(color = data_years, group = data_years), se = FALSE, linetype = "solid") +
+  theme_minimal() +
+  labs(title = "Temperature and ED Visits Rate", 
+       x = "Average Temperature (°C)", 
+       y = "ED Visits Rate") +
+  theme(legend.position = "top")
+
+tempplot
+knitr::kable(tempmodel, digits = 3)
+```
+
+For both year groups, there is nearly no correlation between temperature and ED visit rate. We can infer that temperature is not a significant factor for ED visits.
+
+#### Temperature vs Hospitalization by year group
+
+```{r echo = FALSE, message = FALSE}
+tempmodel2 = temp_association_hosp |>
+  group_by(data_years) |>
+  do(model = lm(borough_rate ~ avg_temperature, data = .)) |> #linear model
+  mutate( 
+    slope = coef(model)[2], #calc slope, intercept, R², and correlation coefficient (R)
+    intercept = coef(model)[1],
+    r_squared = summary(model)$r.squared,
+    r = -sqrt(r_squared)) |> #negative correlation
+   select(-model, -intercept)
+
+# Plot the data and regression lines
+tempplot2 = ggplot(temp_association_hosp, aes(x = avg_temperature, y = borough_rate, group = data_years)) + 
+  geom_point(aes(color = data_years)) + 
+  geom_smooth(method = "lm", aes(color = data_years, group = data_years), se = FALSE, linetype = "solid") +
+  theme_minimal() +
+  labs(title = "Temperature and Hospitalization Rate", 
+       x = "Average Temperature (°C)", 
+       y = "Hospitalization Rate") +
+  theme(legend.position = "top")
+
+tempplot2
+knitr::kable(tempmodel2, digits = 3)
+```
+
+For both year groups, there is nearly no correlation between temperature and Hospitalization rate. We can infer that temperature is not a significant factor for Hospitalization.
+
+#### Plot of average temperature vs rate by borough
 
 ```{r echo=FALSE, message=FALSE}
 ggplot(temp_association, aes(x = avg_temperature, y = borough_rate, color = borough)) +
