@@ -14,7 +14,7 @@
 
 <title>data_preparation.knit</title>
 
-<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cerulean.min.css" rel="stylesheet" />
@@ -36,8 +36,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -836,6 +836,21 @@ Celsius for each borough and time period</li>
   mutate(zip_code = as.double(zip_code_tabulation_area_zcta_2020),
          hvi = as.factor(heat_vulnerability_index_hvi)) |&gt; 
   dplyr::select(zip_code, hvi)</code></pre>
+<p>The Heat Vulnerability Index (HVI) shows neighborhoods whose
+residents are more at risk for dying during and immediately following
+extreme heat. It uses a statistical model to summarize the most
+important social and environmental factors that contribute to
+neighborhood heat risk. The factors included in the HVI are surface
+temperature, green space, access to home air conditioning, and the
+percentage of residents who are low-income or non-Latinx Black.
+Differences in these risk factors across neighborhoods are rooted in
+past and present racism. Neighborhoods are scored from 1 (lowest risk)
+to 5 (highest risk) by summing the following factors and assigning them
+into 5 groups.</p>
+<ul>
+<li><code>zip_code</code>: Zip Code information</li>
+<li><code>hvi</code>: HVI score for Zip Code</li>
+</ul>
 </div>
 </div>
 <div id="data-merging" class="section level1">

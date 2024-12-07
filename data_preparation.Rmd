@@ -436,9 +436,12 @@ hvi_df = read_csv("data/Heat_Vulnerability_Index_Rankings_20241205 (1).csv") |>
          hvi = as.factor(heat_vulnerability_index_hvi)) |> 
   dplyr::select(zip_code, hvi)
 
-
 ```
 
+The Heat Vulnerability Index (HVI) shows neighborhoods whose residents are more at risk for dying during and immediately following extreme heat. It uses a statistical model to summarize the most important social and environmental factors that contribute to neighborhood heat risk. The factors included in the HVI are surface temperature, green space, access to home air conditioning, and the percentage of residents who are low-income or non-Latinx Black. Differences in these risk factors across neighborhoods are rooted in past and present racism. Neighborhoods are scored from 1 (lowest risk) to 5 (highest risk) by summing the following factors and assigning them into 5 groups.
+
+* `zip_code`: Zip Code information
+* `hvi`: HVI score for Zip Code
 
 # Data Merging
 
