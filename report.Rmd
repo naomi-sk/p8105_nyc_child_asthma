@@ -53,6 +53,10 @@ library(tidyverse)
 library(sf)
 library(ggplot2)
 library(readxl)
+library(broom)
+library(patchwork)
+library(lmtest)
+library(car)
 
 ```
 
@@ -827,17 +831,552 @@ Brooklyn and Staten Island's slightly consistently higher average temperatures, 
 
 The observed warming trend between periods (0.2-0.3°C increase) aligns with broader climate change patterns but may also reflect the effects of localized urban developments. This warming pattern, combined with limited greenspace in asthma hotspot areas like the Bronx, suggests potential intersecting environmental health challenges.
 
-
-
 #### Heat Vulnerability Index
 
 While our exploratory analysis examined temperature patterns across NYC boroughs, our final modeling approach ultimately employed the Heat Vulnerability Index (HVI) rather than raw temperature measurements. This decision was driven by several key considerations. First, our exploratory analysis revealed that temperature patterns were very similar across all boroughs, with only slight variations in average temperatures (0.2-0.3°C differences). This uniformity in temperature measurements meant it would not be easy to explain the substantial geographic variations we observed in asthma outcomes. Second, HVI would be able to represent neighborhood-level variations in heat vulnerability that raw temperature data alone would unlikely show based on the data obtained.
 
 Instead, we opted to use the Heat Vulnerability Index, which provides a more comprehensive measure of the impact of heat stress on different communities. The HVI incorporates not only environmental factors but also crucial socio-demographic characteristics that influence a community's resilience to heat stress. These include language vulnerability (relevant for NYC's diverse neighborhoods), socioeconomic vulnerability, environmental and urban vulnerability, and elderly isolation - factors that may indirectly affect childhood asthma outcomes through the social determinants of health, including housing quality, access to cooling infrastructure, and overall community resources.
 
+```{r}
 
-# Correlations
+# Read full data
 
+full_data2 = read_csv("data/NYC_total.csv")
+
+# Calculate average HVI scores for each borough
+# This helps understand overall heat vulnerability patterns across boroughs
+
+daa = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |>
+  group_by(borough) |> 
+  summarise(hvi_mean = mean(hvi))
+
+# Produce table
+
+knitr::kable(daa, col.names = c("Borough", "Mean HVI"))
+
+```
+**Table 8. Mean HVI across NYC Boroughs**
+
+The mean Heat Vulnerability Index varies considerably across NYC boroughs, with the Bronx showing the highest average (4.07), followed by Brooklyn (3.65), Queens (3.27), Manhattan (2.42), and Staten Island (2.07). This suggests that heat vulnerability is not evenly distributed across the city, with some boroughs experiencing systematically higher heat vulnerability than others. The notable variation in HVI means across boroughs indicates that geographic and demographic factors play an important role in heat vulnerability distribution in NYC.
+
+```{r}
+
+# Plot for mean HVI scores by borough
+
+borough_plot = ggplot(daa, aes(x = reorder(borough, -hvi_mean), y = hvi_mean)) +
+  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) +
+  geom_text(aes(label = round(hvi_mean, 2)), 
+            vjust = -0.5, 
+            size = 3.5) +
+  labs(title = "Mean Heat Vulnerability Index (HVI) by Borough",
+       x = "Borough",
+       y = "Mean HVI Score") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
+  ylim(0, max(daa$hvi_mean) * 1.1)  # Add some space above bars for labels
+
+# Display the plot
+
+borough_plot
+
+```
+**Figure 8. Mean Heat Vulnerability Index (HVI) by Borough**
+
+The above plot provides a visual representation of these HVI disparities, with a noticeable difference between the Bronx and Staten Island - a gap of 2 points on the HVI scale.
+
+
+# Predictor and Outcome Associations
+
+## PM2.5  
+
+```{r pm2.5 file, include=FALSE}
+#clean merged file for pm2.5 and outcome comparisons across boroughs and year groups
+assoc_pm2_5 = full_data2 |>
+  janitor::clean_names() |>
+  rename(Year = data_years, Borough = borough) |> #renamed it to reflect on plots
+  select(Year, Borough, indicator, pm2_5_level, borough_rate)
+```
+
+#### Year Group Comparison
+
+```{r pm2.5 ed, echo=FALSE, message=FALSE}
+#clean data for Borough level ED visit rates and pm2.5
+ED_assoc_pm2_5 = assoc_pm2_5 |>
+  filter(indicator == "ed_visits_rate") |>
+  distinct() |>
+  select(-indicator)
+
+# Fit linear models for each year group and obtain values of interest
+EDmodels_pm2_5 = ED_assoc_pm2_5 |>
+  group_by(Year) |>
+  do(model = lm(borough_rate ~ pm2_5_level, data = .)) |> #linear model
+  mutate( 
+    slope = coef(model)[2], #calc slope, intercept, R², and correlation coefficient (R)
+    intercept = coef(model)[1],
+    r_squared = summary(model)$r.squared,
+    r = sign(slope) * sqrt(r_squared)) |>
+   select(-model, -intercept)
+
+# Plot the data and regression lines
+EDplot_pm2_5 = ggplot(ED_assoc_pm2_5, aes(x = pm2_5_level, y = borough_rate, group = Year)) + 
+  geom_point(aes(color = Year)) + 
+  geom_smooth(method = "lm", aes(color = Year, group = Year), se = FALSE, linetype = "solid") +
+  theme_minimal() +
+  labs(title = "PM2.5 Levels and ED Visits Rate", 
+       x = "PM2.5 Level (ug/m3)", 
+       y = "ED Visits Rate") +
+  theme(legend.position = "top")
+
+#plot
+EDplot_pm2_5
+
+```
+
+**Figure 9. PM2.5 Levels and ED Visits Rate by Year Group**
+
+```{r}
+#Make table of results
+knitr::kable(EDmodels_pm2_5, digits = 3)
+```
+
+**Table 9. Correlation between PM2.5 Levels and ED Visits Rate by Year Group**
+
+Comparing between the two year groups, there are lower ED visist rates and lower PM2.5 levels in the 2019-2021 year group. 
+
+The correlation coefficient for both year groups are similar. Data from 2016 to 2018 indicates a positive association between PM2.5 levels and ED visit rate (R = 0.377). Data from 2019 to 2021 also shows a positive association between these two variables (R = 0.323). Thus, decreased PM2.5 levels is weakly associated with decreased hospitalization rate for both year groups.
+
+```{r pm2.5 hosp, echo=FALSE, message=FALSE}
+#clean data for Borough level hospitalization rates and pm2.5
+hosp_assoc_pm2_5 = assoc_pm2_5 |>
+  filter(indicator == "hosp_rate") |>
+  distinct() |>
+  select(-indicator)
+
+# Fit linear models for each year group and obtain values of interest
+hospmodels_pm2_5 = hosp_assoc_pm2_5 |>
+  group_by(Year) |>
+  do(model = lm(borough_rate ~ pm2_5_level, data = .)) |>
+  mutate(
+    slope = coef(model)[2],
+    intercept = coef(model)[1],
+    r_squared = summary(model)$r.squared,
+    r = sign(slope) * sqrt(r_squared)) |>
+   select(-model, -intercept)
+
+# Plot the data and regression lines
+hosplot_pm2_5 = ggplot(hosp_assoc_pm2_5, aes(x = pm2_5_level, y = borough_rate, group = Year)) + 
+  geom_point(aes(color = Year)) + 
+  geom_smooth(method = "lm", aes(color = Year, group = Year), se = FALSE, linetype = "solid") +
+  theme_minimal() +
+  labs(title = "PM2.5 Levels and Hospitalization Rate", 
+       x = "PM2.5 Levels (ug/m3)", 
+       y = "Hospitalization Rate") +
+  theme(legend.position = "top")
+
+#plot 
+hosplot_pm2_5
+```
+
+**Figure 10. Year Group Comparison: PM2.5 Levels and Hospitalization Rate**
+
+```{r}
+#Make table of results
+knitr::kable(hospmodels_pm2_5, digits = 3)
+```
+
+**Table 10. Correlation between PM2.5 Levels and Hospitalization Rate by Year Group**
+
+Similar to the trend comparing PM2.5 levels and ED visit rates, hospitalization rates and PM2.5 levels are also lower in the 2019-2021 year group.
+
+The correlation coefficient (r) for both year groups is 0.414, which indicates a moderate relationship between the two variables for the year groups. Decreased PM2.5 levels is thus moderately associated with decreased hospitalization rate for both year groups.
+
+#### Borough and Year Comparison
+
+```{r pm2.5 boroughyear, echo=FALSE, message=FALSE}
+
+GS_ED_pm2_5 = assoc_pm2_5 |>
+  filter(indicator == "ed_visits_rate") |> #look at ed visit rate
+  ggplot(aes(x = pm2_5_level, y = borough_rate, color = Borough)) + 
+  geom_point(aes(shape = Year)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "PM2.5 Levels(ug/m3)", y = "ED Visit Rate", 
+       title = "NYC PM2.5 Levels and ED Visit Rate") +
+  theme_minimal()
+```
+
+```{r pm2.5 HR, echo=FALSE, message=FALSE}
+
+GS_HR_pm2_5 = assoc_pm2_5 |>
+  filter(indicator == "hosp_rate") |> #look at hospitalization rate
+  ggplot(aes(x = pm2_5_level, y = borough_rate, color = Borough)) + 
+  geom_point(aes(shape = Year)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "PM2.5 Levels(ug/m3)", y = "Hospitalization Rate", 
+       title = "NYC PM2.5 Levels and Hospitalization Rate") +
+  theme_minimal()
+```
+
+```{r}
+ 
+combo = GS_ED_pm2_5 + GS_HR_pm2_5
+combo
+```
+
+**Figure 11. PM2.5 Levels and Outcome across Borough and by Year Group**
+
+For all boroughs, PM2.5 levels and ED visit rates are higher in 2016 to 2018 than in 2019 to 2021. Compared to the other boroughs, decrease in ED visit rate per PM2.5 level is most dramatic in the Bronx.
+
+Similar to the trend seen between PM2.5 levels and ED visit rates, PM2.5 levels and hospitalization rates are higher in 2016 to 2018 than in 2019 to 2021. Bronx also experienced the most dramatic decrease in hospitalization rate per PM2.5 level. 
+
+## Greenspace
+
+```{r GS file, include=FALSE}
+#clean merged file for greenspace and outcome comparisons across boroughs and year groups
+GS_assoc = full_data2 |>
+  rename(Year = data_years, Borough = borough) |> #renamed it to reflect on plots
+  select(Year, Borough, indicator, acres_sum, borough_rate)
+```
+
+#### Year Group Comparison
+
+```{r ed, echo=FALSE, message=FALSE}
+#clean data for Borough level ED visit rates and greenspace
+ED_assoc = GS_assoc |>
+  filter(indicator == "ed_visits_rate") |>
+  distinct() |>
+  select(-indicator)
+
+# Fit linear models for each year group and obtain values of interest
+#calc slope, intercept, R², and correlation coefficient (R)
+EDmodels = ED_assoc |>
+  group_by(Year) |>
+  do(model = lm(borough_rate ~ acres_sum, data = .)) |> 
+  mutate( 
+    slope = coef(model)[2], 
+    intercept = coef(model)[1],
+    r_squared = summary(model)$r.squared,
+    r = sign(slope) * sqrt(r_squared)) |>
+   select(-model, -intercept)
+
+# Plot the data and regression lines
+EDplot = ggplot(ED_assoc, aes(x = acres_sum, y = borough_rate, group = Year)) + 
+  geom_point(aes(color = Year)) + 
+  geom_smooth(method = "lm", aes(color = Year, group = Year), se = FALSE, linetype = "solid") +
+  theme_minimal() +
+  labs(title = "Greenspace and ED Visits Rate", 
+       x = "Greenspace (Total Acres)", 
+       y = "ED Visits Rate") +
+  theme(legend.position = "top")
+
+#plot
+EDplot
+```
+**Figure 12. Greenspace and ED Visits Rate by Year Group**
+
+```{r}
+#Make table of results
+knitr::kable(EDmodels, digits = 3)
+```
+**Table 11. Correlation between Greenspace and ED Visit Rate by Year Group**
+
+
+The correlation coefficient for both year groups are similar. Data from 2016 to 2018 indicates a negative association between greenspace and ED visit rate (r = -0.905). Data from 2019 to 2021 also shows a negative association between these two variables (r = -0.830). Thus, increased greenspace is strongly associated with decreased ED visit rate for both year groups.
+
+```{r hosp, echo=FALSE, message=FALSE}
+
+#clean data for Borough level hospitalization rates and greenspace
+hosp_assoc = GS_assoc |>
+  filter(indicator == "hosp_rate") |>
+  distinct() |>
+  select(-indicator)
+
+# Fit linear models for each year group and extract results
+hospmodels = hosp_assoc |>
+  group_by(Year) |>
+  do(model = lm(borough_rate ~ acres_sum, data = .)) |>
+  mutate(
+    slope = coef(model)[2],
+    intercept = coef(model)[1],
+    r_squared = summary(model)$r.squared,
+    r = sign(slope) * sqrt(r_squared)) |>
+   select(-model, -intercept)
+
+# Plot the data and regression lines
+hosplot = ggplot(hosp_assoc, aes(x = acres_sum, y = borough_rate, group = Year)) + 
+  geom_point(aes(color = Year)) + 
+  geom_smooth(method = "lm", aes(color = Year, group = Year), se = FALSE, linetype = "solid") +
+  theme_minimal() +
+  labs(title = "Greenspace and Hospitalization Rate", 
+       x = "Greenspace (Total Acres)", 
+       y = "ED Visits Rate") +
+  theme(legend.position = "top")
+
+#plot 
+hosplot
+```
+**Figure 13. Greenspace and Hospitalization Rate by Year Group**
+
+```{r}
+ #Make table of results
+knitr::kable(hospmodels, digits = 3)
+```
+**Table 12. Correlation between Greenspace and Hospitalization Rate by Year Group**
+
+Similar to the trend comparing greenspace and ED visit rates, the correlation coefficient for both year groups are similar. Data from 2016 to 2018 indicates a negative association between greenspace and hospitalization rate (r = -0.861). Data from 2019 to 2021 also shows a negative association between these two variables (r = -0.793). Thus, **increased greenspace is strongly associated with decreased hospitalization rate for both year groups.
+
+#### Borough and Year Comparison
+
+```{r, echo=FALSE, message=FALSE}
+
+GS_ED = GS_assoc |>
+  filter(indicator == "ed_visits_rate") |> #look at ed visit rate
+  ggplot(aes(x = acres_sum, y = borough_rate, color = Borough)) + 
+  geom_point(aes(shape = Year)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Greenspace (Total Acres)", y = "ED Visit Rate", 
+       title = "NYC Greenspace and ED Visit Rate") +
+  theme_minimal()
+```
+
+```{r, echo=FALSE, message=FALSE}
+
+GS_HR = GS_assoc |>
+  filter(indicator == "hosp_rate") |> #look at hospitalization rate
+  ggplot(aes(x = acres_sum, y = borough_rate, color = Borough)) + 
+  geom_point(aes(shape = Year)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Greenspace (Total Acres)", y = "Hospitalization Rate", 
+       title = "NYC Greenspace and Hospitalization Rate") +
+  theme_minimal()
+```
+
+```{r}
+combo1 = GS_ED + GS_HR
+
+combo1
+```
+**Figure 14. Greenspace and Outcome across Borough and by Year Group**
+
+In Bronx, there is a dramatic decrease in ED visit rate with an increase in total acres of greenspace between the two year groups. This decrease is also seen for Staten Island. The association is less obvious for Brooklyn, Manhattan, and Queens. 
+
+When comparing between the two year groups, the association for borough-level greenspace and ED visit rate is similar to trend for borough-level greenspace and hospitalization rate.
+
+## Temperature
+
+```{r echo = FALSE, message = FALSE}
+temp_association = full_data2 |> 
+  select(data_years, avg_temperature, indicator, borough, borough_rate) |> 
+  distinct(data_years, avg_temperature, indicator, borough, borough_rate) |>
+  rename(Year = data_years, Borough = borough)
+
+temp_association_ed = temp_association |> 
+  filter(indicator == "ed_visits_rate") 
+
+temp_association_hosp = temp_association |> 
+  filter(indicator == "hosp_rate")
+```
+
+#### Year Group Comparison
+
+```{r echo = FALSE, message = FALSE}
+tempmodel = temp_association_ed |>
+  group_by(Year) |>
+  do(model = lm(borough_rate ~ avg_temperature, data = .)) |> #linear model
+  mutate( 
+    slope = coef(model)[2], #calc slope, intercept, R², and correlation coefficient (R)
+    intercept = coef(model)[1],
+    r_squared = summary(model)$r.squared,
+    r = -sqrt(r_squared)) |> #negative correlation
+   select(-model, -intercept)
+
+# Plot the data and regression lines
+tempplot = ggplot(temp_association_ed, aes(x = avg_temperature, y = borough_rate, group = Year)) + 
+  geom_point(aes(color = Year)) + 
+  geom_smooth(method = "lm", aes(color = Year, group = Year), se = FALSE, linetype = "solid") +
+  theme_minimal() +
+  labs(title = "Temperature and ED Visits Rate", 
+       x = "Average Temperature (°C)", 
+       y = "ED Visits Rate") +
+  theme(legend.position = "top")
+
+tempplot
+```
+
+**Figure 15. Temperature and ED Visits Rate by Year Group**
+
+```{r}
+knitr::kable(tempmodel, digits = 3)
+```
+**Table 13. Correlation between Temperature and ED Visits Rate by Year Group**
+
+The correlation coefficient for the year groups are different. Data from 2016 to 2018 indicates a weak negative association between temperature and ED visit rate (r = -0.323). The correlation coefficient for 2019 to 2021 (r = -0.039) indicates no association between these two variables. 
+
+We can infer that temperature is not a significant factor for ED visits.
+
+```{r echo = FALSE, message = FALSE}
+tempmodel2 = temp_association_hosp |>
+  group_by(Year) |>
+  do(model = lm(borough_rate ~ avg_temperature, data = .)) |> #linear model
+  mutate( 
+    slope = coef(model)[2], #calc slope, intercept, R², and correlation coefficient (R)
+    intercept = coef(model)[1],
+    r_squared = summary(model)$r.squared,
+    r = -sqrt(r_squared)) |> #negative correlation
+   select(-model, -intercept)
+
+# Plot the data and regression lines
+tempplot2 = ggplot(temp_association_hosp, aes(x = avg_temperature, y = borough_rate, group = Year)) + 
+  geom_point(aes(color = Year)) + 
+  geom_smooth(method = "lm", aes(color = Year, group = Year), se = FALSE, linetype = "solid") +
+  theme_minimal() +
+  labs(title = "Temperature and Hospitalization Rate", 
+       x = "Average Temperature (°C)", 
+       y = "Hospitalization Rate") +
+  theme(legend.position = "top")
+
+tempplot2
+```
+**Figure 16. Temperature and Hospitalization Rate by Year Group**
+
+```{r}
+knitr::kable(tempmodel2, digits = 3)
+```
+
+**Table 14. Correlation between Temperature and Hospitalization Rate by Year Group**
+
+Data from 2016 to 2018 indicates a weak negative association between temperature and hospitalization rate (r = -0.348). The correlation coefficient for 2019 to 2021 (r = -0.120) indicates a very week negative association between these two variables. 
+
+We can infer that temperature is not a significant factor for Hospitalization.
+
+#### Borough and Year Comparison
+
+```{r echo=FALSE, message=FALSE}
+ggplot(temp_association, aes(x = avg_temperature, y = borough_rate, color = Borough)) +
+  geom_point(size = 3) +
+  facet_wrap(~indicator) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Relationship between Temperature and Rates by Borough",
+    x = "Average Temperature (°C)",
+    y = "Rate"
+  ) +
+  theme_minimal()
+```
+**Figure 17. Temperature and Outcomes across Borough and by Year Group**
+
+The plot shows that the higher temperature is associated with lower rate of ED visit and hospitalization.
+
+## Heat Vulnerability Index (HVI)
+
+```{r dataset, include = FALSE}
+
+# Data ED Visits (2016-2018)
+
+full_data2_ed_1 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "ed_visits_rate") |> 
+  filter(data_years == "2016-2018")
+
+## Datasets for Graphing (datasets 1 & 2):
+## Changing HVI to numeric
+
+# Data ED Visits (2019-2021)
+
+full_data2_ed_2 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "ed_visits_rate") |> 
+  filter(data_years == "2019-2021")
+
+# Data Hospitalizations (2016-2018)
+
+full_data2_hosp_1 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "hosp_rate") |>  
+  filter(data_years == "2016-2018")
+
+# Data Hospitalizations (2019-2021)
+
+full_data2_hosp_2 = full_data2 |> 
+  mutate(hvi = as.numeric(hvi)) |> 
+  filter(indicator == "hosp_rate") |>  
+  filter(data_years == "2019-2021")
+
+## Datasets for Statistical Analysis (datasets 3 & 4):
+## Keeping HVI as a factor variable
+
+
+# Data ED Visits (2016-2018)
+
+full_data2_ed_3 = full_data2 |> 
+  filter(indicator == "ed_visits_rate") |>  # filtering only ed_visits
+  filter(data_years == "2016-2018")
+
+# Data ED Visits (2019-2021)
+
+full_data2_ed_4 = full_data2 |> 
+  filter(indicator == "ed_visits_rate") |>  # filtering only ed_visits
+  filter(data_years == "2019-2021")
+
+# Data Hospitalizations (2016-2018)
+
+full_data2_hosp_3 = full_data2 |> 
+  filter(indicator == "hosp_rate") |>  #filtering only hospitlization rate
+  filter(data_years == "2016-2018")
+
+# Data Hospitalizations (2019-2021)
+
+full_data2_hosp_4 = full_data2 |> 
+  filter(indicator == "hosp_rate") |>  #filtering only hospitlization rate
+  filter(data_years == "2019-2021")
+
+```
+
+```{r, fig.height=10, fig.width=12, echo=FALSE, message=FALSE}
+
+# Create visualization plots showing relationship between HVI scores and health outcomes
+# Four plots examine ED visits and hospitalizations across both time periods
+
+# Create plots
+
+plot1 = ggplot(full_data2_ed_1, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = "blue", alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "ED Visit rate per HVI score (2016-2018)", 
+       x = "HVI", y = "ED Visit Rate") +
+  theme_minimal()
+
+plot2 = ggplot(full_data2_ed_2, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = "blue", alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "ED Visit rate per HVI score (2019-2021)", 
+       x = "HVI", y = "ED Visit Rate") +
+  theme_minimal()
+
+plot3 = ggplot(full_data2_hosp_1, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = "blue", alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "Hospitalization rate per HVI score (2016-2018)", 
+       x = "HVI", y = "Hospitalization Rate") +
+  theme_minimal()
+
+plot4 = ggplot(full_data2_hosp_2, aes(x = hvi, y = zip_code_rate)) +
+  geom_point(color = "blue", alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "Hospitalization rate per HVI score (2019-2021)", 
+       x = "HVI", y = "Hospitalization Rate") +
+  theme_minimal()
+
+# Combine plots with adjusted height and width
+(plot1 + plot2) / (plot3 + plot4) +
+  patchwork::plot_layout(heights = c(3, 3), widths = c(3, 3))
+
+```
+**Figure 18. Associations between HVI and Outcomes**
+
+The scatter plots show consistent positive relationships between Heat Vulnerability Index and both pediatric asthma health outcomes across time periods. ED visit rates show a stronger association with HVI than hospitalization rates, as observed in steeper trend lines. The relationship appears more pronounced in the 2016-2018 period, with ED visits ranging from 0 to approximately 700 per 10,000 across HVI scores, compared to 0-350 in 2019-2021. 
+
+While the overall patterns persist in 2019-2021, the rates are lower, particularly for ED visits. The considerable vertical spread in the data points at each HVI level suggests that other factors beyond heat vulnerability influence pediatric asthma health outcomes.
 
 
 
@@ -857,18 +1396,6 @@ Using linear regression models, we observed the linear association between HVI a
 
 
 ```{r, include = FALSE}
-
-# Load libraries
-
-library(tidyverse)
-library(broom)
-library(patchwork)
-library(lmtest)
-library(car)
-
-# Read full data
-
-full_data2 = read_csv("data/NYC_total.csv")
 
 # Data ED Visits (2016-2018)
 
@@ -935,7 +1462,7 @@ full_data2_hosp_4 = full_data2 |>
 
 #### 2016-2018 period
 
-```{r, include = FALSE}
+```{r}
 
 # Fit linear regression model for ED visits (2016-2018)
 # Examining relationship between visit rates and borough/HVI
@@ -953,7 +1480,7 @@ results_table = tidy(fit) |>
 results_table
 
 ```
-
+**Table 15. Statistical Results for ED Visits (2016-2018)**
 
 For the 2016-2018 time period, compared to the Bronx, Queens shows the largest reduction in ED visits (-169.36 visits, p < 0.001), followed by Brooklyn (-158.44 visits, p < 0.001) and Staten Island (-113.01 visits, p = 0.001). Manhattan's lower rate (-37.83 visits) was not statistically significant (p = 0.122).
 Heat vulnerability shows a strong positive association with ED visits: for each one-unit increase in HVI score, ED visit rates increase by approximately 69.15 visits per 10,000 children (p < 0.001). 
@@ -983,6 +1510,7 @@ results_table2
 
 ```
 
+**Table 16. Statistical Results for ED Visits (2019-2021)**
 
 For the 2019-2021 time period, Queens shows the largest reduction in ED visits compared to the Bronx (-88.61 visits, p < 0.001), closely followed by Brooklyn (-81.90 visits, p < 0.001). Staten Island shows fewer visits (-55.99, p = 0.001), while Manhattan's lower rate (-18.59 visits) remains not statistically significant (p = 0.140).
 
@@ -1010,6 +1538,7 @@ results_table3
 
 ```
 
+**Table 16. Statistical Results for Hospitalizations (2016-2018)**
 
 Here we conduct a similar analysis, however this time instead of hospital admission data we are looking at hospitalization data. During our exploratory analysis we found that rates of admission were less than half of hospitalizations across all boroughs, therefore we expect the linear regression slope to be smaller than that of adissions.The linear regression model examines pediatric asthma hospitalization rates per 10,000 children, with the Bronx as the reference borough.
 
@@ -1040,6 +1569,7 @@ results_table4 = tidy(fit4) |>
 results_table4
 
 ```
+**Table 17. Statistical Results for Hospitalizations (2019-2021)**
 
 For the 2019-2021 time period, Queens shows the largest reduction in hospitalizations compared to the Bronx (-19.44 visits, p < 0.001), followed by Brooklyn (-17.65 visits, p < 0.001) and Staten Island (-13.55, p < 0.001). Unlike previous models, Manhattan's lower rate (-5.56 visits) is now statistically significant (p = 0.035).
 
@@ -1085,6 +1615,7 @@ all_diagnostics = rbind(
 knitr::kable(all_diagnostics, digits = 4)
 
 ```
+**Table 18. Statistical Table for Model Diagnostics**
 
 Our diagnostic testing examined two key model assumptions using Shapiro-Wilk tests for normality and Breusch-Pagan tests for homoscedasticity. Results indicate statistical significance (p < 0.05) for violations of both assumptions. However, with moderate to large sample sizes (ED visits: n=171 for 2016-2018, n=168 for 2019-2021; Hospitalizations: n=155 for 2016-2018, n=140 for 2019-2021), our models maintain reasonable robustness to these violations. The Shapiro-Wilk statistics (all W > 0.90) suggest only mild deviations from normality. The Breusch-Pagan tests indicate the presence of heteroscedasticity, but this primarily affects efficiency rather than consistency of our estimates. Therefore, while not perfect, our models provide reliable insights into the relationships between borough characteristics, heat vulnerability, and health outcomes.
 
@@ -1102,6 +1633,7 @@ par(mfrow=c(2,2))
 plot(fit4, main="Hospitalizations 2019-2021")
 
 ```
+**Figure 19. Diagnostic Plots**
 
 The diagnostic plots show important patterns across our models:
 
@@ -1114,102 +1646,6 @@ The diagnostic plots show important patterns across our models:
 * Residuals vs Leverage plots show a few potentially influential observations (e.g., observations 75 and 76 in ED visits 2016-2018; 68 and 71 in hospitalizations 2016-2018), but none appear to exceed Cook's distance thresholds (dotted lines). This indicates these points do not greatly impact our model estimates.
 
 While these diagnostics do appear to suggest some deviation from model assumptions, the violations are not severe enough to invalidate our main findings, particularly given our moderately large sample sizes.
-
-### Borough-Level HVI Analysis
-
-```{r}
-
-# Calculate average HVI scores for each borough
-# This helps understand overall heat vulnerability patterns across boroughs
-
-daa = full_data2 |> 
-  mutate(hvi = as.numeric(hvi)) |>
-  group_by(borough) |> 
-  summarise(hvi_mean = mean(hvi))
-
-# Produce table
-
-knitr::kable(daa)
-
-```
-
-The mean Heat Vulnerability Index varies considerably across NYC boroughs, with the Bronx showing the highest average (4.07), followed by Brooklyn (3.65), Queens (3.27), Manhattan (2.42), and Staten Island (2.07). This suggests that heat vulnerability is not evenly distributed across the city, with some boroughs experiencing systematically higher heat vulnerability than others. The notable variation in HVI means across boroughs indicates that geographic and demographic factors play an important role in heat vulnerability distribution in NYC.
-
-```{r}
-
-# Plot for mean HVI scores by borough
-
-borough_plot = ggplot(daa, aes(x = reorder(borough, -hvi_mean), y = hvi_mean)) +
-  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) +
-  geom_text(aes(label = round(hvi_mean, 2)), 
-            vjust = -0.5, 
-            size = 3.5) +
-  labs(title = "Mean Heat Vulnerability Index (HVI) by Borough",
-       x = "Borough",
-       y = "Mean HVI Score") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
-  ylim(0, max(daa$hvi_mean) * 1.1)  # Add some space above bars for labels
-
-# Display the plot
-
-borough_plot
-
-```
-
-The above plot provides a visual representation of these HVI disparities, with a noticeable difference between the Bronx and Staten Island - a gap of 2 points on the HVI scale.
-
-### Visualization of Relationships
-
-```{r, fig.height=10, fig.width=12}
-
-# Create visualization plots showing relationship between HVI scores and health outcomes
-# Four plots examine ED visits and hospitalizations across both time periods
-
-# Create plots
-
-plot1 = ggplot(full_data2_ed_1, aes(x = hvi, y = zip_code_rate)) +
-  geom_point(color = "blue", alpha = 0.6) +
-  geom_smooth(method = "lm", color = "red", se = TRUE) +
-  labs(title = "ED Visit rate per HVI score (2016-2018)", 
-       x = "HVI", y = "ED Visit Rate") +
-  theme_minimal()
-
-plot2 = ggplot(full_data2_ed_2, aes(x = hvi, y = zip_code_rate)) +
-  geom_point(color = "blue", alpha = 0.6) +
-  geom_smooth(method = "lm", color = "red", se = TRUE) +
-  labs(title = "ED Visit rate per HVI score (2019-2021)", 
-       x = "HVI", y = "ED Visit Rate") +
-  theme_minimal()
-
-plot3 = ggplot(full_data2_hosp_1, aes(x = hvi, y = zip_code_rate)) +
-  geom_point(color = "blue", alpha = 0.6) +
-  geom_smooth(method = "lm", color = "red", se = TRUE) +
-  labs(title = "Hospitalization rate per HVI score (2016-2018)", 
-       x = "HVI", y = "Hospitalization Rate") +
-  theme_minimal()
-
-plot4 = ggplot(full_data2_hosp_2, aes(x = hvi, y = zip_code_rate)) +
-  geom_point(color = "blue", alpha = 0.6) +
-  geom_smooth(method = "lm", color = "red", se = TRUE) +
-  labs(title = "Hospitalization rate per HVI score (2019-2021)", 
-       x = "HVI", y = "Hospitalization Rate") +
-  theme_minimal()
-
-# Combine plots with adjusted height and width
-(plot1 + plot2) / (plot3 + plot4) +
-  patchwork::plot_layout(heights = c(3, 3), widths = c(3, 3))
-
-```
-
-The scatter plots show consistent positive relationships between Heat Vulnerability Index and both pediatric asthma health outcomes across time periods. ED visit rates show a stronger association with HVI than hospitalization rates, as observed in steeper trend lines. The relationship appears more pronounced in the 2016-2018 period, with ED visits ranging from 0 to approximately 700 per 10,000 across HVI scores, compared to 0-350 in 2019-2021. 
-
-While the overall patterns persist in 2019-2021, the rates are lower, particularly for ED visits. The considerable vertical spread in the data points at each HVI level suggests that other factors beyond heat vulnerability influence pediatric asthma health outcomes.
-
-
-
-
-
 
 
 # References
