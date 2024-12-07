@@ -14,7 +14,7 @@
 
 <title>Report</title>
 
-<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
@@ -37,8 +37,8 @@
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -1603,14 +1603,28 @@ Island - a gap of 2 points on the HVI scale.</p>
 <h2>PM2.5</h2>
 <div id="year-group-comparison" class="section level4">
 <h4>Year Group Comparison</h4>
-<p><img src="report_files/figure-html/pm2.5%20ed-1.png" width="672" /></p>
-<p><strong>Figure 9. PM2.5 Levels and ED Visits Rate by Year
-Group</strong></p>
-<pre class="r"><code>#Make table of results
-knitr::kable(EDmodels_pm2_5, digits = 3)</code></pre>
+<pre class="r"><code>#plot both outcomes
+combined_plot = EDplot_pm2_5 + hosplot_pm2_5 
+
+combined_plot</code></pre>
+<p><img src="report_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p><strong>Figure 9. PM2.5 Levels and Outcome (ED Visits Rate and
+Hospitalization Rate) by Year Group</strong></p>
+<pre class="r"><code>#combine correlation table
+ED_values = EDmodels_pm2_5 |&gt;
+  mutate(Outcome = &quot;ED Visit Rates&quot;)
+
+Hosp_values = hospmodels_pm2_5 |&gt;
+  mutate(Outcome = &quot;Hospitalization Rates&quot;)
+
+Yr_table = bind_rows(ED_values, Hosp_values) |&gt;
+  select(Outcome, Year, slope, r_squared, r) #reorder
+
+knitr::kable(Yr_table, digits = 3)</code></pre>
 <table>
 <thead>
 <tr class="header">
+<th align="left">Outcome</th>
 <th align="left">Year</th>
 <th align="right">slope</th>
 <th align="right">r_squared</th>
@@ -1619,51 +1633,28 @@ knitr::kable(EDmodels_pm2_5, digits = 3)</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
+<td align="left">ED Visit Rates</td>
 <td align="left">2016-2018</td>
 <td align="right">48.927</td>
 <td align="right">0.142</td>
 <td align="right">0.377</td>
 </tr>
 <tr class="even">
+<td align="left">ED Visit Rates</td>
 <td align="left">2019-2021</td>
 <td align="right">25.223</td>
 <td align="right">0.104</td>
 <td align="right">0.323</td>
 </tr>
-</tbody>
-</table>
-<p><strong>Table 9. Correlation between PM2.5 Levels and ED Visits Rate
-by Year Group</strong></p>
-<p>Comparing between the two year groups, there are lower ED visist
-rates and lower PM2.5 levels in the 2019-2021 year group.</p>
-<p>The correlation coefficient for both year groups are similar. Data
-from 2016 to 2018 indicates a positive association between PM2.5 levels
-and ED visit rate (R = 0.377). Data from 2019 to 2021 also shows a
-positive association between these two variables (R = 0.323). Thus,
-decreased PM2.5 levels is weakly associated with decreased
-hospitalization rate for both year groups.</p>
-<p><img src="report_files/figure-html/pm2.5%20hosp-1.png" width="672" /></p>
-<p><strong>Figure 10. Year Group Comparison: PM2.5 Levels and
-Hospitalization Rate</strong></p>
-<pre class="r"><code>#Make table of results
-knitr::kable(hospmodels_pm2_5, digits = 3)</code></pre>
-<table>
-<thead>
-<tr class="header">
-<th align="left">Year</th>
-<th align="right">slope</th>
-<th align="right">r_squared</th>
-<th align="right">r</th>
-</tr>
-</thead>
-<tbody>
 <tr class="odd">
+<td align="left">Hospitalization Rates</td>
 <td align="left">2016-2018</td>
 <td align="right">8.446</td>
 <td align="right">0.172</td>
 <td align="right">0.414</td>
 </tr>
 <tr class="even">
+<td align="left">Hospitalization Rates</td>
 <td align="left">2019-2021</td>
 <td align="right">6.412</td>
 <td align="right">0.171</td>
@@ -1671,22 +1662,26 @@ knitr::kable(hospmodels_pm2_5, digits = 3)</code></pre>
 </tr>
 </tbody>
 </table>
-<p><strong>Table 10. Correlation between PM2.5 Levels and
-Hospitalization Rate by Year Group</strong></p>
-<p>Similar to the trend comparing PM2.5 levels and ED visit rates,
-hospitalization rates and PM2.5 levels are also lower in the 2019-2021
-year group.</p>
-<p>The correlation coefficient (r) for both year groups is 0.414, which
-indicates a moderate relationship between the two variables for the year
-groups. Decreased PM2.5 levels is thus moderately associated with
-decreased hospitalization rate for both year groups.</p>
+<p><strong>Table 9. Correlation between PM2.5 Levels and Outcomes by
+Year Group</strong></p>
+<p><strong>ED Visit Rates</strong>: The association between PM2.5 and ED
+visit rates are similar for both year groups. Data from 2016 to 2018 and
+2019 to 2021 indicate a positive association between the two variables
+with a correlation coefficient of 0.377 and 0.323, respectively. Thus,
+PM2.5 levels is weakly associated with hospitalization rate for both
+year groups.</p>
+<p><strong>Hospitalization Rates</strong>: There is a positive
+association between PM2.5 and hospitalization rates for both year groups
+with an estimated correlation coefficient of 0.414. Decreased PM2.5
+levels is thus moderately associated with decreased hospitalization rate
+for both year groups.</p>
 </div>
 <div id="borough-and-year-comparison" class="section level4">
 <h4>Borough and Year Comparison</h4>
 <pre class="r"><code>combo = GS_ED_pm2_5 + GS_HR_pm2_5
 combo</code></pre>
 <p><img src="report_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
-<p><strong>Figure 11. PM2.5 Levels and Outcome across Borough and by
+<p><strong>Figure 10. PM2.5 Levels and Outcomes across Borough and by
 Year Group</strong></p>
 <p>For all boroughs, PM2.5 levels and ED visit rates are higher in 2016
 to 2018 than in 2019 to 2021. Compared to the other boroughs, decrease
@@ -1701,14 +1696,28 @@ hospitalization rate per PM2.5 level.</p>
 <h2>Greenspace</h2>
 <div id="year-group-comparison-1" class="section level4">
 <h4>Year Group Comparison</h4>
-<p><img src="report_files/figure-html/ed-1.png" width="672" />
-<strong>Figure 12. Greenspace and ED Visits Rate by Year
-Group</strong></p>
-<pre class="r"><code>#Make table of results
-knitr::kable(EDmodels, digits = 3)</code></pre>
+<pre class="r"><code>#GS plots
+GS_combo = EDplot + hosplot
+
+GS_combo</code></pre>
+<p><img src="report_files/figure-html/unnamed-chunk-24-1.png" width="672" />
+<strong>Figure 11. Greenspace and Outcome (ED Visits Rate and
+Hospitalization Rate) by Year Group</strong></p>
+<pre class="r"><code>#combine correlation table
+GS_ED_values = EDmodels |&gt;
+  mutate(Outcome = &quot;ED Visit Rates&quot;)
+
+GS_Hosp_values = hospmodels |&gt;
+  mutate(Outcome = &quot;Hospitalization Rates&quot;)
+
+Yr_table_GS = bind_rows(GS_ED_values, GS_Hosp_values) |&gt;
+  select(Outcome, Year, slope, r_squared, r) #reorder
+
+knitr::kable(Yr_table_GS, digits = 3)</code></pre>
 <table>
 <thead>
 <tr class="header">
+<th align="left">Outcome</th>
 <th align="left">Year</th>
 <th align="right">slope</th>
 <th align="right">r_squared</th>
@@ -1717,49 +1726,28 @@ knitr::kable(EDmodels, digits = 3)</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
+<td align="left">ED Visit Rates</td>
 <td align="left">2016-2018</td>
 <td align="right">-0.145</td>
 <td align="right">0.819</td>
 <td align="right">-0.905</td>
 </tr>
 <tr class="even">
+<td align="left">ED Visit Rates</td>
 <td align="left">2019-2021</td>
 <td align="right">-0.061</td>
 <td align="right">0.690</td>
 <td align="right">-0.830</td>
 </tr>
-</tbody>
-</table>
-<p><strong>Table 11. Correlation between Greenspace and ED Visit Rate by
-Year Group</strong></p>
-<p>The correlation coefficient for both year groups are similar. Data
-from 2016 to 2018 indicates a negative association between greenspace
-and ED visit rate (r = -0.905). Data from 2019 to 2021 also shows a
-negative association between these two variables (r = -0.830). Thus,
-increased greenspace is strongly associated with decreased ED visit rate
-for both year groups.</p>
-<p><img src="report_files/figure-html/hosp-1.png" width="672" />
-<strong>Figure 13. Greenspace and Hospitalization Rate by Year
-Group</strong></p>
-<pre class="r"><code> #Make table of results
-knitr::kable(hospmodels, digits = 3)</code></pre>
-<table>
-<thead>
-<tr class="header">
-<th align="left">Year</th>
-<th align="right">slope</th>
-<th align="right">r_squared</th>
-<th align="right">r</th>
-</tr>
-</thead>
-<tbody>
 <tr class="odd">
+<td align="left">Hospitalization Rates</td>
 <td align="left">2016-2018</td>
 <td align="right">-0.022</td>
 <td align="right">0.742</td>
 <td align="right">-0.861</td>
 </tr>
 <tr class="even">
+<td align="left">Hospitalization Rates</td>
 <td align="left">2019-2021</td>
 <td align="right">-0.012</td>
 <td align="right">0.628</td>
@@ -1767,23 +1755,30 @@ knitr::kable(hospmodels, digits = 3)</code></pre>
 </tr>
 </tbody>
 </table>
-<p><strong>Table 12. Correlation between Greenspace and Hospitalization
-Rate by Year Group</strong></p>
-<p>Similar to the trend comparing greenspace and ED visit rates, the
-correlation coefficient for both year groups are similar. Data from 2016
-to 2018 indicates a negative association between greenspace and
-hospitalization rate (r = -0.861). Data from 2019 to 2021 also shows a
-negative association between these two variables (r = -0.793). Thus,
-**increased greenspace is strongly associated with decreased
-hospitalization rate for both year groups.</p>
+<p><strong>Table 10. Correlation between Greenspace and Outcomes by Year
+Group</strong></p>
+<p><strong>ED Visit Rates</strong>: The correlation coefficient for both
+year groups are similar. Data from 2016 to 2018 indicates a negative
+association between greenspace and ED visit rate (r = -0.905). Data from
+2019 to 2021 also shows a negative association between these two
+variables (r = -0.830). Thus, increased greenspace is strongly
+associated with decreased ED visit rate for both year groups.</p>
+<p><strong>Hospitalization Rates</strong>: Similar to the trend
+comparing greenspace and ED visit rates, the correlation coefficient for
+both year groups are similar. Data from 2016 to 2018 indicates a
+negative association between greenspace and hospitalization rate (r =
+-0.861). Data from 2019 to 2021 also shows a negative association
+between these two variables (r = -0.793). Thus, **increased greenspace
+is strongly associated with decreased hospitalization rate for both year
+groups.</p>
 </div>
 <div id="borough-and-year-comparison-1" class="section level4">
 <h4>Borough and Year Comparison</h4>
 <pre class="r"><code>combo1 = GS_ED + GS_HR
 
 combo1</code></pre>
-<p><img src="report_files/figure-html/unnamed-chunk-28-1.png" width="672" />
-<strong>Figure 14. Greenspace and Outcome across Borough and by Year
+<p><img src="report_files/figure-html/unnamed-chunk-28-1.png" width="672" /></p>
+<p><strong>Figure 12. Greenspace and Outcome across Borough and by Year
 Group</strong></p>
 <p>In Bronx, there is a dramatic decrease in ED visit rate with an
 increase in total acres of greenspace between the two year groups. This
@@ -1798,13 +1793,27 @@ borough-level greenspace and hospitalization rate.</p>
 <h2>Temperature</h2>
 <div id="year-group-comparison-2" class="section level4">
 <h4>Year Group Comparison</h4>
-<p><img src="report_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
-<p><strong>Figure 15. Temperature and ED Visits Rate by Year
-Group</strong></p>
-<pre class="r"><code>knitr::kable(tempmodel, digits = 3)</code></pre>
+<pre class="r"><code>temp_plot = tempplot + tempplot2
+
+temp_plot</code></pre>
+<p><img src="report_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
+<p><strong>Figure 13. Temperature and Outcome (ED Visits Rate and
+Hospitalization Rate) by Year Group</strong></p>
+<pre class="r"><code>#combine correlation table
+temp_ED_values = tempmodel |&gt;
+  mutate(Outcome = &quot;ED Visit Rates&quot;)
+
+temp_Hosp_values = tempmodel2 |&gt;
+  mutate(Outcome = &quot;Hospitalization Rates&quot;)
+
+temp_Yr_table = bind_rows(temp_ED_values, temp_Hosp_values) |&gt;
+  select(Outcome, Year, slope, r_squared, r) #reorder
+
+knitr::kable(temp_Yr_table, digits = 3)</code></pre>
 <table>
 <thead>
 <tr class="header">
+<th align="left">Outcome</th>
 <th align="left">Year</th>
 <th align="right">slope</th>
 <th align="right">r_squared</th>
@@ -1813,49 +1822,28 @@ Group</strong></p>
 </thead>
 <tbody>
 <tr class="odd">
+<td align="left">ED Visit Rates</td>
 <td align="left">2016-2018</td>
 <td align="right">-282.676</td>
 <td align="right">0.105</td>
 <td align="right">-0.323</td>
 </tr>
 <tr class="even">
+<td align="left">ED Visit Rates</td>
 <td align="left">2019-2021</td>
 <td align="right">-17.658</td>
 <td align="right">0.002</td>
 <td align="right">-0.039</td>
 </tr>
-</tbody>
-</table>
-<p><strong>Table 13. Correlation between Temperature and ED Visits Rate
-by Year Group</strong></p>
-<p>The correlation coefficient for the year groups are different. Data
-from 2016 to 2018 indicates a weak negative association between
-temperature and ED visit rate (r = -0.323). The correlation coefficient
-for 2019 to 2021 (r = -0.039) indicates no association between these two
-variables.</p>
-<p>We can infer that temperature is not a significant factor for ED
-visits.</p>
-<p><img src="report_files/figure-html/unnamed-chunk-32-1.png" width="672" />
-<strong>Figure 16. Temperature and Hospitalization Rate by Year
-Group</strong></p>
-<pre class="r"><code>knitr::kable(tempmodel2, digits = 3)</code></pre>
-<table>
-<thead>
-<tr class="header">
-<th align="left">Year</th>
-<th align="right">slope</th>
-<th align="right">r_squared</th>
-<th align="right">r</th>
-</tr>
-</thead>
-<tbody>
 <tr class="odd">
+<td align="left">Hospitalization Rates</td>
 <td align="left">2016-2018</td>
 <td align="right">-47.811</td>
 <td align="right">0.121</td>
 <td align="right">-0.348</td>
 </tr>
 <tr class="even">
+<td align="left">Hospitalization Rates</td>
 <td align="left">2019-2021</td>
 <td align="right">-10.757</td>
 <td align="right">0.014</td>
@@ -1863,28 +1851,36 @@ Group</strong></p>
 </tr>
 </tbody>
 </table>
-<p><strong>Table 14. Correlation between Temperature and Hospitalization
-Rate by Year Group</strong></p>
-<p>Data from 2016 to 2018 indicates a weak negative association between
-temperature and hospitalization rate (r = -0.348). The correlation
-coefficient for 2019 to 2021 (r = -0.120) indicates a very week negative
+<p><strong>Table 11. Correlation between Temperature and Outcomes by
+Year Group</strong></p>
+<p><strong>ED Visit Rate</strong>: The correlation coefficient for the
+year groups are different. Data from 2016 to 2018 indicates a weak
+negative association between temperature and ED visit rate (r = -0.323).
+The correlation coefficient for 2019 to 2021 (r = -0.039) indicates no
 association between these two variables.</p>
+<p>We can infer that temperature is not a significant factor for ED
+visits.</p>
+<p><strong>Hospitalization Rate</strong>: Data from 2016 to 2018
+indicates a weak negative association between temperature and
+hospitalization rate (r = -0.348). The correlation coefficient for 2019
+to 2021 (r = -0.120) indicates a very week negative association between
+these two variables.</p>
 <p>We can infer that temperature is not a significant factor for
 Hospitalization.</p>
 </div>
 <div id="borough-and-year-comparison-2" class="section level4">
 <h4>Borough and Year Comparison</h4>
-<p><img src="report_files/figure-html/unnamed-chunk-34-1.png" width="672" />
-<strong>Figure 17. Temperature and Outcomes across Borough and by Year
-Group</strong></p>
+<p><img src="report_files/figure-html/unnamed-chunk-34-1.png" width="672" /></p>
+<p><strong>Figure 14. Temperature and Outcomes across Borough and by
+Year Group</strong></p>
 <p>The plot shows that the higher temperature is associated with lower
 rate of ED visit and hospitalization.</p>
 </div>
 </div>
 <div id="heat-vulnerability-index-hvi" class="section level2">
 <h2>Heat Vulnerability Index (HVI)</h2>
-<p><img src="report_files/figure-html/unnamed-chunk-35-1.png" width="1152" />
-<strong>Figure 18. Associations between HVI and Outcomes</strong></p>
+<p><img src="report_files/figure-html/unnamed-chunk-35-1.png" width="1152" /></p>
+<p><strong>Figure 15. Associations between HVI and Outcomes</strong></p>
 <p>The scatter plots show consistent positive relationships between Heat
 Vulnerability Index and both pediatric asthma health outcomes across
 time periods. ED visit rates show a stronger association with HVI than
@@ -1986,7 +1982,7 @@ results_table</code></pre>
 </tr>
 </tbody>
 </table>
-<p><strong>Table 15. Statistical Results for ED Visits
+<p><strong>Table 12. Statistical Results for ED Visits
 (2016-2018)</strong></p>
 <p>For the 2016-2018 time period, compared to the Bronx, Queens shows
 the largest reduction in ED visits (-169.36 visits, p &lt; 0.001),
@@ -2073,7 +2069,7 @@ results_table2</code></pre>
 </tr>
 </tbody>
 </table>
-<p><strong>Table 16. Statistical Results for ED Visits
+<p><strong>Table 13. Statistical Results for ED Visits
 (2019-2021)</strong></p>
 <p>For the 2019-2021 time period, Queens shows the largest reduction in
 ED visits compared to the Bronx (-88.61 visits, p &lt; 0.001), closely
@@ -2155,7 +2151,7 @@ results_table3</code></pre>
 </tr>
 </tbody>
 </table>
-<p><strong>Table 16. Statistical Results for Hospitalizations
+<p><strong>Table 14. Statistical Results for Hospitalizations
 (2016-2018)</strong></p>
 <p>Here we conduct a similar analysis, however this time instead of
 hospital admission data we are looking at hospitalization data. During
@@ -2240,7 +2236,7 @@ results_table4</code></pre>
 </tr>
 </tbody>
 </table>
-<p><strong>Table 17. Statistical Results for Hospitalizations
+<p><strong>Table 15. Statistical Results for Hospitalizations
 (2019-2021)</strong></p>
 <p>For the 2019-2021 time period, Queens shows the largest reduction in
 hospitalizations compared to the Bronx (-19.44 visits, p &lt; 0.001),
@@ -2368,7 +2364,7 @@ knitr::kable(all_diagnostics, digits = 4)</code></pre>
 </tr>
 </tbody>
 </table>
-<p><strong>Table 18. Statistical Table for Model
+<p><strong>Table 16. Statistical Table for Model
 Diagnostics</strong></p>
 <p>Our diagnostic testing examined two key model assumptions using
 Shapiro-Wilk tests for normality and Breusch-Pagan tests for
@@ -2396,8 +2392,8 @@ plot(fit3, main=&quot;Hospitalizations 2016-2018&quot;)</code></pre>
 <p><img src="report_files/figure-html/unnamed-chunk-42-3.png" width="672" /></p>
 <pre class="r"><code>par(mfrow=c(2,2))
 plot(fit4, main=&quot;Hospitalizations 2019-2021&quot;)</code></pre>
-<p><img src="report_files/figure-html/unnamed-chunk-42-4.png" width="672" />
-<strong>Figure 19. Diagnostic Plots</strong></p>
+<p><img src="report_files/figure-html/unnamed-chunk-42-4.png" width="672" /></p>
+<p><strong>Figure 16. Diagnostic Plots</strong></p>
 <p>The diagnostic plots show important patterns across our models:</p>
 <ul>
 <li><p>QQ Plots show moderate deviations from normality, particularly in
