@@ -24,7 +24,8 @@ img {
 # Mapping New York City's Environmental Impact on Pediatric Asthma
 
 ![](images/child_asthma_image.png){width=80% fig.align='center'}
-# Group members: Shayne Estill(ske2118), Woojin Shin(ws2721), Naomi Simon-Kumar(ns3782), Serena Ting(sjt2164)
+
+#### Group members: Shayne Estill(ske2118), Woojin Shin(ws2721), Naomi Simon-Kumar(ns3782), Serena Ting(sjt2164)
 
 Our project seeks to analyze how environmental factors shape children's respiratory health in New York City during a time of increasing climate change. As urban environments face rising temperatures, changing air quality patterns, and pressures on existing greenspace, understanding these environmental impacts on pediatric asthma is critical to addressing the burden of asthma in New York City, particularly in communities facing health inequities. 
 
