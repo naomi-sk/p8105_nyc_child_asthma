@@ -29,7 +29,14 @@ Through this project, we aim to investigate how these interconnected environment
 
 * Do areas with higher ED admission and hospitalization rates align with particular environmental patterns?
 * Are there geographic clusters where both environmental inequities and higher asthma rates persist across time periods?
-* What are the estimated associations between environmental factors (PM2.5, temperature, greenspace) and pediatric asthma ED rates, accounting for borough-level and temporal variation?
+* What are the estimated associations between environmental factors (PM2.5, temperature, greenspace, and Heat Vulnerability Index()) and pediatric asthma ED rates, accounting for borough-level and temporal variation?
+
+#### Main Questions
+
+* What is the relationship between environmental factors (PM2.5, temperature, greenspace, Heat Vulnerability Index (HVI)) and pediatric asthma emergencies?
+* Which environmental factors show the strongest associations with pediatric asthma emergencies?
+* How are these environmental health burdens geographically distributed across New York City?
+* Is HVI a good model predictor for pediatric asthma emergencies?
 
 # Data
 
