@@ -1,0 +1,251 @@
+---
+title: "Visualization New"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup_initial, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(sf)
+library(plotly)
+library(viridis)
+library(readxl)
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r pm25, echo = FALSE}
+
+# Load PM data
+
+particulate_matter = 
+  read_csv("data/Air_Quality_20231208.csv")
+
+# Produce tidied PM dataset for analysis
+
+tidy_analysis_pm = 
+  particulate_matter |>
+  janitor::clean_names() |>
+    mutate(
+    unique_id = as.character(unique_id),
+    indicator_id = as.character(indicator_id),
+    geo_join_id = as.character(geo_join_id)) |>
+  filter(name == "Fine particles (PM 2.5)") |>
+  filter(time_period %in% c("Annual Average 2016", "Annual Average 2017",
+                            "Annual Average 2018", "Annual Average 2019",
+                            "Annual Average 2020", "Annual Average 2021")) |>
+  filter(geo_type_name == "Borough") |>
+  select(-unique_id, -indicator_id, -start_date) |>
+    rename(borough = geo_place_name) |>
+  mutate(
+    period = case_when(
+      time_period %in% c("Annual Average 2016", "Annual Average 2017", "Annual Average 2018") ~ "2016-2018",
+      time_period %in% c("Annual Average 2019", "Annual Average 2020", "Annual Average 2021") ~ "2019-2021"
+    )
+  ) |>
+  group_by(borough, period) |>
+  summarize(
+    average_pm2.5 = mean(data_value, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  pivot_wider(
+    names_from = period,
+    values_from = average_pm2.5,
+    names_prefix = "avg_pm2.5_"
+  )
+
+# Load NYC geospatial data
+
+geography = 
+  read_excel("data/geoid_borough_name_nyc.xlsx") |>
+  rename(geo_join_id = ID) |>
+  mutate(geo_join_id = 
+           as.character(geo_join_id))
+
+# Tidy dataset for geospatial PM analysis
+
+tidy_uhf42_pm = 
+  particulate_matter |>
+  janitor::clean_names() |>
+    mutate(
+    unique_id = as.character(unique_id),
+    indicator_id = as.character(indicator_id),
+    geo_join_id = as.character(geo_join_id)) |>
+  filter(name == "Fine particles (PM 2.5)") |>
+  filter(time_period %in% c("Annual Average 2016", "Annual Average 2017",
+                            "Annual Average 2018", "Annual Average 2019",
+                            "Annual Average 2020", "Annual Average 2021")) |>
+  filter(geo_type_name == "UHF42") |>
+  select(-unique_id, -indicator_id, -start_date) |>
+  mutate(
+    period = case_when(
+      time_period %in% c("Annual Average 2016", "Annual Average 2017", "Annual Average 2018") ~ "2016_2018",
+      time_period %in% c("Annual Average 2019", "Annual Average 2020", "Annual Average 2021") ~ "2019_2021"
+    )
+  ) |>
+  group_by(geo_place_name, geo_join_id, period) |>
+  summarize(
+    average_pm2.5 = mean(data_value, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  pivot_wider(
+    names_from = period,
+    values_from = average_pm2.5,
+    names_prefix = "avg_pm2.5_"
+  ) 
+
+# Load shapefiles map for UHF data
+
+uhf42_map <- st_read("data/UHF_42_DOHMH_2009.shp", quiet = TRUE) 
+
+tidy_uhf42_pm <- 
+  tidy_uhf42_pm |>
+  rename(UHFCODE = geo_join_id) |>
+  mutate(
+    UHFCODE = as.double(UHFCODE))
+
+# Combine geospatial data and PM data
+
+map_uhf42 <- 
+  uhf42_map |>
+  left_join(tidy_uhf42_pm, by = "UHFCODE") |>
+  pivot_longer(cols = starts_with("avg_pm2.5_"), 
+               names_to = "time_period", 
+               values_to = "avg_pm2.5")
+
+# Produce heat map 
+
+heat_map_pm2.5 <- ggplot() +
+  geom_sf(data = map_uhf42, aes(fill = avg_pm2.5)) +
+  facet_wrap(~time_period, ncol = 2) +
+  scale_fill_viridis_c(option = "plasma", na.value = "grey50") +
+  labs(
+    title = "PM2.5 (ug/m3) Levels by UHF42 Neighborhood",
+    fill = "PM2.5"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 12),
+    legend.position = "right",
+    legend.key.height = unit(2, "cm"),
+    panel.grid = element_blank(),          
+    axis.text = element_blank(),           
+    axis.ticks = element_blank(),         
+    axis.title = element_blank()          
+  )
+
+# Show heat map for PM2.5 
+
+ggplotly(heat_map_pm2.5)
+
+```
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r ed, echo = FALSE}
+
+# Load ED data for 2016-2018
+
+ed_2016_2018 = 
+  read_csv("data/ed_2016_2018.csv")
+
+# Load ED data for 2019-2021
+
+ed_2019_2021 = 
+  read_csv("data/ed_2019_2021.csv")
+
+# Load NYC zipcode shapefile
+
+nyc_zip_sf <- st_read("shapefiles/geo_export_8df5c38c-c74c-4840-9d00-da16c0201e07.shp", quiet = TRUE)
+
+# Combine datasets
+
+all_data <- bind_rows(
+  ed_2016_2018 %>% mutate(period = "2016-2018"),
+  ed_2019_2021 %>% mutate(period = "2019-2021")
+)
+
+# Create borough averages for both indicators
+
+borough_data <- all_data %>%
+  group_by(borough, period, indicator) %>%
+  summarize(avg_rate = mean(zip_code_rate, na.rm = TRUE))
+
+# Create the map_data
+
+borough_data <- borough_data %>%
+  rename(boro_name = borough)
+
+map_data <- nyc_zip_sf %>%
+  left_join(borough_data, by = "boro_name")
+
+# Create ED Visits Map 
+
+ed_plot <- ggplot() +
+  geom_sf(data = filter(map_data, indicator == "ed_visits_rate"), 
+          aes(fill = avg_rate)) +
+  facet_wrap(~period) +
+  scale_fill_viridis_c(
+    name = "Borough Average of\nED Visit Rates\nper 10,000 Children\nAged 0-17 Years", 
+    option = "plasma"
+  ) +
+  theme_minimal() +
+  labs(title = "Asthma ED Visit Rates by NYC Borough",
+       subtitle = "Children aged 0-17 years") +
+  theme(
+    plot.title = element_text(size = 12),
+    legend.position = "right",
+    legend.key.height = unit(2, "cm"),
+    axis.text = element_blank(),      
+    axis.ticks = element_blank(),     
+    panel.grid = element_blank()      
+  )
+
+# Display plot
+
+ggplotly(ed_plot)
+
+```
+### Chart C
+
+```{r hosp, echo = FALSE}
+
+# Create Hospitalizations Map 
+
+hosp_plot <- ggplot() +
+  geom_sf(data = filter(map_data, indicator == "hosp_rate"), 
+          aes(fill = avg_rate)) +
+  facet_wrap(~period) +
+  scale_fill_viridis_c(
+    name = "Borough Average of\nHospitalization Rates\nper 10,000 Children\nAged 0-17 Years", 
+    option = "plasma"
+  ) +
+  theme_minimal() +
+  labs(title = "Asthma Hospitalization Rates by NYC Borough",
+       subtitle = "Children aged 0-17 years") +
+  theme(
+    plot.title = element_text(size = 12),
+    panel.grid = element_blank(),         
+    axis.text = element_blank(),           
+    axis.ticks = element_blank(),         
+    axis.title = element_blank()         
+  )
+
+# Display plot
+
+ggplotly(hosp_plot)
+
+```
+
+```{r}
+rmarkdown::render("visualization_new.Rmd", output_format = "flexdashboard::flex_dashboard")
+```
+
