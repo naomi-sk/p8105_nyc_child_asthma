@@ -310,7 +310,11 @@ tidy_analysis_pm |>
 
 tidy_analysis_pm_diff <- 
   tidy_analysis_pm |>
-  mutate(pm2.5_difference = `avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`)
+  mutate(
+    `avg_pm2.5_2016-2018` = round(`avg_pm2.5_2016-2018`, 3),
+    `avg_pm2.5_2019-2021` = round(`avg_pm2.5_2019-2021`, 3),
+    pm2.5_difference = round(`avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`, 3)
+  )
 
 knitr::kable(tidy_analysis_pm_diff, col.names = c("Borough", "Average PM2.5 (2016-2018)", "Average PM2.5 (2019-2021)", "Difference in PM2.5 Levels"))
 
@@ -674,6 +678,115 @@ knitr::kable(top3_bor_gstype, col.names = c("Borough", "Highest", "Second Highes
 ```
 
 While the Bronx contains major Flagship Parks and Parkways among its largest green spaces, these types of spaces may not provide the same respiratory health benefits as smaller, more accessible neighborhood parks distributed throughout residential areas where children live and play. Despite the expansion of neighborhood parks (259.617 acres) and managed sites (119.095 acres) across the city, the concentration of greenspace in large, potentially less accessible formats like Flagship Parks may limit their protective effects against childhood asthma. Staten Island's lower asthma rates and large Nature Area (1690.97 acres) present an interesting contrast, though this association may reflect broader factors such as lower population density or better air quality rather than the specific type of greenspace.
+
+### Temperature
+
+```{r}
+
+# Load and clean raw temperature data for each borough
+
+manhattan = read_csv("data/manhattan.csv",skip = 3) |>
+  mutate(Borough = "Manhattan") |> 
+  janitor::clean_names()
+
+bronx = read_csv("data/bronx.csv",skip = 3) |>
+  mutate(Borough = "Bronx") |> 
+  janitor::clean_names()
+
+brooklyn = read_csv("data/brooklyn.csv",skip = 3) |>
+  mutate(Borough = "Brooklyn") |> 
+  janitor::clean_names()
+
+queens = read_csv("data/queens.csv",skip = 3) |>
+  mutate(Borough = "Queens") |> 
+  janitor::clean_names()
+
+staten_island = read_csv("data/staten_island.csv",skip = 3) |>
+  mutate(Borough = "Staten Island") |> 
+  janitor::clean_names()
+
+# Combine temperature data from all boroughs and format dates/times
+
+all_temp = bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |> 
+  mutate(borough = as.factor(borough)) |> 
+  mutate(date = as.Date(time, format = "%d/%m/%Y")) |> 
+  select(time:temperature_2m_mean, borough, date) |> 
+  mutate(years = year(date)) |> 
+  mutate(months = as.Date(paste0(format(date, "%Y-%m"), "-01"), format = "%Y-%m-%d"))
+
+# Calculate average temperatures by borough and year group
+
+all_temp_borough = all_temp |> 
+  mutate(date = as.Date(time, format = "%d/%m/%Y")) |> 
+  mutate(data_years = ifelse(year(date) %in% 2016:2018, "2016-2018", "2019-2021")) |> 
+  select(temperature_2m_max:data_years) |> 
+  group_by(data_years, borough) |> 
+  summarise(avg_temperature = mean(temperature_2m_mean, na.rm = TRUE))
+
+```
+
+
+```{r}
+
+# Produce plot of monthly Mean temperature
+
+all_temp_month = all_temp |> 
+  group_by(months, borough) |> 
+  summarise(avg_month = mean(temperature_2m_mean, na.rm = TRUE))
+
+ggplot(all_temp_month, aes(x = months, y = avg_month, color = borough)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Monthly Mean Temperature (2016-2021) by Borough",
+    x = "Month",
+    y = "Average Temperature (Celsius)",
+    color = "Borough"
+  ) +
+  theme_minimal()
+
+```
+
+Temperature analysis shows differences across New York City's boroughs between 2016 and 2021. While seasonal variations show consistent patterns across boroughs (peaks around 25°C and lows near 0°C), the slight but persistent temperature differences between boroughs suggest varying urban heat island effects. 
+
+
+```{r}
+
+# Mean temperature data
+
+mean_temp_year = all_temp |> 
+  group_by(years, borough) |> 
+  summarize(
+    high_temp = mean(temperature_2m_max, na.rm = TRUE),
+    low_temp = mean(temperature_2m_min, na.rm = TRUE),
+    mean_temp = mean(temperature_2m_mean, na.rm = TRUE)
+  ) |> 
+  arrange(years, borough) 
+
+# Produce average temperature table with rounded values
+
+mean_temp_year |> 
+  select(years, borough, mean_temp) |> 
+  mutate(mean_temp = round(mean_temp, 3)) |>
+  pivot_wider(
+    names_from = borough,
+    values_from = mean_temp
+  ) |>
+  knitr::kable(col.names = c("Years", "Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"))
+
+```
+
+Brooklyn and Staten Island's slightly consistently higher average temperatures, compared to Manhattan's lower averages, may reflect differences in building density and greenspace coverage.
+
+The observed warming trend between periods (0.2-0.3°C increase) aligns with broader climate change patterns but may also reflect the effects of localized urban developments. This warming pattern, combined with limited greenspace in asthma hotspot areas like the Bronx, suggests potential intersecting environmental health challenges.
+
+
+
+#### Heat Vulnerability Index
+
+While our exploratory analysis examined temperature patterns across NYC boroughs, our final modeling approach ultimately employed the Heat Vulnerability Index (HVI) rather than raw temperature measurements. This decision was driven by several key considerations. First, our exploratory analysis revealed that temperature patterns were very similar across all boroughs, with only slight variations in average temperatures (0.2-0.3°C differences). This uniformity in temperature measurements meant it would not be easy to explain the substantial geographic variations we observed in asthma outcomes. Second, HVI would be able to represent neighborhood-level variations in heat vulnerability that raw temperature data alone would unlikely show based on the data obtained.
+
+Instead, we opted to use the Heat Vulnerability Index, which provides a more comprehensive measure of the impact of heat stress on different communities. The HVI incorporates not only environmental factors but also crucial socio-demographic characteristics that influence a community's resilience to heat stress. These include language vulnerability (relevant for NYC's diverse neighborhoods), socioeconomic vulnerability, environmental and urban vulnerability, and elderly isolation - factors that may indirectly affect childhood asthma outcomes through the social determinants of health, including housing quality, access to cooling infrastructure, and overall community resources.
 
 
 # Correlations

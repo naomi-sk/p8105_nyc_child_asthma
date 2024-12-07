@@ -767,7 +767,11 @@ tidy_analysis_pm |&gt;
 
 tidy_analysis_pm_diff &lt;- 
   tidy_analysis_pm |&gt;
-  mutate(pm2.5_difference = `avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`)
+  mutate(
+    `avg_pm2.5_2016-2018` = round(`avg_pm2.5_2016-2018`, 3),
+    `avg_pm2.5_2019-2021` = round(`avg_pm2.5_2019-2021`, 3),
+    pm2.5_difference = round(`avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`, 3)
+  )
 
 knitr::kable(tidy_analysis_pm_diff, col.names = c(&quot;Borough&quot;, &quot;Average PM2.5 (2016-2018)&quot;, &quot;Average PM2.5 (2019-2021)&quot;, &quot;Difference in PM2.5 Levels&quot;))</code></pre>
 <table>
@@ -788,33 +792,33 @@ knitr::kable(tidy_analysis_pm_diff, col.names = c(&quot;Borough&quot;, &quot;Ave
 <tbody>
 <tr class="odd">
 <td align="left">Bronx</td>
-<td align="right">7.573333</td>
-<td align="right">6.553333</td>
-<td align="right">1.0200000</td>
+<td align="right">7.573</td>
+<td align="right">6.553</td>
+<td align="right">1.020</td>
 </tr>
 <tr class="even">
 <td align="left">Brooklyn</td>
-<td align="right">7.490000</td>
-<td align="right">6.470000</td>
-<td align="right">1.0200000</td>
+<td align="right">7.490</td>
+<td align="right">6.470</td>
+<td align="right">1.020</td>
 </tr>
 <tr class="odd">
 <td align="left">Manhattan</td>
-<td align="right">8.716667</td>
-<td align="right">7.626667</td>
-<td align="right">1.0900000</td>
+<td align="right">8.717</td>
+<td align="right">7.627</td>
+<td align="right">1.090</td>
 </tr>
 <tr class="even">
 <td align="left">Queens</td>
-<td align="right">7.060000</td>
-<td align="right">6.336667</td>
-<td align="right">0.7233333</td>
+<td align="right">7.060</td>
+<td align="right">6.337</td>
+<td align="right">0.723</td>
 </tr>
 <tr class="odd">
 <td align="left">Staten Island</td>
-<td align="right">6.683333</td>
-<td align="right">5.870000</td>
-<td align="right">0.8133333</td>
+<td align="right">6.683</td>
+<td align="right">5.870</td>
+<td align="right">0.813</td>
 </tr>
 </tbody>
 </table>
@@ -1217,6 +1221,186 @@ Staten Island’s lower asthma rates and large Nature Area (1690.97 acres)
 present an interesting contrast, though this association may reflect
 broader factors such as lower population density or better air quality
 rather than the specific type of greenspace.</p>
+</div>
+<div id="temperature" class="section level3">
+<h3>Temperature</h3>
+<pre class="r"><code># Load and clean raw temperature data for each borough
+
+manhattan = read_csv(&quot;data/manhattan.csv&quot;,skip = 3) |&gt;
+  mutate(Borough = &quot;Manhattan&quot;) |&gt; 
+  janitor::clean_names()
+
+bronx = read_csv(&quot;data/bronx.csv&quot;,skip = 3) |&gt;
+  mutate(Borough = &quot;Bronx&quot;) |&gt; 
+  janitor::clean_names()
+
+brooklyn = read_csv(&quot;data/brooklyn.csv&quot;,skip = 3) |&gt;
+  mutate(Borough = &quot;Brooklyn&quot;) |&gt; 
+  janitor::clean_names()
+
+queens = read_csv(&quot;data/queens.csv&quot;,skip = 3) |&gt;
+  mutate(Borough = &quot;Queens&quot;) |&gt; 
+  janitor::clean_names()
+
+staten_island = read_csv(&quot;data/staten_island.csv&quot;,skip = 3) |&gt;
+  mutate(Borough = &quot;Staten Island&quot;) |&gt; 
+  janitor::clean_names()
+
+# Combine temperature data from all boroughs and format dates/times
+
+all_temp = bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |&gt; 
+  mutate(borough = as.factor(borough)) |&gt; 
+  mutate(date = as.Date(time, format = &quot;%d/%m/%Y&quot;)) |&gt; 
+  select(time:temperature_2m_mean, borough, date) |&gt; 
+  mutate(years = year(date)) |&gt; 
+  mutate(months = as.Date(paste0(format(date, &quot;%Y-%m&quot;), &quot;-01&quot;), format = &quot;%Y-%m-%d&quot;))
+
+# Calculate average temperatures by borough and year group
+
+all_temp_borough = all_temp |&gt; 
+  mutate(date = as.Date(time, format = &quot;%d/%m/%Y&quot;)) |&gt; 
+  mutate(data_years = ifelse(year(date) %in% 2016:2018, &quot;2016-2018&quot;, &quot;2019-2021&quot;)) |&gt; 
+  select(temperature_2m_max:data_years) |&gt; 
+  group_by(data_years, borough) |&gt; 
+  summarise(avg_temperature = mean(temperature_2m_mean, na.rm = TRUE))</code></pre>
+<pre class="r"><code># Produce plot of monthly Mean temperature
+
+all_temp_month = all_temp |&gt; 
+  group_by(months, borough) |&gt; 
+  summarise(avg_month = mean(temperature_2m_mean, na.rm = TRUE))
+
+ggplot(all_temp_month, aes(x = months, y = avg_month, color = borough)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = &quot;Monthly Mean Temperature (2016-2021) by Borough&quot;,
+    x = &quot;Month&quot;,
+    y = &quot;Average Temperature (Celsius)&quot;,
+    color = &quot;Borough&quot;
+  ) +
+  theme_minimal()</code></pre>
+<p><img src="report_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>Temperature analysis shows differences across New York City’s
+boroughs between 2016 and 2021. While seasonal variations show
+consistent patterns across boroughs (peaks around 25°C and lows near
+0°C), the slight but persistent temperature differences between boroughs
+suggest varying urban heat island effects.</p>
+<pre class="r"><code># Mean temperature data
+
+mean_temp_year = all_temp |&gt; 
+  group_by(years, borough) |&gt; 
+  summarize(
+    high_temp = mean(temperature_2m_max, na.rm = TRUE),
+    low_temp = mean(temperature_2m_min, na.rm = TRUE),
+    mean_temp = mean(temperature_2m_mean, na.rm = TRUE)
+  ) |&gt; 
+  arrange(years, borough) 
+
+# Produce average temperature table with rounded values
+
+mean_temp_year |&gt; 
+  select(years, borough, mean_temp) |&gt; 
+  mutate(mean_temp = round(mean_temp, 3)) |&gt;
+  pivot_wider(
+    names_from = borough,
+    values_from = mean_temp
+  ) |&gt;
+  knitr::kable(col.names = c(&quot;Years&quot;, &quot;Bronx&quot;, &quot;Brooklyn&quot;, &quot;Manhattan&quot;, &quot;Queens&quot;, &quot;Staten Island&quot;))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Years</th>
+<th align="right">Bronx</th>
+<th align="right">Brooklyn</th>
+<th align="right">Manhattan</th>
+<th align="right">Queens</th>
+<th align="right">Staten Island</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2016</td>
+<td align="right">12.499</td>
+<td align="right">12.759</td>
+<td align="right">12.393</td>
+<td align="right">12.662</td>
+<td align="right">12.707</td>
+</tr>
+<tr class="even">
+<td align="right">2017</td>
+<td align="right">12.231</td>
+<td align="right">12.402</td>
+<td align="right">12.153</td>
+<td align="right">12.144</td>
+<td align="right">12.393</td>
+</tr>
+<tr class="odd">
+<td align="right">2018</td>
+<td align="right">12.085</td>
+<td align="right">12.118</td>
+<td align="right">11.933</td>
+<td align="right">11.950</td>
+<td align="right">12.142</td>
+</tr>
+<tr class="even">
+<td align="right">2019</td>
+<td align="right">11.981</td>
+<td align="right">12.124</td>
+<td align="right">11.851</td>
+<td align="right">11.860</td>
+<td align="right">12.098</td>
+</tr>
+<tr class="odd">
+<td align="right">2020</td>
+<td align="right">12.866</td>
+<td align="right">12.955</td>
+<td align="right">12.683</td>
+<td align="right">12.725</td>
+<td align="right">12.855</td>
+</tr>
+<tr class="even">
+<td align="right">2021</td>
+<td align="right">12.651</td>
+<td align="right">12.766</td>
+<td align="right">12.566</td>
+<td align="right">12.548</td>
+<td align="right">12.755</td>
+</tr>
+</tbody>
+</table>
+<p>Brooklyn and Staten Island’s slightly consistently higher average
+temperatures, compared to Manhattan’s lower averages, may reflect
+differences in building density and greenspace coverage.</p>
+<p>The observed warming trend between periods (0.2-0.3°C increase)
+aligns with broader climate change patterns but may also reflect the
+effects of localized urban developments. This warming pattern, combined
+with limited greenspace in asthma hotspot areas like the Bronx, suggests
+potential intersecting environmental health challenges.</p>
+<div id="heat-vulnerability-index" class="section level4">
+<h4>Heat Vulnerability Index</h4>
+<p>While our exploratory analysis examined temperature patterns across
+NYC boroughs, our final modeling approach ultimately employed the Heat
+Vulnerability Index (HVI) rather than raw temperature measurements. This
+decision was driven by several key considerations. First, our
+exploratory analysis revealed that temperature patterns were very
+similar across all boroughs, with only slight variations in average
+temperatures (0.2-0.3°C differences). This uniformity in temperature
+measurements meant it would not be easy to explain the substantial
+geographic variations we observed in asthma outcomes. Second, HVI would
+be able to represent neighborhood-level variations in heat vulnerability
+that raw temperature data alone would unlikely show based on the data
+obtained.</p>
+<p>Instead, we opted to use the Heat Vulnerability Index, which provides
+a more comprehensive measure of the impact of heat stress on different
+communities. The HVI incorporates not only environmental factors but
+also crucial socio-demographic characteristics that influence a
+community’s resilience to heat stress. These include language
+vulnerability (relevant for NYC’s diverse neighborhoods), socioeconomic
+vulnerability, environmental and urban vulnerability, and elderly
+isolation - factors that may indirectly affect childhood asthma outcomes
+through the social determinants of health, including housing quality,
+access to cooling infrastructure, and overall community resources.</p>
+</div>
 </div>
 </div>
 </div>

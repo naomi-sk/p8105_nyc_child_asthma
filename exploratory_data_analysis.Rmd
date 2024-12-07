@@ -292,7 +292,11 @@ tidy_analysis_pm |>
 
 tidy_analysis_pm_diff <- 
   tidy_analysis_pm |>
-  mutate(pm2.5_difference = `avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`)
+  mutate(
+    `avg_pm2.5_2016-2018` = round(`avg_pm2.5_2016-2018`, 3),
+    `avg_pm2.5_2019-2021` = round(`avg_pm2.5_2019-2021`, 3),
+    pm2.5_difference = round(`avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`, 3)
+  )
 
 knitr::kable(tidy_analysis_pm_diff, col.names = c("Borough", "Average PM2.5 (2016-2018)", "Average PM2.5 (2019-2021)", "Difference in PM2.5 Levels"))
 
@@ -728,7 +732,7 @@ ggplot(all_temp_month, aes(x = months, y = avg_month, color = borough)) +
   labs(
     title = "Monthly Mean Temperature (2016-2021) by Borough",
     x = "Month",
-    y = "Average Temperature (°C)",
+    y = "Average Temperature (Celsius)",
     color = "Borough"
   ) +
   theme_minimal()

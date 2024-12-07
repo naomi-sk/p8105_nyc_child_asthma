@@ -671,7 +671,11 @@ tidy_analysis_pm |&gt;
 
 tidy_analysis_pm_diff &lt;- 
   tidy_analysis_pm |&gt;
-  mutate(pm2.5_difference = `avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`)
+  mutate(
+    `avg_pm2.5_2016-2018` = round(`avg_pm2.5_2016-2018`, 3),
+    `avg_pm2.5_2019-2021` = round(`avg_pm2.5_2019-2021`, 3),
+    pm2.5_difference = round(`avg_pm2.5_2016-2018` - `avg_pm2.5_2019-2021`, 3)
+  )
 
 knitr::kable(tidy_analysis_pm_diff, col.names = c(&quot;Borough&quot;, &quot;Average PM2.5 (2016-2018)&quot;, &quot;Average PM2.5 (2019-2021)&quot;, &quot;Difference in PM2.5 Levels&quot;))</code></pre>
 <table>
@@ -692,33 +696,33 @@ knitr::kable(tidy_analysis_pm_diff, col.names = c(&quot;Borough&quot;, &quot;Ave
 <tbody>
 <tr class="odd">
 <td align="left">Bronx</td>
-<td align="right">7.573333</td>
-<td align="right">6.553333</td>
-<td align="right">1.0200000</td>
+<td align="right">7.573</td>
+<td align="right">6.553</td>
+<td align="right">1.020</td>
 </tr>
 <tr class="even">
 <td align="left">Brooklyn</td>
-<td align="right">7.490000</td>
-<td align="right">6.470000</td>
-<td align="right">1.0200000</td>
+<td align="right">7.490</td>
+<td align="right">6.470</td>
+<td align="right">1.020</td>
 </tr>
 <tr class="odd">
 <td align="left">Manhattan</td>
-<td align="right">8.716667</td>
-<td align="right">7.626667</td>
-<td align="right">1.0900000</td>
+<td align="right">8.717</td>
+<td align="right">7.627</td>
+<td align="right">1.090</td>
 </tr>
 <tr class="even">
 <td align="left">Queens</td>
-<td align="right">7.060000</td>
-<td align="right">6.336667</td>
-<td align="right">0.7233333</td>
+<td align="right">7.060</td>
+<td align="right">6.337</td>
+<td align="right">0.723</td>
 </tr>
 <tr class="odd">
 <td align="left">Staten Island</td>
-<td align="right">6.683333</td>
-<td align="right">5.870000</td>
-<td align="right">0.8133333</td>
+<td align="right">6.683</td>
+<td align="right">5.870</td>
+<td align="right">0.813</td>
 </tr>
 </tbody>
 </table>
@@ -1220,7 +1224,7 @@ ggplot(all_temp_month, aes(x = months, y = avg_month, color = borough)) +
   labs(
     title = &quot;Monthly Mean Temperature (2016-2021) by Borough&quot;,
     x = &quot;Month&quot;,
-    y = &quot;Average Temperature (°C)&quot;,
+    y = &quot;Average Temperature (Celsius)&quot;,
     color = &quot;Borough&quot;
   ) +
   theme_minimal()</code></pre>
