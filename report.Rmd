@@ -586,9 +586,9 @@ knitr::kable(table_type, col.names = c("Greenspace Type", "2016-2018", "2019-202
 
 ```
 
-The analysis of greenspace types suggests varying priorities in green developments across New York City. The substantial expansion of neighborhood parks (259.617 acres) and managed sites (119.095 acres) indicates focused efforts to increase accessible green spaces. However, the minimal changes in smaller categories like gardens and plazas suggests that large-scale greenspace development may not adequately address neighborhood-level access needs, which could be more meaningful for boroughs like the Bronx.
+**Table 5. Difference in greenspace coverage across boroughs: 2016-2018 vs 2019-2021**
 
-**Table 5. Top 3 Greenspace Types (Total Acres) Across Boroughs**
+The analysis of greenspace types suggests varying priorities in green developments across New York City. The substantial expansion of neighborhood parks (259.617 acres) and managed sites (119.095 acres) indicates focused efforts to increase accessible green spaces. However, the minimal changes in smaller categories like gardens and plazas suggests that large-scale greenspace development may not adequately address neighborhood-level access needs, which could be more meaningful for boroughs like the Bronx.
 
 ```{r, echo=FALSE, message = FALSE}
 
@@ -676,6 +676,8 @@ top3_bor_gstype = bind_rows(Bronx_perBor, Brook_perBor, Q_perBor, Man_perBor, SI
 knitr::kable(top3_bor_gstype, col.names = c("Borough", "Highest", "Second Highest", "Third Highest"))
  
 ```
+
+**Table 6. Top 3 Greenspace Types (Total Acres) Across Boroughs**
 
 While the Bronx contains major Flagship Parks and Parkways among its largest green spaces, these types of spaces may not provide the same respiratory health benefits as smaller, more accessible neighborhood parks distributed throughout residential areas where children live and play. Despite the expansion of neighborhood parks (259.617 acres) and managed sites (119.095 acres) across the city, the concentration of greenspace in large, potentially less accessible formats like Flagship Parks may limit their protective effects against childhood asthma. Staten Island's lower asthma rates and large Nature Area (1690.97 acres) present an interesting contrast, though this association may reflect broader factors such as lower population density or better air quality rather than the specific type of greenspace.
 
@@ -778,7 +780,7 @@ mean_temp_year |>
 
 ```
 
-**Table 6. Mean Temperature across NYC Boroughs (2016-2021)**
+**Table 7. Mean Temperature across NYC Boroughs (2016-2021)**
 
 Brooklyn and Staten Island's slightly consistently higher average temperatures, compared to Manhattan's lower averages, may reflect differences in building density and greenspace coverage.
 
