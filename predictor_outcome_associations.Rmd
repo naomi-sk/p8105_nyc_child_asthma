@@ -295,22 +295,25 @@ When comparing between the two year groups, the association for borough greenspa
 
 ## Temperature
 
-### ED Admissions
-
-* Odds Ratios for ED admissions, by time period
-
-```{r}
-
-
-
+```{r echo=FALSE, message=FALSE}
+temp_association = full_data2 |> 
+  select(data_years, avg_temperature, indicator, borough, borough_rate) |> 
+  distinct(data_years, avg_temperature, indicator, borough, borough_rate)
 ```
 
-### ED Hospitalizations
+### Scattor plot of average temperature vs rate by borough
 
-* Odds Ratios for ED hospitalizations, by time period
-
-```{r}
-
-
-
+```{r echo=FALSE, message=FALSE}
+ggplot(temp_association, aes(x = avg_temperature, y = borough_rate, color = borough)) +
+  geom_point(size = 3) +
+  facet_wrap(~indicator) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Relationship between Temperature and Rates by Borough",
+    x = "Average Temperature (°C)",
+    y = "Rate"
+  ) +
+  theme_minimal()
 ```
+
+The plot shows that the higher temperature is associated with lower rate of ED visit and hospitalization.
