@@ -14,7 +14,7 @@
 
 <title>predictor_outcome_associations.knit</title>
 
-<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cerulean.min.css" rel="stylesheet" />
@@ -36,8 +36,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -374,24 +374,80 @@ div.tocify {
 <h1>Predictor-Outcome Associations</h1>
 <div id="pm2.5" class="section level2">
 <h2>PM2.5</h2>
-<div id="ed-admissions" class="section level3">
-<h3>ED Admissions</h3>
-<ul>
-<li>Odds Ratios for ED admissions, by time period</li>
-</ul>
+<div id="year-group-comparison" class="section level4">
+<h4>Year Group Comparison</h4>
+<p><img src="predictor_outcome_associations_files/figure-html/pm2.5%20ed-1.png" width="672" /></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Year</th>
+<th align="right">slope</th>
+<th align="right">r_squared</th>
+<th align="right">r</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2016-2018</td>
+<td align="right">48.927</td>
+<td align="right">0.142</td>
+<td align="right">-0.377</td>
+</tr>
+<tr class="even">
+<td align="left">2019-2021</td>
+<td align="right">25.223</td>
+<td align="right">0.104</td>
+<td align="right">-0.323</td>
+</tr>
+</tbody>
+</table>
+<p>Decreased PM2.5 levels is associated with decreased hospitalization
+rate.</p>
+<p><img src="predictor_outcome_associations_files/figure-html/pm2.5%20hosp-1.png" width="672" /></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Year</th>
+<th align="right">slope</th>
+<th align="right">r_squared</th>
+<th align="right">r</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2016-2018</td>
+<td align="right">8.446</td>
+<td align="right">0.172</td>
+<td align="right">-0.414</td>
+</tr>
+<tr class="even">
+<td align="left">2019-2021</td>
+<td align="right">6.412</td>
+<td align="right">0.171</td>
+<td align="right">-0.414</td>
+</tr>
+</tbody>
+</table>
+<p>Decrease in PM2.5 levels is associated with decrease hospitalization
+rate.</p>
 </div>
-<div id="ed-hospitalizations" class="section level3">
-<h3>ED Hospitalizations</h3>
-<ul>
-<li>Odds Ratios for ED hospitalizations, by time period</li>
-</ul>
+<div id="borough-and-year-comparison" class="section level4">
+<h4>Borough and Year Comparison</h4>
+<p><img src="predictor_outcome_associations_files/figure-html/pm2.5%20boroughyear-1.png" width="672" /></p>
+<p>In all boroughs, a decrease in PM2.5 levels between the two year
+groups is negatively associated with ED visit rate. The decrease is most
+dramatic in the Bronx.</p>
+<p><img src="predictor_outcome_associations_files/figure-html/pm2.5%20HR-1.png" width="672" /></p>
+<p>When comparing between the two year groups, the association for PM2.5
+levels and ED Visit Rate is similar to trend for PM2.5 leveels and
+hospitalization rate.</p>
 </div>
 </div>
 <div id="greenspace" class="section level2">
 <h2>Greenspace</h2>
-<div id="ed-admissions-1" class="section level3">
+<div id="ed-admissions" class="section level3">
 <h3>ED Admissions</h3>
-<div id="year-group-comparison" class="section level4">
+<div id="year-group-comparison-1" class="section level4">
 <h4>Year Group Comparison</h4>
 <p><img src="predictor_outcome_associations_files/figure-html/ed-1.png" width="672" /></p>
 <table>
@@ -450,20 +506,20 @@ greenspace is associated with decreased hospitalization rate.</p>
 negatively associated with borough-level hospitalization rate. Increase
 in greenspace is associated with decrease hospitalization rate.</p>
 </div>
-<div id="borough-and-year-comparison" class="section level4">
+<div id="borough-and-year-comparison-1" class="section level4">
 <h4>Borough and Year Comparison</h4>
-<p><img src="predictor_outcome_associations_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p><img src="predictor_outcome_associations_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
 <p>In Bronx, an increase in total acres of greenspace between the two
 year groups is negatively associated with ED visit rate. This is also
 seen for Staten Island. The association is less obvious for Brooklyn,
 Manhattan, and Queens.</p>
-<p><img src="predictor_outcome_associations_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="predictor_outcome_associations_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 <p>When comparing between the two year groups, the association for
 borough greenspace and ED Visit Rate is similar to trend for borough
 greenspace and hospitalization rate.</p>
 </div>
 </div>
-<div id="ed-hospitalizations-1" class="section level3">
+<div id="ed-hospitalizations" class="section level3">
 <h3>ED Hospitalizations</h3>
 <ul>
 <li>Odds Ratios for ED hospitalizations, by time period</li>
@@ -472,13 +528,13 @@ greenspace and hospitalization rate.</p>
 </div>
 <div id="temperature" class="section level2">
 <h2>Temperature</h2>
-<div id="ed-admissions-2" class="section level3">
+<div id="ed-admissions-1" class="section level3">
 <h3>ED Admissions</h3>
 <ul>
 <li>Odds Ratios for ED admissions, by time period</li>
 </ul>
 </div>
-<div id="ed-hospitalizations-2" class="section level3">
+<div id="ed-hospitalizations-1" class="section level3">
 <h3>ED Hospitalizations</h3>
 <ul>
 <li>Odds Ratios for ED hospitalizations, by time period</li>
