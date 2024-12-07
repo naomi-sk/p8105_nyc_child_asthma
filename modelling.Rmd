@@ -285,7 +285,7 @@ The diagnostic plots show important patterns across our models:
 
 While these diagnostics do appear to suggest some deviation from model assumptions, the violations are not severe enough to invalidate our main findings, particularly given our moderately large sample sizes.
 
-### Borough-Level HVI Analysis
+# Borough-Level HVI Analysis
 
 ```{r}
 
@@ -305,7 +305,7 @@ knitr::kable(daa)
 
 The mean Heat Vulnerability Index varies considerably across NYC boroughs, with the Bronx showing the highest average (4.07), followed by Brooklyn (3.65), Queens (3.27), Manhattan (2.42), and Staten Island (2.07). This suggests that heat vulnerability is not evenly distributed across the city, with some boroughs experiencing systematically higher heat vulnerability than others. The notable variation in HVI means across boroughs indicates that geographic and demographic factors play an important role in heat vulnerability distribution throughout New York City.
 
-### Visualization of Relationships
+## Visualization of Relationships
 
 ```{r, fig.height=10, fig.width=12}
 
