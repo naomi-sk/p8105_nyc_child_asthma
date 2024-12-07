@@ -19,7 +19,7 @@ navbar:
     - text: "Visualizations"
       href: visualization.html
     - icon: fa-github fa-lg
-      href: http://github.com/naomi-sk
+      href: https://github.com/naomi-sk/p8105_nyc_child_asthma
 output:
   html_document:
     theme: cerulean
