@@ -34,7 +34,7 @@ Using linear modeling and other statistical methods, we analyze data across two 
 
 ## Main Research Questions
 
-* What is the relationship between environmental factors (PM2.5, temperature, greenspace, Heat Vulnerability (HVI)) and pediatric asthma emergencies?
+* What is the relationship between environmental factors (PM2.5, temperature, greenspace, Heat Vulnerability Index (HVI)) and pediatric asthma emergencies?
 * Which environmental factors show the strongest associations with pediatric asthma emergencies?
 * How are these environmental health burdens geographically distributed across New York City?
 * Is HVI a good model predictor for pediatric asthma emergencies? 
