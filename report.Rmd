@@ -9,7 +9,7 @@ output:
     theme: cerulean
     code_folding: hide
 ---
-# Group members: Shayne Estill(ske2118), Woojin Shin(ws2721), Naomi Simon-Kumar(ns3782), Serena Ting(sjt2164)
+#### Group members: Shayne Estill(ske2118), Woojin Shin(ws2721), Naomi Simon-Kumar(ns3782), Serena Ting(sjt2164)
 
 # Motivation
 
