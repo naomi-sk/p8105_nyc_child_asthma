@@ -58,11 +58,13 @@ library(readxl)
 
 ```
 
-The research project integrated multiple datasets to examine the relationship between pediatric asthma outcomes and environmental factors across New York City. Data was sourced from various public health and environmental databases, with each dataset requiring specific cleaning and standardization procedures before merging.
+The research project integrated multiple datasets to examine the relationship between pediatric asthma outcomes and environmental factors across New York City. Data was sourced from various public health and environmental databases, with each dataset requiring specific cleaning and standardization before merging.
 
 #### Data Sources
 
-The analysis incorporated five primary datasets from different sources. The pediatric ED admissions and hospitalizations data from 2016-2021 was obtained from the New York State Asthma Dashboard, providing emergency department visit rates and hospitalization rates for children aged 0-17 years at both ZIP code and borough levels. Air quality data, specifically PM2.5 measurements, came from a NYC Kaggle dataset and was available at both borough and Community District levels. Greenspace data through 2021 was sourced from the NYC Open Data portal, providing park properties and greenspace measurements at the borough level. Temperature data for 2016-2021 was extracted from the Open-Meteo historical weather API, offering daily temperature measurements for each borough. The Heat Vulnerability Index data came from NYC Heat Vulnerability Index Rankings, providing vulnerability classifications at the ZIP code level.
+The analysis incorporated five primary datasets from different sources. Pediatric ED admissions and hospitalizations data for the 2016-2021 periods were obtained from the New York State Asthma Dashboard, providing emergency department visit rates and hospitalization rates for children aged 0-17 years at both ZIP code and borough levels. Air quality data, specifically PM2.5 measures, were obtained from a NYC Kaggle dataset, providing relevant data at both borough and Community District levels. 
+
+Greenspace data through 2021 was sourced from the NYC Open Data portal, providing park properties and greenspace measurements at the borough level. Temperature data for 2016-2021 was extracted from the Open-Meteo historical weather API, including daily temperature measurements for each borough. The Heat Vulnerability Index data came from NYC Heat Vulnerability Index Rankings, corresponding with vulnerability measures at the ZIP code level.
 
 #### Data Cleaning Procedures
 
