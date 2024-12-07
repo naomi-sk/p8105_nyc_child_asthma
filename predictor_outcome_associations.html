@@ -372,6 +372,8 @@ div.tocify {
 
 <div id="predictor-outcome-associations" class="section level1">
 <h1>Predictor-Outcome Associations</h1>
+<p>The plots below show the associations between each predictor and the
+outcome of interest (ED Visits Rate and Hospitalization Rate).</p>
 <div id="pm2.5" class="section level2">
 <h2>PM2.5</h2>
 <div id="year-group-comparison" class="section level4">
@@ -391,18 +393,24 @@ div.tocify {
 <td align="left">2016-2018</td>
 <td align="right">48.927</td>
 <td align="right">0.142</td>
-<td align="right">-0.377</td>
+<td align="right">0.377</td>
 </tr>
 <tr class="even">
 <td align="left">2019-2021</td>
 <td align="right">25.223</td>
 <td align="right">0.104</td>
-<td align="right">-0.323</td>
+<td align="right">0.323</td>
 </tr>
 </tbody>
 </table>
-<p>Decreased PM2.5 levels is associated with decreased hospitalization
-rate.</p>
+<p>Comparing between the two year groups, there are lower ED visist
+rates and lower PM2.5 levels in the 2019-2021 year group.</p>
+<p>The correlation coefficient for both year groups are similar. Data
+from 2016 to 2018 indicates a positive association between PM2.5 levels
+and ED visit rate (R = 0.377). Data from 2019 to 2021 also shows a
+positive association between these two variables (R = 0.323). Thus,
+<strong>decreased PM2.5 levels is weakly associated with decreased
+hospitalization rate for both year groups.</strong></p>
 <p><img src="predictor_outcome_associations_files/figure-html/pm2.5%20hosp-1.png" width="672" /></p>
 <table>
 <thead>
@@ -418,35 +426,40 @@ rate.</p>
 <td align="left">2016-2018</td>
 <td align="right">8.446</td>
 <td align="right">0.172</td>
-<td align="right">-0.414</td>
+<td align="right">0.414</td>
 </tr>
 <tr class="even">
 <td align="left">2019-2021</td>
 <td align="right">6.412</td>
 <td align="right">0.171</td>
-<td align="right">-0.414</td>
+<td align="right">0.414</td>
 </tr>
 </tbody>
 </table>
-<p>Decrease in PM2.5 levels is associated with decrease hospitalization
-rate.</p>
+<p>Similar to the trend comparing PM2.5 levels and ED visit rates,
+hospitalization rates and PM2.5 levels are also lower in the 2019-2021
+year group.</p>
+<p>The correlation coefficient (r) for both year groups is 0.414, which
+indicates a moderate relationship between the two variables for the year
+groups. <strong>Decreased PM2.5 levels is thus moderately associated
+with decreased hospitalization rate for both year groups.</strong></p>
 </div>
 <div id="borough-and-year-comparison" class="section level4">
 <h4>Borough and Year Comparison</h4>
 <p><img src="predictor_outcome_associations_files/figure-html/pm2.5%20boroughyear-1.png" width="672" /></p>
-<p>In all boroughs, a decrease in PM2.5 levels between the two year
-groups is negatively associated with ED visit rate. The decrease is most
-dramatic in the Bronx.</p>
+<p>For all boroughs, <strong>PM2.5 levels and ED visit rates are higher
+in 2016 to 2018 than in 2019 to 2021.</strong> Compared to the other
+boroughs, decrease in ED visit rate per PM2.5 level is most dramatic in
+the Bronx.</p>
 <p><img src="predictor_outcome_associations_files/figure-html/pm2.5%20HR-1.png" width="672" /></p>
-<p>When comparing between the two year groups, the association for PM2.5
-levels and ED Visit Rate is similar to trend for PM2.5 leveels and
-hospitalization rate.</p>
+<p>Similar to the trend seen between PM2.5 levels and ED visit rates,
+<strong>PM2.5 levels and hospitalization rates are higher in 2016 to
+2018 than in 2019 to 2021.</strong> Bronx also experienced the most
+dramatic decrease in hospitalization rate per PM2.5 level.</p>
 </div>
 </div>
 <div id="greenspace" class="section level2">
 <h2>Greenspace</h2>
-<div id="ed-admissions" class="section level3">
-<h3>ED Admissions</h3>
 <div id="year-group-comparison-1" class="section level4">
 <h4>Year Group Comparison</h4>
 <p><img src="predictor_outcome_associations_files/figure-html/ed-1.png" width="672" /></p>
@@ -474,9 +487,13 @@ hospitalization rate.</p>
 </tr>
 </tbody>
 </table>
-<p>For both year groups, total acres of borough-level greenspace is
-negatively associated with borough-level ED visit rate. Increased
-greenspace is associated with decreased hospitalization rate.</p>
+<p><strong>The correlation coefficient for both year groups are
+similar.</strong> Data from 2016 to 2018 indicates a negative
+association between greenspace and ED visit rate (r = -0.905). Data from
+2019 to 2021 also shows a negative association between these two
+variables (r = -0.830). Thus, <strong>increased greenspace is strongly
+associated with decreased ED visit rate for both year
+groups.</strong></p>
 <p><img src="predictor_outcome_associations_files/figure-html/hosp-1.png" width="672" /></p>
 <table>
 <thead>
@@ -502,9 +519,14 @@ greenspace is associated with decreased hospitalization rate.</p>
 </tr>
 </tbody>
 </table>
-<p>For both year groups, total acres of borough-level greenspace is
-negatively associated with borough-level hospitalization rate. Increase
-in greenspace is associated with decrease hospitalization rate.</p>
+<p>Similar to the trend comparing greenspace and ED visit rates,
+<strong>the correlation coefficient for both year groups are
+similar.</strong> Data from 2016 to 2018 indicates a negative
+association between greenspace and hospitalization rate (r = -0.861).
+Data from 2019 to 2021 also shows a negative association between these
+two variables (r = -0.793). Thus, <strong>increased greenspace is
+strongly associated with decreased hospitalization rate for both year
+groups.</strong></p>
 </div>
 <div id="borough-and-year-comparison-1" class="section level4">
 <h4>Borough and Year Comparison</h4>
@@ -515,9 +537,8 @@ seen for Staten Island. The association is less obvious for Brooklyn,
 Manhattan, and Queens.</p>
 <p><img src="predictor_outcome_associations_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 <p>When comparing between the two year groups, the association for
-borough greenspace and ED Visit Rate is similar to trend for borough
-greenspace and hospitalization rate.</p>
-</div>
+borough-level greenspace and ED visit rate is similar to trend for
+borough-level greenspace and hospitalization rate.</p>
 </div>
 </div>
 <div id="temperature" class="section level2">
@@ -526,8 +547,8 @@ greenspace and hospitalization rate.</p>
 class="section level4">
 <h4>Scattor plot of average temperature vs rate by borough</h4>
 <p><img src="predictor_outcome_associations_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
-<p>The plot shows that the higher temperature is associated with lower
-rate of ED visit and hospitalization.</p>
+<p>The plot shows that the <strong>higher temperature is associated with
+lower rate of ED visit and hospitalization.</strong></p>
 </div>
 </div>
 <div id="heat-vulnerability-index-hvi" class="section level2">
