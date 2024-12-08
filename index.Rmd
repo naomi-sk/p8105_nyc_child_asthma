@@ -43,4 +43,6 @@ We believe that understanding these relationships is crucial for informing equit
 
 ## Screencast
 
-[placeholder]
+<video width="640" height="360" controls>
+<source src="screencast/screencast_good.mp4" type="video/mp4">
+</video>
