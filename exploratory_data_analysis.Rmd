@@ -420,7 +420,7 @@ greenspace_clean = read_csv("./data/Parks_Properties_20241126.csv", na = c("NA",
 
 ```
 
-#### Borough and Year Comparison
+#### Borough and Time Period Comparison
 
 ```{r}
 

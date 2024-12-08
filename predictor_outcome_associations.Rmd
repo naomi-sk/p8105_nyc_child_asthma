@@ -121,7 +121,7 @@ Similar to the trend comparing PM2.5 levels and ED visit rates, hospitalization 
 
 The correlation coefficient (r) for both time periods is 0.414, which indicates a moderate relationship between the two variables. Decreased PM2.5 levels is thus moderately associated with decreased hospitalization rate for both time periods.
 
-#### Borough and Year Comparison
+#### Borough and Time Period Comparison
 
 ```{r pm2.5 boroughyear, echo=FALSE, message=FALSE}
 
@@ -248,7 +248,7 @@ knitr::kable(hospmodels, digits = 3, col.names = c("Time Period", "Slope", "R Sq
 
 Similar to the trend comparing greenspace and ED visit rates, the correlation coefficient for both time periods are similar. Data from 2016 to 2018 indicates a negative association between greenspace and hospitalization rate (r = -0.861). Data from 2019 to 2021 also shows a negative association between these two variables (r = -0.793). Thus, increased greenspace is strongly associated with decreased hospitalization rate for both time periods.
 
-#### Borough and Year Comparison
+#### Borough and Time Period Comparison
 
 ```{r, echo=FALSE, message=FALSE}
 
@@ -363,7 +363,7 @@ Data from 2016 to 2018 indicates a weak negative association between temperature
 
 We can infer that temperature is not a significant factor for Hospitalization.
 
-#### Borough and Year Comparison
+#### Borough and Time Period Comparison
 
 ```{r echo=FALSE, message=FALSE}
 ggplot(temp_association, aes(x = avg_temperature, y = borough_rate, color = Borough)) +

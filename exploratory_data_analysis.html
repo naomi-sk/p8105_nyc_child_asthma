@@ -860,8 +860,8 @@ greenspace_clean = read_csv(&quot;./data/Parks_Properties_20241126.csv&quot;, na
   separate(acquisitiondate, into = c(&quot;year&quot;, &quot;month&quot;, &quot;day&quot;), sep = &quot;-&quot;) |&gt;
   select(year, borough, acres, typecategory) |&gt; 
   filter(year &lt; 2022 | is.na(year))</code></pre>
-<div id="borough-and-year-comparison" class="section level4">
-<h4>Borough and Year Comparison</h4>
+<div id="borough-and-time-period-comparison" class="section level4">
+<h4>Borough and Time Period Comparison</h4>
 <pre class="r"><code># Load 2016-2018 dataset
 
 dataset1_gs = greenspace_clean |&gt;
