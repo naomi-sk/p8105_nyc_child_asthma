@@ -882,7 +882,7 @@ tidy_analysis_pm |&gt;
     title = &quot;Average PM2.5 Levels by Borough (2016-2018 vs 2019-2021)&quot;,
     x = &quot;Borough&quot;,
     y = &quot;PM2.5 Values&quot;,
-    fill = &quot;Year Group&quot;
+    fill = &quot;Time Period&quot;
   ) </code></pre>
 <p><img src="report_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <p><strong>Figure 3. Average PM.25 levels across boroughs: 2016-2018 vs
@@ -1108,7 +1108,7 @@ Greenspace_data = total_acres |&gt;
 
 ggplot(total_acres, aes(x = reorder(borough, acres_sum), y = acres_sum, fill = year_group)) + 
   geom_bar(stat = &quot;identity&quot;, position = &quot;dodge&quot;, alpha = 0.7) + 
-  labs(x = &quot;Borough&quot;, y = &quot;Greenspace (Total Acres)&quot;, title = &quot;Greenspaces Across Borough by Year Group&quot;) +
+  labs(x = &quot;Borough&quot;, y = &quot;Greenspace (Total Acres)&quot;, title = &quot;Greenspaces Across Borough by Time Period&quot;, fill = &quot;Time Period&quot;) +
   theme_minimal()</code></pre>
 <p><img src="report_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 <p><strong>Figure 5. Greenspace distribution across boroughs: 2016-2018
@@ -1215,7 +1215,7 @@ binded |&gt;
       &quot;year2&quot; ~ &quot;2019-2021&quot;)) |&gt;
   ggplot(aes(x = reorder(typecategory, acres_total), y = acres_total, fill = year_group)) + 
   geom_bar(stat = &quot;identity&quot;, position = &quot;dodge&quot;, width = 0.6) +
-  labs(x = &quot;Greenspace Types&quot;, y = &quot;Total Acres&quot;, title = &quot;Total Acres of NYC Greenspace by Type and Year Group&quot;) +
+  labs(x = &quot;Greenspace Types&quot;, y = &quot;Total Acres&quot;, title = &quot;Total Acres of NYC Greenspace by Type and Time Period&quot;, fill = &quot;Time Period&quot;) +
     theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))</code></pre>
 <p><img src="report_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
@@ -1381,7 +1381,7 @@ all_temp = bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |&gt;
   mutate(years = year(date)) |&gt; 
   mutate(months = as.Date(paste0(format(date, &quot;%Y-%m&quot;), &quot;-01&quot;), format = &quot;%Y-%m-%d&quot;))
 
-# Calculate average temperatures by borough and year group
+# Calculate average temperatures by borough and time period
 
 all_temp_borough = all_temp |&gt; 
   mutate(date = as.Date(time, format = &quot;%d/%m/%Y&quot;)) |&gt; 
@@ -1433,11 +1433,11 @@ mean_temp_year |&gt;
     names_from = borough,
     values_from = mean_temp
   ) |&gt;
-  knitr::kable(col.names = c(&quot;Years&quot;, &quot;Bronx&quot;, &quot;Brooklyn&quot;, &quot;Manhattan&quot;, &quot;Queens&quot;, &quot;Staten Island&quot;))</code></pre>
+  knitr::kable(col.names = c(&quot;Time Period&quot;, &quot;Bronx&quot;, &quot;Brooklyn&quot;, &quot;Manhattan&quot;, &quot;Queens&quot;, &quot;Staten Island&quot;))</code></pre>
 <table>
 <thead>
 <tr class="header">
-<th align="right">Years</th>
+<th align="right">Time Period</th>
 <th align="right">Bronx</th>
 <th align="right">Brooklyn</th>
 <th align="right">Manhattan</th>
@@ -1615,15 +1615,15 @@ Island - a gap of 2 points on the HVI scale.</p>
 <h1>Predictor and Outcome Associations</h1>
 <div id="pm2.5" class="section level2">
 <h2>PM2.5</h2>
-<div id="year-group-comparison" class="section level4">
-<h4>Year Group Comparison</h4>
+<div id="time-period-comparison" class="section level4">
+<h4>Time Period Comparison</h4>
 <pre class="r"><code>#plot both outcomes
 combined_plot = EDplot_pm2_5 + hosplot_pm2_5 
 
 combined_plot</code></pre>
 <p><img src="report_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
 <p><strong>Figure 9. PM2.5 Levels and Outcome (ED Visits Rate and
-Hospitalization Rate) by Year Group</strong></p>
+Hospitalization Rate) by Time Period</strong></p>
 <pre class="r"><code>#combine correlation table
 ED_values = EDmodels_pm2_5 |&gt;
   mutate(Outcome = &quot;ED Visit Rates&quot;)
@@ -1634,14 +1634,14 @@ Hosp_values = hospmodels_pm2_5 |&gt;
 Yr_table = bind_rows(ED_values, Hosp_values) |&gt;
   select(Outcome, Year, slope, r_squared, r) #reorder
 
-knitr::kable(Yr_table, digits = 3)</code></pre>
+knitr::kable(Yr_table, digits = 3, col.names = c(&quot;Outcome&quot;, &quot;Time Period&quot;, &quot;Slope&quot;, &quot;R Squared&quot;, &quot;r&quot;))</code></pre>
 <table>
 <thead>
 <tr class="header">
 <th align="left">Outcome</th>
-<th align="left">Year</th>
-<th align="right">slope</th>
-<th align="right">r_squared</th>
+<th align="left">Time Period</th>
+<th align="right">Slope</th>
+<th align="right">R Squared</th>
 <th align="right">r</th>
 </tr>
 </thead>
@@ -1677,18 +1677,18 @@ knitr::kable(Yr_table, digits = 3)</code></pre>
 </tbody>
 </table>
 <p><strong>Table 9. Correlation between PM2.5 Levels and Outcomes by
-Year Group</strong></p>
+Time Period</strong></p>
 <p><strong>ED Visit Rates</strong>: The association between PM2.5 and ED
-visit rates are similar for both year groups. Data from 2016 to 2018 and
-2019 to 2021 indicate a positive association between the two variables
-with a correlation coefficient of 0.377 and 0.323, respectively. Thus,
-PM2.5 levels is weakly associated with hospitalization rate for both
-year groups.</p>
+visit rates are similar for both time periods. Data from 2016 to 2018
+and 2019 to 2021 indicate a positive association between the two
+variables with a correlation coefficient of 0.377 and 0.323,
+respectively. Thus, PM2.5 levels is weakly associated with
+hospitalization rate for both time periods.</p>
 <p><strong>Hospitalization Rates</strong>: There is a positive
-association between PM2.5 and hospitalization rates for both year groups
-with an estimated correlation coefficient of 0.414. Decreased PM2.5
-levels is thus moderately associated with decreased hospitalization rate
-for both year groups.</p>
+association between PM2.5 and hospitalization rates for both time
+periods with an estimated correlation coefficient of 0.414. Decreased
+PM2.5 levels is thus moderately associated with decreased
+hospitalization rate for both time periods.</p>
 </div>
 <div id="borough-and-year-comparison" class="section level4">
 <h4>Borough and Year Comparison</h4>
@@ -1696,7 +1696,7 @@ for both year groups.</p>
 combo</code></pre>
 <p><img src="report_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
 <p><strong>Figure 10. PM2.5 Levels and Outcomes across Borough and by
-Year Group</strong></p>
+Time Period</strong></p>
 <p>For all boroughs, PM2.5 levels and ED visit rates are higher in 2016
 to 2018 than in 2019 to 2021. Compared to the other boroughs, decrease
 in ED visit rate per PM2.5 level is most dramatic in the Bronx.</p>
@@ -1708,15 +1708,15 @@ hospitalization rate per PM2.5 level.</p>
 </div>
 <div id="greenspace-1" class="section level2">
 <h2>Greenspace</h2>
-<div id="year-group-comparison-1" class="section level4">
-<h4>Year Group Comparison</h4>
+<div id="time-period-comparison-1" class="section level4">
+<h4>Time Period Comparison</h4>
 <pre class="r"><code>#GS plots
 GS_combo = EDplot + hosplot
 
 GS_combo</code></pre>
 <p><img src="report_files/figure-html/unnamed-chunk-24-1.png" width="672" />
 <strong>Figure 11. Greenspace and Outcome (ED Visits Rate and
-Hospitalization Rate) by Year Group</strong></p>
+Hospitalization Rate) by Time Period</strong></p>
 <pre class="r"><code>#combine correlation table
 GS_ED_values = EDmodels |&gt;
   mutate(Outcome = &quot;ED Visit Rates&quot;)
@@ -1727,14 +1727,14 @@ GS_Hosp_values = hospmodels |&gt;
 Yr_table_GS = bind_rows(GS_ED_values, GS_Hosp_values) |&gt;
   select(Outcome, Year, slope, r_squared, r) #reorder
 
-knitr::kable(Yr_table_GS, digits = 3)</code></pre>
+knitr::kable(Yr_table_GS, digits = 3, col.names = c(&quot;Outcome&quot;, &quot;Time Period&quot;, &quot;Slope&quot;, &quot;R Squared&quot;, &quot;r&quot;))</code></pre>
 <table>
 <thead>
 <tr class="header">
 <th align="left">Outcome</th>
-<th align="left">Year</th>
-<th align="right">slope</th>
-<th align="right">r_squared</th>
+<th align="left">Time Period</th>
+<th align="right">Slope</th>
+<th align="right">R Squared</th>
 <th align="right">r</th>
 </tr>
 </thead>
@@ -1769,22 +1769,22 @@ knitr::kable(Yr_table_GS, digits = 3)</code></pre>
 </tr>
 </tbody>
 </table>
-<p><strong>Table 10. Correlation between Greenspace and Outcomes by Year
-Group</strong></p>
+<p><strong>Table 10. Correlation between Greenspace and Outcomes by Time
+Period</strong></p>
 <p><strong>ED Visit Rates</strong>: The correlation coefficient for both
-year groups are similar. Data from 2016 to 2018 indicates a negative
+time periods are similar. Data from 2016 to 2018 indicates a negative
 association between greenspace and ED visit rate (r = -0.905). Data from
 2019 to 2021 also shows a negative association between these two
 variables (r = -0.830). Thus, increased greenspace is strongly
-associated with decreased ED visit rate for both year groups.</p>
+associated with decreased ED visit rate for both time periods.</p>
 <p><strong>Hospitalization Rates</strong>: Similar to the trend
 comparing greenspace and ED visit rates, the correlation coefficient for
-both year groups are similar. Data from 2016 to 2018 indicates a
+both time periods are similar. Data from 2016 to 2018 indicates a
 negative association between greenspace and hospitalization rate (r =
 -0.861). Data from 2019 to 2021 also shows a negative association
 between these two variables (r = -0.793). Thus, **increased greenspace
-is strongly associated with decreased hospitalization rate for both year
-groups.</p>
+is strongly associated with decreased hospitalization rate for both time
+periods.</p>
 </div>
 <div id="borough-and-year-comparison-1" class="section level4">
 <h4>Borough and Year Comparison</h4>
@@ -1792,27 +1792,27 @@ groups.</p>
 
 combo1</code></pre>
 <p><img src="report_files/figure-html/unnamed-chunk-28-1.png" width="672" /></p>
-<p><strong>Figure 12. Greenspace and Outcome across Borough and by Year
-Group</strong></p>
+<p><strong>Figure 12. Greenspace and Outcome across Borough and by Time
+Period</strong></p>
 <p>In Bronx, there is a dramatic decrease in ED visit rate with an
-increase in total acres of greenspace between the two year groups. This
+increase in total acres of greenspace between the two time period. This
 decrease is also seen for Staten Island. The association is less obvious
 for Brooklyn, Manhattan, and Queens.</p>
-<p>When comparing between the two year groups, the association for
+<p>When comparing between the two time periods, the association for
 borough-level greenspace and ED visit rate is similar to trend for
 borough-level greenspace and hospitalization rate.</p>
 </div>
 </div>
 <div id="temperature-1" class="section level2">
 <h2>Temperature</h2>
-<div id="year-group-comparison-2" class="section level4">
-<h4>Year Group Comparison</h4>
+<div id="time-period-comparison-2" class="section level4">
+<h4>Time Period Comparison</h4>
 <pre class="r"><code>temp_plot = tempplot + tempplot2
 
 temp_plot</code></pre>
 <p><img src="report_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
 <p><strong>Figure 13. Temperature and Outcome (ED Visits Rate and
-Hospitalization Rate) by Year Group</strong></p>
+Hospitalization Rate) by Time Period</strong></p>
 <pre class="r"><code>#combine correlation table
 temp_ED_values = tempmodel |&gt;
   mutate(Outcome = &quot;ED Visit Rates&quot;)
@@ -1823,14 +1823,14 @@ temp_Hosp_values = tempmodel2 |&gt;
 temp_Yr_table = bind_rows(temp_ED_values, temp_Hosp_values) |&gt;
   select(Outcome, Year, slope, r_squared, r) #reorder
 
-knitr::kable(temp_Yr_table, digits = 3)</code></pre>
+knitr::kable(temp_Yr_table, digits = 3, col.names = c(&quot;Outcome&quot;, &quot;Time Period&quot;, &quot;Slope&quot;, &quot;R Squared&quot;, &quot;r&quot;))</code></pre>
 <table>
 <thead>
 <tr class="header">
 <th align="left">Outcome</th>
-<th align="left">Year</th>
-<th align="right">slope</th>
-<th align="right">r_squared</th>
+<th align="left">Time Period</th>
+<th align="right">Slope</th>
+<th align="right">R Squared</th>
 <th align="right">r</th>
 </tr>
 </thead>
@@ -1866,9 +1866,9 @@ knitr::kable(temp_Yr_table, digits = 3)</code></pre>
 </tbody>
 </table>
 <p><strong>Table 11. Correlation between Temperature and Outcomes by
-Year Group</strong></p>
+Time Period</strong></p>
 <p><strong>ED Visit Rate</strong>: The correlation coefficient for the
-year groups are different. Data from 2016 to 2018 indicates a weak
+time period are different. Data from 2016 to 2018 indicates a weak
 negative association between temperature and ED visit rate (r = -0.323).
 The correlation coefficient for 2019 to 2021 (r = -0.039) indicates no
 association between these two variables.</p>
@@ -1886,7 +1886,7 @@ Hospitalization.</p>
 <h4>Borough and Year Comparison</h4>
 <p><img src="report_files/figure-html/unnamed-chunk-34-1.png" width="672" /></p>
 <p><strong>Figure 14. Temperature and Outcomes across Borough and by
-Year Group</strong></p>
+Time Period</strong></p>
 <p>The plot shows that the higher temperature is associated with lower
 rate of ED visit and hospitalization.</p>
 </div>

@@ -348,7 +348,7 @@ tidy_analysis_pm |>
     title = "Average PM2.5 Levels by Borough (2016-2018 vs 2019-2021)",
     x = "Borough",
     y = "PM2.5 Values",
-    fill = "Year Group"
+    fill = "Time Period"
   ) 
 
 ```
@@ -532,7 +532,7 @@ Greenspace_data = total_acres |>
 
 ggplot(total_acres, aes(x = reorder(borough, acres_sum), y = acres_sum, fill = year_group)) + 
   geom_bar(stat = "identity", position = "dodge", alpha = 0.7) + 
-  labs(x = "Borough", y = "Greenspace (Total Acres)", title = "Greenspaces Across Borough by Year Group") +
+  labs(x = "Borough", y = "Greenspace (Total Acres)", title = "Greenspaces Across Borough by Time Period", fill = "Time Period") +
   theme_minimal()
 
 ```
@@ -607,7 +607,7 @@ binded |>
       "year2" ~ "2019-2021")) |>
   ggplot(aes(x = reorder(typecategory, acres_total), y = acres_total, fill = year_group)) + 
   geom_bar(stat = "identity", position = "dodge", width = 0.6) +
-  labs(x = "Greenspace Types", y = "Total Acres", title = "Total Acres of NYC Greenspace by Type and Year Group") +
+  labs(x = "Greenspace Types", y = "Total Acres", title = "Total Acres of NYC Greenspace by Type and Time Period", fill = "Time Period") +
     theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
@@ -643,7 +643,7 @@ The analysis of greenspace types suggests varying priorities in green developmen
 
 ```{r, echo=FALSE, message = FALSE}
 
-# Create initial dataset of acres by type, borough, and year group
+# Create initial dataset of acres by type, borough, and time period
 
 perBor = bind_rows(type1B, type2B) |>
   group_by(typecategory, year_group, borough) |>
@@ -767,7 +767,7 @@ all_temp = bind_rows(manhattan, bronx, brooklyn, queens, staten_island) |>
   mutate(years = year(date)) |> 
   mutate(months = as.Date(paste0(format(date, "%Y-%m"), "-01"), format = "%Y-%m-%d"))
 
-# Calculate average temperatures by borough and year group
+# Calculate average temperatures by borough and time period
 
 all_temp_borough = all_temp |> 
   mutate(date = as.Date(time, format = "%d/%m/%Y")) |> 
@@ -827,7 +827,7 @@ mean_temp_year |>
     names_from = borough,
     values_from = mean_temp
   ) |>
-  knitr::kable(col.names = c("Years", "Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"))
+  knitr::kable(col.names = c("Time Period", "Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"))
 
 ```
 
@@ -897,14 +897,14 @@ The above plot provides a visual representation of these HVI disparities, with a
 ## PM2.5  
 
 ```{r pm2.5 file, include=FALSE}
-#clean merged file for pm2.5 and outcome comparisons across boroughs and year groups
+#clean merged file for pm2.5 and outcome comparisons across boroughs and time period
 assoc_pm2_5 = full_data2 |>
   janitor::clean_names() |>
   rename(Year = data_years, Borough = borough) |> #renamed it to reflect on plots
   select(Year, Borough, indicator, pm2_5_level, borough_rate)
 ```
 
-#### Year Group Comparison
+#### Time Period Comparison
 
 ```{r pm2.5 ed, echo=FALSE, message=FALSE}
 #clean data for Borough level ED visit rates and pm2.5
@@ -913,7 +913,7 @@ ED_assoc_pm2_5 = assoc_pm2_5 |>
   distinct() |>
   select(-indicator)
 
-# Fit linear models for each year group and obtain values of interest
+# Fit linear models for each time period and obtain values of interest
 EDmodels_pm2_5 = ED_assoc_pm2_5 |>
   group_by(Year) |>
   do(model = lm(borough_rate ~ pm2_5_level, data = .)) |> #linear model
@@ -931,7 +931,8 @@ EDplot_pm2_5 = ggplot(ED_assoc_pm2_5, aes(x = pm2_5_level, y = borough_rate, gro
   theme_minimal() +
   labs(title = "PM2.5 Levels and ED Visits Rate", 
        x = "PM2.5 Level (ug/m3)", 
-       y = "ED Visits Rate") +
+       y = "ED Visits Rate", 
+       color = "Time Period") +
   theme(legend.position = "top")
 ```
 
@@ -942,7 +943,7 @@ hosp_assoc_pm2_5 = assoc_pm2_5 |>
   distinct() |>
   select(-indicator)
 
-# Fit linear models for each year group and obtain values of interest
+# Fit linear models for each time period and obtain values of interest
 hospmodels_pm2_5 = hosp_assoc_pm2_5 |>
   group_by(Year) |>
   do(model = lm(borough_rate ~ pm2_5_level, data = .)) |>
@@ -960,7 +961,8 @@ hosplot_pm2_5 = ggplot(hosp_assoc_pm2_5, aes(x = pm2_5_level, y = borough_rate, 
   theme_minimal() +
   labs(title = "PM2.5 Levels and Hospitalization Rate", 
        x = "PM2.5 Levels (ug/m3)", 
-       y = "Hospitalization Rate") +
+       y = "Hospitalization Rate", 
+       color = "Time Period") +
   theme(legend.position = "top")
 ```
 
@@ -972,7 +974,7 @@ combined_plot = EDplot_pm2_5 + hosplot_pm2_5
 combined_plot
 ```
 
-**Figure 9. PM2.5 Levels and Outcome (ED Visits Rate and Hospitalization Rate) by Year Group**
+**Figure 9. PM2.5 Levels and Outcome (ED Visits Rate and Hospitalization Rate) by Time Period**
 
 
 ```{r}
@@ -986,13 +988,13 @@ Hosp_values = hospmodels_pm2_5 |>
 Yr_table = bind_rows(ED_values, Hosp_values) |>
   select(Outcome, Year, slope, r_squared, r) #reorder
 
-knitr::kable(Yr_table, digits = 3)
+knitr::kable(Yr_table, digits = 3, col.names = c("Outcome", "Time Period", "Slope", "R Squared", "r"))
 ```
-**Table 9. Correlation between PM2.5 Levels and Outcomes by Year Group**
+**Table 9. Correlation between PM2.5 Levels and Outcomes by Time Period**
 
-**ED Visit Rates**: The association between PM2.5 and ED visit rates are similar for both year groups. Data from 2016 to 2018 and 2019 to 2021 indicate a positive association between the two variables with a correlation coefficient of 0.377 and 0.323, respectively. Thus, PM2.5 levels is weakly associated with hospitalization rate for both year groups.
+**ED Visit Rates**: The association between PM2.5 and ED visit rates are similar for both time periods. Data from 2016 to 2018 and 2019 to 2021 indicate a positive association between the two variables with a correlation coefficient of 0.377 and 0.323, respectively. Thus, PM2.5 levels is weakly associated with hospitalization rate for both time periods.
 
-**Hospitalization Rates**: There is a positive association between PM2.5 and hospitalization rates for both year groups with an estimated correlation coefficient of 0.414. Decreased PM2.5 levels is thus moderately associated with decreased hospitalization rate for both year groups.
+**Hospitalization Rates**: There is a positive association between PM2.5 and hospitalization rates for both time periods with an estimated correlation coefficient of 0.414. Decreased PM2.5 levels is thus moderately associated with decreased hospitalization rate for both time periods.
 
 #### Borough and Year Comparison
 
@@ -1004,7 +1006,8 @@ GS_ED_pm2_5 = assoc_pm2_5 |>
   geom_point(aes(shape = Year)) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(x = "PM2.5 Levels(ug/m3)", y = "ED Visit Rate", 
-       title = "NYC PM2.5 Levels and ED Visit Rate") +
+       title = "NYC PM2.5 Levels and ED Visit Rate", 
+       shape = "Time Period") +
   theme_minimal()
 ```
 
@@ -1016,7 +1019,8 @@ GS_HR_pm2_5 = assoc_pm2_5 |>
   geom_point(aes(shape = Year)) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(x = "PM2.5 Levels(ug/m3)", y = "Hospitalization Rate", 
-       title = "NYC PM2.5 Levels and Hospitalization Rate") +
+       title = "NYC PM2.5 Levels and Hospitalization Rate",
+       shape = "Time Period") +
   theme_minimal()
 ```
 
@@ -1026,7 +1030,7 @@ combo = GS_ED_pm2_5 + GS_HR_pm2_5
 combo
 ```
 
-**Figure 10. PM2.5 Levels and Outcomes across Borough and by Year Group**
+**Figure 10. PM2.5 Levels and Outcomes across Borough and by Time Period**
 
 For all boroughs, PM2.5 levels and ED visit rates are higher in 2016 to 2018 than in 2019 to 2021. Compared to the other boroughs, decrease in ED visit rate per PM2.5 level is most dramatic in the Bronx.
 
@@ -1035,13 +1039,13 @@ Similar to the trend seen between PM2.5 levels and ED visit rates, PM2.5 levels 
 ## Greenspace
 
 ```{r GS file, include=FALSE}
-#clean merged file for greenspace and outcome comparisons across boroughs and year groups
+#clean merged file for greenspace and outcome comparisons across boroughs and time periods
 GS_assoc = full_data2 |>
   rename(Year = data_years, Borough = borough) |> #renamed it to reflect on plots
   select(Year, Borough, indicator, acres_sum, borough_rate)
 ```
 
-#### Year Group Comparison
+#### Time Period Comparison
 
 ```{r ed, echo=FALSE, message=FALSE}
 #clean data for Borough level ED visit rates and greenspace
@@ -1050,7 +1054,7 @@ ED_assoc = GS_assoc |>
   distinct() |>
   select(-indicator)
 
-# Fit linear models for each year group and obtain values of interest
+# Fit linear models for each Time Period and obtain values of interest
 #calc slope, intercept, R², and correlation coefficient (R)
 EDmodels = ED_assoc |>
   group_by(Year) |>
@@ -1069,7 +1073,8 @@ EDplot = ggplot(ED_assoc, aes(x = acres_sum, y = borough_rate, group = Year)) +
   theme_minimal() +
   labs(title = "Greenspace and ED Visits Rate", 
        x = "Greenspace (Total Acres)", 
-       y = "ED Visits Rate") +
+       y = "ED Visits Rate",
+      color = "Time Period") +
   theme(legend.position = "top")
 ```
 
@@ -1082,7 +1087,7 @@ hosp_assoc = GS_assoc |>
   distinct() |>
   select(-indicator)
 
-# Fit linear models for each year group and extract results
+# Fit linear models for each time period and extract results
 hospmodels = hosp_assoc |>
   group_by(Year) |>
   do(model = lm(borough_rate ~ acres_sum, data = .)) |>
@@ -1100,7 +1105,8 @@ hosplot = ggplot(hosp_assoc, aes(x = acres_sum, y = borough_rate, group = Year))
   theme_minimal() +
   labs(title = "Greenspace and Hospitalization Rate", 
        x = "Greenspace (Total Acres)", 
-       y = "ED Visits Rate") +
+       y = "ED Visits Rate",
+       color = "Time Period") +
   theme(legend.position = "top")
 
 ```
@@ -1113,7 +1119,7 @@ GS_combo = EDplot + hosplot
 
 GS_combo
 ```
-**Figure 11. Greenspace and Outcome (ED Visits Rate and Hospitalization Rate) by Year Group**
+**Figure 11. Greenspace and Outcome (ED Visits Rate and Hospitalization Rate) by Time Period**
 
 
 ```{r}
@@ -1127,16 +1133,16 @@ GS_Hosp_values = hospmodels |>
 Yr_table_GS = bind_rows(GS_ED_values, GS_Hosp_values) |>
   select(Outcome, Year, slope, r_squared, r) #reorder
 
-knitr::kable(Yr_table_GS, digits = 3)
+knitr::kable(Yr_table_GS, digits = 3, col.names = c("Outcome", "Time Period", "Slope", "R Squared", "r"))
 ```
 
 
-**Table 10. Correlation between Greenspace and Outcomes by Year Group**
+**Table 10. Correlation between Greenspace and Outcomes by Time Period**
 
 
-**ED Visit Rates**: The correlation coefficient for both year groups are similar. Data from 2016 to 2018 indicates a negative association between greenspace and ED visit rate (r = -0.905). Data from 2019 to 2021 also shows a negative association between these two variables (r = -0.830). Thus, increased greenspace is strongly associated with decreased ED visit rate for both year groups.
+**ED Visit Rates**: The correlation coefficient for both time periods are similar. Data from 2016 to 2018 indicates a negative association between greenspace and ED visit rate (r = -0.905). Data from 2019 to 2021 also shows a negative association between these two variables (r = -0.830). Thus, increased greenspace is strongly associated with decreased ED visit rate for both time periods.
 
-**Hospitalization Rates**: Similar to the trend comparing greenspace and ED visit rates, the correlation coefficient for both year groups are similar. Data from 2016 to 2018 indicates a negative association between greenspace and hospitalization rate (r = -0.861). Data from 2019 to 2021 also shows a negative association between these two variables (r = -0.793). Thus, **increased greenspace is strongly associated with decreased hospitalization rate for both year groups.
+**Hospitalization Rates**: Similar to the trend comparing greenspace and ED visit rates, the correlation coefficient for both time periods are similar. Data from 2016 to 2018 indicates a negative association between greenspace and hospitalization rate (r = -0.861). Data from 2019 to 2021 also shows a negative association between these two variables (r = -0.793). Thus, **increased greenspace is strongly associated with decreased hospitalization rate for both time periods.
 
 #### Borough and Year Comparison
 
@@ -1148,7 +1154,8 @@ GS_ED = GS_assoc |>
   geom_point(aes(shape = Year)) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(x = "Greenspace (Total Acres)", y = "ED Visit Rate", 
-       title = "NYC Greenspace and ED Visit Rate") +
+       title = "NYC Greenspace and ED Visit Rate",
+       shape = "Time Period") +
   theme_minimal()
 ```
 
@@ -1160,7 +1167,8 @@ GS_HR = GS_assoc |>
   geom_point(aes(shape = Year)) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(x = "Greenspace (Total Acres)", y = "Hospitalization Rate", 
-       title = "NYC Greenspace and Hospitalization Rate") +
+       title = "NYC Greenspace and Hospitalization Rate",
+       shape = "Time Period") +
   theme_minimal()
 ```
 
@@ -1170,11 +1178,11 @@ combo1 = GS_ED + GS_HR
 combo1
 ```
 
-**Figure 12. Greenspace and Outcome across Borough and by Year Group**
+**Figure 12. Greenspace and Outcome across Borough and by Time Period**
 
-In Bronx, there is a dramatic decrease in ED visit rate with an increase in total acres of greenspace between the two year groups. This decrease is also seen for Staten Island. The association is less obvious for Brooklyn, Manhattan, and Queens. 
+In Bronx, there is a dramatic decrease in ED visit rate with an increase in total acres of greenspace between the two time period. This decrease is also seen for Staten Island. The association is less obvious for Brooklyn, Manhattan, and Queens. 
 
-When comparing between the two year groups, the association for borough-level greenspace and ED visit rate is similar to trend for borough-level greenspace and hospitalization rate.
+When comparing between the two time periods, the association for borough-level greenspace and ED visit rate is similar to trend for borough-level greenspace and hospitalization rate.
 
 ## Temperature
 
@@ -1191,7 +1199,7 @@ temp_association_hosp = temp_association |>
   filter(indicator == "hosp_rate")
 ```
 
-#### Year Group Comparison
+#### Time Period Comparison
 
 ```{r echo = FALSE, message = FALSE}
 tempmodel = temp_association_ed |>
@@ -1211,7 +1219,8 @@ tempplot = ggplot(temp_association_ed, aes(x = avg_temperature, y = borough_rate
   theme_minimal() +
   labs(title = "Temperature and ED Visits Rate", 
        x = "Average Temperature (°C)", 
-       y = "ED Visits Rate") +
+       y = "ED Visits Rate",
+       color = "Time Period") +
   theme(legend.position = "top")
 ```
 
@@ -1233,7 +1242,8 @@ tempplot2 = ggplot(temp_association_hosp, aes(x = avg_temperature, y = borough_r
   theme_minimal() +
   labs(title = "Temperature and Hospitalization Rate", 
        x = "Average Temperature (°C)", 
-       y = "Hospitalization Rate") +
+       y = "Hospitalization Rate",
+       color = "Time Period") +
   theme(legend.position = "top")
 ```
 
@@ -1245,7 +1255,7 @@ temp_plot = tempplot + tempplot2
 temp_plot
 ```
 
-**Figure 13. Temperature and Outcome (ED Visits Rate and Hospitalization Rate) by Year Group**
+**Figure 13. Temperature and Outcome (ED Visits Rate and Hospitalization Rate) by Time Period**
 
 ```{r}
 #combine correlation table
@@ -1258,12 +1268,12 @@ temp_Hosp_values = tempmodel2 |>
 temp_Yr_table = bind_rows(temp_ED_values, temp_Hosp_values) |>
   select(Outcome, Year, slope, r_squared, r) #reorder
 
-knitr::kable(temp_Yr_table, digits = 3)
+knitr::kable(temp_Yr_table, digits = 3, col.names = c("Outcome", "Time Period", "Slope", "R Squared", "r"))
 ```
 
-**Table 11. Correlation between Temperature and Outcomes by Year Group**
+**Table 11. Correlation between Temperature and Outcomes by Time Period**
 
-**ED Visit Rate**: The correlation coefficient for the year groups are different. Data from 2016 to 2018 indicates a weak negative association between temperature and ED visit rate (r = -0.323). The correlation coefficient for 2019 to 2021 (r = -0.039) indicates no association between these two variables. 
+**ED Visit Rate**: The correlation coefficient for the time period are different. Data from 2016 to 2018 indicates a weak negative association between temperature and ED visit rate (r = -0.323). The correlation coefficient for 2019 to 2021 (r = -0.039) indicates no association between these two variables. 
 
 We can infer that temperature is not a significant factor for ED visits.
 
@@ -1286,7 +1296,7 @@ ggplot(temp_association, aes(x = avg_temperature, y = borough_rate, color = Boro
   theme_minimal()
 ```
 
-**Figure 14. Temperature and Outcomes across Borough and by Year Group**
+**Figure 14. Temperature and Outcomes across Borough and by Time Period**
 
 The plot shows that the higher temperature is associated with lower rate of ED visit and hospitalization.
 
